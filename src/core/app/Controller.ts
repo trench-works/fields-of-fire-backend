@@ -1,4 +1,5 @@
 import { WebSocket } from "ws";
+import { Request } from "express";
 
 export type ControllerOptions = {
     path: string;
@@ -10,7 +11,7 @@ type Action = {
 };
 
 export class Controller {
-    public ws: WebSocket;
+    public clients: Map<String, WebSocket>;
     public wsHandlers: Map<String, (payload: any) => void>;
 
     constructor(private readonly config: ControllerOptions) {
@@ -37,7 +38,16 @@ export class Controller {
         }
     }
 
+    subscribe(socket: WebSocket, request: Request): void {
+        const clientIP = request.socket.remoteAddress;
+        socket.onclose;
+        socket.on("message", this.handleWS.bind(this));
+        this.clients.set(clientIP, socket);
+    }
+
     emit(action: Action) {
-        this.ws.send(JSON.stringify(action));
+        for (const client of this.clients.values()) {
+            client.send(JSON.stringify(action));
+        }
     }
 }

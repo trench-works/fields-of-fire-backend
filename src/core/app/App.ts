@@ -1,10 +1,10 @@
 import express from "express";
 import { Express } from "express";
 import expressWs from "express-ws";
-import { Controller, ControllerOptions } from "./Controller";
+import { Controller } from "./Controller";
 import { Server } from "http";
 
-type ControllerConstructor = { new (props: ControllerOptions): Controller };
+type ControllerConstructor = { new (): Controller };
 
 export type AppConfig = {
     port: number;
@@ -24,12 +24,12 @@ export class App {
         this.socket = expressWs(this.app);
         //apply controllers
         for (const controllerInit of this.config.controllers) {
-            const controller = new controllerInit({ path: "/" });
+            const controller = new controllerInit();
             this.controllers.push(controller);
-            this.socket.app.ws(controller.path, (ws, _req) => {
-                controller.ws = ws;
-                ws.on("message", controller.handleWS.bind(controller));
-            });
+            this.socket.app.ws(
+                controller.path,
+                controller.subscribe.bind(controller)
+            );
         }
     }
 

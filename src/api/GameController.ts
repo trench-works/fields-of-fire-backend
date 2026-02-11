@@ -23,8 +23,8 @@ type Game = {
 export class GameController extends Controller {
     private games: Game[] = [];
 
-    constructor(options: ControllerOptions) {
-        super({ ...options, path: "/games" });
+    constructor() {
+        super({ path: "/games" });
         //create subscriptions for this controller
         this.onWs("create", this.handleCreate.bind(this));
         this.onWs("join", this.handleJoin.bind(this));
