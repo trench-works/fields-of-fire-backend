@@ -22,12 +22,12 @@ export class Controller {
         return this.config.path;
     }
 
-    onWs(action: string, listener: (payload: any) => void): this {
+    on(action: string, listener: (payload: any) => void): this {
         this.wsHandlers.set(action, listener);
         return this;
     }
 
-    handleWS(message: string) {
+    private handleMessage(message: string) {
         try {
             const { actionId, payload } = JSON.parse(message) as Action;
             this.wsHandlers.get(actionId)?.(payload);
@@ -40,8 +40,8 @@ export class Controller {
 
     subscribe(socket: WebSocket, request: Request): void {
         const clientIP = request.socket.remoteAddress;
-        socket.onclose;
-        socket.on("message", this.handleWS.bind(this));
+        socket.on("message", this.handleMessage.bind(this));
+        //socket.onclose;
         this.clients.set(clientIP, socket);
     }
 
