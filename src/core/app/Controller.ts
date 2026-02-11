@@ -1,25 +1,43 @@
-import { OnFunctionParam, OnHandler } from "../types/OnEvent";
-import { RawData } from "ws";
+import { WebSocket } from "ws";
 
-export type ControllerProps = {
+export type ControllerOptions = {
     path: string;
 };
 
-export class Controller {
-    public onHandlers: OnHandler[];
+type Action = {
+    actionId: string;
+    payload: any;
+};
 
-    constructor(private readonly config: ControllerProps) {
-        this.onHandlers = [];
+export class Controller {
+    public ws: WebSocket;
+    public wsHandlers: Map<String, (payload: any) => void>;
+
+    constructor(private readonly config: ControllerOptions) {
+        this.wsHandlers = new Map();
     }
 
     get path(): string {
         return this.config.path;
     }
 
-    on(listener: (message: string) => void): this {
-        this.onHandlers.push({ event: "message", listener: listener as any });
+    onWs(action: string, listener: (payload: any) => void): this {
+        this.wsHandlers.set(action, listener);
         return this;
     }
 
-    mount() {}
+    handleWS(message: string) {
+        try {
+            const { actionId, payload } = JSON.parse(message) as Action;
+            this.wsHandlers.get(actionId)?.(payload);
+        } catch {
+            console.error(
+                `BAD MESSAGE RECEIVED / on path : "${this.path}" / with payload : "${message}"`
+            );
+        }
+    }
+
+    emit(action: Action) {
+        this.ws.send(JSON.stringify(action));
+    }
 }

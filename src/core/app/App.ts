@@ -1,12 +1,14 @@
 import express from "express";
 import { Express } from "express";
 import expressWs from "express-ws";
-import { Controller } from "./Controller";
+import { Controller, ControllerOptions } from "./Controller";
 import { Server } from "http";
+
+type ControllerConstructor = { new (props: ControllerOptions): Controller };
 
 export type AppConfig = {
     port: number;
-    controllers: Controller[];
+    controllers: ControllerConstructor[];
 };
 
 export class App {
@@ -14,16 +16,19 @@ export class App {
     public server: Server;
     public socket: expressWs.Instance;
 
+    private controllers: Controller[] = [];
+
     constructor(private readonly config: AppConfig) {
         this.server = undefined;
         this.app = express();
         this.socket = expressWs(this.app);
         //apply controllers
-        for (const controller of this.config.controllers) {
+        for (const controllerInit of this.config.controllers) {
+            const controller = new controllerInit({ path: "/" });
+            this.controllers.push(controller);
             this.socket.app.ws(controller.path, (ws, _req) => {
-                for (const handler of controller.onHandlers) {
-                    ws.on(handler.event, handler.listener);
-                }
+                controller.ws = ws;
+                ws.on("message", controller.handleWS.bind(controller));
             });
         }
     }
