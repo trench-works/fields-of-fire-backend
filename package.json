@@ -1,0 +1,36 @@
+{
+    "name": "memoires-oubliees-server",
+    "version": "0.0.1",
+    "description": "",
+    "homepage": "https://github.com/aalafTeam/lesMemoiresOubliees_server#readme",
+    "bugs": {
+        "url": "https://github.com/aalafTeam/lesMemoiresOubliees_server/issues"
+    },
+    "imports": {
+        "#*": "./src/*"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/aalafTeam/lesMemoiresOubliees_server.git"
+    },
+    "license": "ISC",
+    "author": "",
+    "type": "commonjs",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "tsc & node ./dist/app.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "express": "^5.2.1",
+        "express-ws": "^5.0.2"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.6",
+        "@types/express-ws": "^3.0.6",
+        "eslint": "^10.0.0",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.9.3"
+    }
+}
