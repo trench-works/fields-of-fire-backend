@@ -1,20 +1,31 @@
 import { WebSocket } from "ws";
 import { Request } from "express";
+import { Instantiable } from "../types/Instantiable";
+import { validate, validateSync } from "class-validator";
 
-export type ControllerOptions = {
+export type ControllerOptions<RessourceKeyObject = {}> = {
     topic: string;
+    key?: Instantiable<RessourceKeyObject>;
 };
 
-type Action = {
+type Action<RessourceKeyObject = {}> = {
     actionId: string;
+    key?: RessourceKeyObject;
     payload: any;
 };
 
-export class Controller {
-    public clients: Map<String, WebSocket>;
-    public wsHandlers: Map<String, (payload: any) => void>;
+type Handler<RessourceKeyObject = {}> = {
+    listener: (payload: any, key?: RessourceKeyObject) => any;
+    payloadType?: Instantiable;
+};
 
-    constructor(private readonly config: ControllerOptions) {
+export class Controller<RessourceKeyObject = {}> {
+    public clients: Map<String, WebSocket>;
+    public wsHandlers: Map<string, Handler<RessourceKeyObject>>;
+
+    constructor(
+        private readonly config: ControllerOptions<RessourceKeyObject>
+    ) {
         this.wsHandlers = new Map();
     }
 
@@ -22,15 +33,45 @@ export class Controller {
         return this.config.topic;
     }
 
-    on(action: string, listener: (payload: any) => void): this {
-        this.wsHandlers.set(action, listener);
+    on(
+        action: string,
+        listener: (payload: any, key?: RessourceKeyObject) => any,
+        payloadType?: Instantiable
+    ): this {
+        this.wsHandlers.set(action, { listener, payloadType });
         return this;
     }
 
-    private handleMessage(message: string) {
+    private handleMessage(socket: WebSocket, message: string) {
         try {
-            const { actionId, payload } = JSON.parse(message) as Action;
-            this.wsHandlers.get(actionId)?.(payload);
+            let { actionId, key, payload } = JSON.parse(
+                message
+            ) as Action<RessourceKeyObject>;
+            const handler = this.wsHandlers.get(actionId);
+            if (handler) {
+                if (key && Object.keys(key).length > 0) {
+                    const keyDto = new handler.payloadType();
+                    Object.assign(keyDto, payload);
+                    const validationErrors = validateSync(keyDto);
+                    if (validationErrors.length > 0) {
+                        socket.send(JSON.stringify(validationErrors));
+                    }
+                    key = keyDto;
+                }
+                if (handler.payloadType) {
+                    const dtoPayload = new handler.payloadType();
+                    Object.assign(dtoPayload, payload);
+                    const validationErrors = validateSync(dtoPayload);
+                    if (validationErrors.length > 0) {
+                        socket.send(JSON.stringify(validationErrors));
+                    }
+                    payload = dtoPayload;
+                }
+                const result = handler.listener(payload, key);
+                if (result) {
+                    socket.send(JSON.stringify(result));
+                }
+            }
         } catch {
             console.error(
                 `BAD MESSAGE RECEIVED / on path : "${this.topic}" / with payload : "${message}"`
@@ -40,7 +81,9 @@ export class Controller {
 
     subscribe(socket: WebSocket, request: Request): void {
         const clientIP = request.socket.remoteAddress;
-        socket.on("message", this.handleMessage.bind(this));
+        socket.on("message", (data) =>
+            this.handleMessage(socket, data.toString())
+        );
         //socket.onclose;
         this.clients.set(clientIP, socket);
     }

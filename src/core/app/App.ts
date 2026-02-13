@@ -30,7 +30,7 @@ export class App {
         }).build();
         for (const controller of controllers) {
             this.socket.app.ws(
-                controller.topic,
+                `/${controller.topic}`,
                 controller.subscribe.bind(controller)
             );
         }
