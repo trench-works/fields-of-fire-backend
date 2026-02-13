@@ -9,4 +9,4 @@ const server = new App({
     controllers: [LobbyController, GameController],
     providers: [LobbyService, GameService],
 });
-//server.start();
+server.start();

@@ -24,11 +24,11 @@ export class App {
         this.app = express();
         this.socket = expressWs(this.app);
         //apply controllers
-        new DependencyResolver({
+        const controllers = new DependencyResolver({
             controllerClasses: config.controllers,
             providerClasses: config.providers,
         }).build();
-        for (const controller of this.controllers) {
+        for (const controller of controllers) {
             this.socket.app.ws(
                 controller.path,
                 controller.subscribe.bind(controller)

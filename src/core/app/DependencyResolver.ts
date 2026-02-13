@@ -20,7 +20,6 @@ export class DependencyResolver {
     private readonly controllerClasses;
 
     private readonly resolvedProviders = new Map<string, Provider>();
-    private readonly resolvedControllers: Controller[] = [];
 
     constructor({
         controllerClasses,
@@ -51,6 +50,7 @@ export class DependencyResolver {
     }
 
     build() {
+        console.log("Dependency tree compiling...");
         while (this.providersDependenciesMap.size > 0) {
             const providersSize = this.providersDependenciesMap.size;
             const orderedProviders = Array.from(
@@ -83,15 +83,24 @@ export class DependencyResolver {
             }
         }
 
-        for (const controllerClass of this.controllerClasses) {
-            const dependencies: string[] = [];
-            for (const mdKey of Reflect.getMetadataKeys(controllerClass)) {
-                dependencies.push(Reflect.getMetadata(mdKey, controllerClass));
-            }
-            this.resolvedControllers.push(
-                this.instantiate(controllerClass, dependencies) as Controller
-            );
-        }
+        const resolvedControllers: Controller[] = this.controllerClasses.map(
+            (controllerClass) =>
+                this.instantiate(
+                    controllerClass,
+                    Reflect.getMetadataKeys(controllerClass)
+                        .filter((key) => String(key).startsWith("provider"))
+                        .map((key) => Number(String(key).split("-")[1]))
+                        .sort((a, b) => a - b)
+                        .map((mdKeyId) =>
+                            Reflect.getMetadata(
+                                `provider-${mdKeyId}`,
+                                controllerClass
+                            )
+                        )
+                ) as Controller
+        );
+        console.log("Dependencies are fully resolved and ready to go !");
+        return resolvedControllers;
     }
 
     buildAsync() {}
