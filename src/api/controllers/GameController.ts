@@ -7,6 +7,6 @@ export class GameController extends Controller {
     constructor(
         @Provide(GameService) private readonly gameService: GameService
     ) {
-        super({ path: "game" });
+        super({ topic: "game" });
     }
 }

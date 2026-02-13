@@ -2,7 +2,7 @@ import { WebSocket } from "ws";
 import { Request } from "express";
 
 export type ControllerOptions = {
-    path: string;
+    topic: string;
 };
 
 type Action = {
@@ -18,8 +18,8 @@ export class Controller {
         this.wsHandlers = new Map();
     }
 
-    get path(): string {
-        return this.config.path;
+    get topic(): string {
+        return this.config.topic;
     }
 
     on(action: string, listener: (payload: any) => void): this {
@@ -33,7 +33,7 @@ export class Controller {
             this.wsHandlers.get(actionId)?.(payload);
         } catch {
             console.error(
-                `BAD MESSAGE RECEIVED / on path : "${this.path}" / with payload : "${message}"`
+                `BAD MESSAGE RECEIVED / on path : "${this.topic}" / with payload : "${message}"`
             );
         }
     }

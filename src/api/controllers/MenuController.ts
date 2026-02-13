@@ -4,6 +4,6 @@ import { LobbyService } from "../services/LobbyService";
 
 export class MenuController extends Controller {
     constructor(@Provide(LobbyService) lobbyService: LobbyService) {
-        super({ path: "menu" });
+        super({ topic: "menu" });
     }
 }
