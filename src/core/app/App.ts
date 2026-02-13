@@ -39,7 +39,7 @@ export class App {
     start(): Server {
         this.server = this.app.listen(this.config.port, () => {
             return console.log(
-                `Express is listening at http://localhost:${this.config.port}`
+                `SocketAPI is ready to talk on http://localhost:${this.config.port}`
             );
         });
         return this.server;

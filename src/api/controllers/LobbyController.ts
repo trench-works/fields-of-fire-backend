@@ -28,7 +28,7 @@ export class LobbyController extends Controller {
     constructor(
         @Provide(LobbyService) private readonly lobbyService: LobbyService
     ) {
-        super({ path: "/lobby" });
+        super({ path: "lobby" });
         //create subscriptions for this controller
         this.on("create", this.handleCreate.bind(this));
         this.on("join", this.handleJoin.bind(this));

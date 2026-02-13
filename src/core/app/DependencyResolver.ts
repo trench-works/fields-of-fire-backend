@@ -2,6 +2,7 @@ import { Controllable, Providable } from "../types/Instantiable";
 import "reflect-metadata";
 import { Provider } from "../types/Provider";
 import { Controller } from "./Controller";
+import { AsyncProvided, isAsyncProvided } from "../types/AsyncProvided";
 
 type DependencyResolverOptions = {
     controllerClasses: Controllable[];
@@ -46,11 +47,37 @@ export class DependencyResolver {
         for (const dependencyName of dependenciesNames) {
             dependencies.push(this.resolvedProviders.get(dependencyName));
         }
-        return new instantiator(...dependencies);
+        const provider = new instantiator(...dependencies);
+        //console.log(provider);
+        return provider;
+    }
+
+    private resolveAsyncDependencies(provider: Provider & AsyncProvided): void {
+        const dependencies: Provider[] = [];
+        console.log(Reflect.getMetadataKeys(provider, "asyncProvide"));
+        for (const dependencyName of Reflect.getMetadataKeys(
+            provider,
+            "asyncProvide"
+        )
+            .filter((key) => String(key).startsWith("asyncProvider"))
+            .map((key) => Number(String(key).split("-")[1]))
+            .sort((a, b) => a - b)
+            .map((mdKeyId) =>
+                Reflect.getMetadata(
+                    `asyncProvider-${mdKeyId}`,
+                    provider,
+                    "asyncProvide"
+                )
+            )) {
+            dependencies.push(this.resolvedProviders.get(dependencyName));
+        }
+        console.log(dependencies);
+        provider.asyncProvide(dependencies);
     }
 
     build() {
         console.log("Dependency tree compiling...");
+        // Providers Synchrone Resolving
         while (this.providersDependenciesMap.size > 0) {
             const providersSize = this.providersDependenciesMap.size;
             const orderedProviders = Array.from(
@@ -83,6 +110,16 @@ export class DependencyResolver {
             }
         }
 
+        //Providers Async Resolving
+        // for (const provider of this.resolvedProviders.entries()) {
+        //     console.log(provider);
+        //     console.log(isAsyncProvided(provider));
+        //     if (isAsyncProvided(provider)) {
+        //         this.resolveAsyncDependencies(provider);
+        //     }
+        // }
+
+        // Controllers Synchrone Resolving
         const resolvedControllers: Controller[] = this.controllerClasses.map(
             (controllerClass) =>
                 this.instantiate(

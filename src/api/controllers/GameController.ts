@@ -5,9 +5,8 @@ import { LobbyService } from "../services/LobbyService";
 
 export class GameController extends Controller {
     constructor(
-        @Provide(LobbyService) private readonly lobbyService: LobbyService,
         @Provide(GameService) private readonly gameService: GameService
     ) {
-        super({ path: "/game/{gameId}" });
+        super({ path: "game" });
     }
 }
