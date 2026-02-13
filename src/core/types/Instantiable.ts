@@ -1,4 +1,5 @@
 import { Controller } from "../app/Controller";
+import { Module } from "../app/Module";
 import { Provider } from "./Provider";
 
 export interface Instantiable<T = any> extends Function {
@@ -6,9 +7,13 @@ export interface Instantiable<T = any> extends Function {
 }
 
 export interface Providable extends Function {
-    new (...providers: Provider[]): Provider;
+    new (...providers: any[]): Provider;
 }
 
 export interface Controllable extends Function {
-    new (...providers: Provider[]): Controller;
+    new (...providers: any[]): Controller<any>;
+}
+
+export interface Modullable extends Function {
+    new (): Module;
 }

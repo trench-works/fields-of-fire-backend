@@ -2,16 +2,11 @@ import { Controllable, Providable } from "../types/Instantiable";
 import "reflect-metadata";
 import { Provider } from "../types/Provider";
 import { Controller } from "./Controller";
-import { AsyncProvided, isAsyncProvided } from "../types/AsyncProvided";
+import { AsyncProvided } from "../types/AsyncProvided";
 
 type DependencyResolverOptions = {
-    controllerClasses: Controllable[];
-    providerClasses: Providable[];
-};
-
-type ResolvedDependencies = {
-    controllers: Controller[];
-    providers: Provider[];
+    controllers: Controllable[];
+    providers: Providable[];
 };
 
 export class DependencyResolver {
@@ -22,13 +17,10 @@ export class DependencyResolver {
 
     private readonly resolvedProviders = new Map<string, Provider>();
 
-    constructor({
-        controllerClasses,
-        providerClasses,
-    }: DependencyResolverOptions) {
+    constructor({ controllers, providers }: DependencyResolverOptions) {
         console.log("Building dependencies tree...");
-        this.controllerClasses = controllerClasses;
-        for (const providerClass of providerClasses) {
+        this.controllerClasses = controllers;
+        for (const providerClass of providers) {
             this.providerClassesMap.set(providerClass.name, providerClass);
             const dependencies: string[] = [];
             for (const mdKey of Reflect.getMetadataKeys(providerClass)) {
@@ -45,7 +37,8 @@ export class DependencyResolver {
     ): Provider | Controller {
         const dependencies: Provider[] = [];
         for (const dependencyName of dependenciesNames) {
-            dependencies.push(this.resolvedProviders.get(dependencyName));
+            const dep = this.resolvedProviders.get(dependencyName);
+            dep && dependencies.push(dep);
         }
         const provider = new instantiator(...dependencies);
         //console.log(provider);
@@ -69,13 +62,14 @@ export class DependencyResolver {
                     "asyncProvide"
                 )
             )) {
-            dependencies.push(this.resolvedProviders.get(dependencyName));
+            const dep = this.resolvedProviders.get(dependencyName);
+            dep && dependencies.push(dep);
         }
         console.log(dependencies);
         provider.asyncProvide(dependencies);
     }
 
-    build() {
+    build(): Controller[] {
         console.log("Dependency tree compiling...");
         // Providers Synchrone Resolving
         while (this.providersDependenciesMap.size > 0) {
@@ -96,10 +90,12 @@ export class DependencyResolver {
                 if (fullyResolved) {
                     const instantiator =
                         this.providerClassesMap.get(providerName);
-                    this.resolvedProviders.set(
-                        providerName,
-                        this.instantiate(instantiator, providerDependencies)
-                    );
+
+                    instantiator &&
+                        this.resolvedProviders.set(
+                            providerName,
+                            this.instantiate(instantiator, providerDependencies)
+                        );
                     this.providersDependenciesMap.delete(providerName);
                 }
             }

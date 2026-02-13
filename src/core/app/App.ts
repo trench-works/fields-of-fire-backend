@@ -1,33 +1,31 @@
 import express from "express";
 import { Express } from "express";
 import expressWs from "express-ws";
-import { Controller } from "./Controller";
 import { Server } from "http";
-import { Controllable, Instantiable, Providable } from "../types/Instantiable";
+import { Controllable, Modullable, Providable } from "../types/Instantiable";
 import { DependencyResolver } from "./DependencyResolver";
+import { ModulesResolver } from "./ModulesResolver";
 
 export type AppConfig = {
     port: number;
-    controllers: Controllable[];
-    providers: Providable[];
+    controllers?: Controllable[];
+    providers?: Providable[];
+    modules?: Modullable[];
 };
 
 export class App {
     public app: Express;
-    public server: Server;
+    public server: Server | undefined;
     public socket: expressWs.Instance;
-
-    private controllers: Controller[] = [];
 
     constructor(private readonly config: AppConfig) {
         this.server = undefined;
         this.app = express();
         this.socket = expressWs(this.app);
         //apply controllers
-        const controllers = new DependencyResolver({
-            controllerClasses: config.controllers,
-            providerClasses: config.providers,
-        }).build();
+        const controllers = new DependencyResolver(
+            ModulesResolver.resolve(config)
+        ).build();
         for (const controller of controllers) {
             this.socket.app.ws(
                 `/${controller.topic}`,
@@ -46,6 +44,6 @@ export class App {
     }
 
     stop() {
-        this.server.close();
+        this.server?.close();
     }
 }

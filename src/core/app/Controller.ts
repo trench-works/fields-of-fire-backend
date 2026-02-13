@@ -3,29 +3,35 @@ import { Request } from "express";
 import { Instantiable } from "../types/Instantiable";
 import { validateSync } from "class-validator";
 
-export type ControllerOptions<RessourceKeyObject = {}> = {
+type ControllerOptions<RessourceKeyObject extends object> = {
     topic: string;
     key?: Instantiable<RessourceKeyObject>;
 };
 
-type Action<RessourceKeyObject = {}> = {
+type Listener<RessourceKeyObject extends object> = (
+    payload: any,
+    key?: RessourceKeyObject
+) => any;
+
+type Action<RessourceKeyObject extends object> = {
     actionId: string;
     key?: RessourceKeyObject;
     payload: any;
 };
 
-type Handler<RessourceKeyObject = {}> = {
-    listener: (payload: any, key?: RessourceKeyObject) => any;
+type Handler<RessourceKeyObject extends object> = {
+    listener: Listener<RessourceKeyObject>;
     payloadType?: Instantiable;
 };
 
-export class Controller<RessourceKeyObject = {}> {
-    public clients: Map<String, WebSocket>;
+export class Controller<RessourceKeyObject extends object = {}> {
+    public clients: Map<string, WebSocket>;
     public wsHandlers: Map<string, Handler<RessourceKeyObject>>;
 
     constructor(
         private readonly config: ControllerOptions<RessourceKeyObject>
     ) {
+        this.clients = new Map();
         this.wsHandlers = new Map();
     }
 
@@ -35,7 +41,7 @@ export class Controller<RessourceKeyObject = {}> {
 
     on(
         action: string,
-        listener: (payload: any, key?: RessourceKeyObject) => any,
+        listener: Listener<RessourceKeyObject>,
         payloadType?: Instantiable
     ): this {
         this.wsHandlers.set(action, { listener, payloadType });
@@ -49,8 +55,8 @@ export class Controller<RessourceKeyObject = {}> {
             ) as Action<RessourceKeyObject>;
             const handler = this.wsHandlers.get(actionId);
             if (handler) {
-                if (key && Object.keys(key).length > 0) {
-                    const keyDto = new handler.payloadType();
+                if (key && Object.keys(key).length > 0 && this.config.key) {
+                    const keyDto = new this.config.key();
                     Object.assign(keyDto, payload);
                     const validationErrors = validateSync(keyDto);
                     if (validationErrors.length > 0) {
@@ -80,7 +86,7 @@ export class Controller<RessourceKeyObject = {}> {
     }
 
     subscribe(socket: WebSocket, request: Request): void {
-        const clientIP = request.socket.remoteAddress;
+        const clientIP = request.socket.remoteAddress ?? "";
         socket.on("message", (data) =>
             this.handleMessage(socket, data.toString())
         );
@@ -88,7 +94,7 @@ export class Controller<RessourceKeyObject = {}> {
         this.clients.set(clientIP, socket);
     }
 
-    emit(action: Action) {
+    emit(action: Action<RessourceKeyObject>) {
         for (const client of this.clients.values()) {
             client.send(JSON.stringify(action));
         }

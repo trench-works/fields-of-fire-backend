@@ -1,12 +1,13 @@
-import { Controller, ControllerOptions } from "../../core/app/Controller";
+import { Controller } from "../../core/app/Controller";
 import { v4 as uuidv4 } from "uuid";
 import { LobbyService } from "../services/LobbyService";
 import { Provide } from "../../core/decorators/Provide";
 import { IsNumber, IsString } from "class-validator";
+import { LobbyKeys } from "./interfaces/LobbyKeys";
 
 class CreatePayload {
     @IsString()
-    userId: string;
+    userId!: string;
 }
 
 type GamePlayer = {
@@ -19,19 +20,14 @@ type Game = {
     players: GamePlayer[];
 };
 
-class LobbyKeys {
-    @IsNumber()
-    lobbyId: number;
-}
-
 class JoinGamePayload {
     @IsString()
-    gameId: string;
+    gameId!: string;
     @IsString()
-    userId: string;
+    userId!: string;
 }
 
-export class LobbyController extends Controller {
+export class LobbyController extends Controller<LobbyKeys> {
     private games: Game[] = [];
 
     constructor(
@@ -43,7 +39,7 @@ export class LobbyController extends Controller {
         this.on("create", this.handleCreate.bind(this), CreatePayload);
     }
 
-    handleJoin(payload: JoinGamePayload, keys: LobbyKeys) {
+    handleJoin(payload: JoinGamePayload, keys?: LobbyKeys) {
         const game = this.games.find((game) => game.id === payload.gameId);
         if (game) {
             game.players.push({ userId: payload.userId });
