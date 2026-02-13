@@ -43,7 +43,7 @@ export class LobbyController extends Controller {
         this.on("create", this.handleCreate.bind(this), CreatePayload);
     }
 
-    handleJoin(payload: JoinGamePayload) {
+    handleJoin(payload: JoinGamePayload, keys: LobbyKeys) {
         const game = this.games.find((game) => game.id === payload.gameId);
         if (game) {
             game.players.push({ userId: payload.userId });
