@@ -1,5 +1,7 @@
-import { Controller, ControllerOptions } from "../core/app/Controller";
+import { Controller, ControllerOptions } from "../../core/app/Controller";
 import { v4 as uuidv4 } from "uuid";
+import { LobbyService } from "../services/LobbyService";
+import { Provide } from "../../core/decorators/Provide";
 
 type CreatePayload = {
     userId: string;
@@ -20,11 +22,13 @@ type Game = {
     players: GamePlayer[];
 };
 
-export class GameController extends Controller {
+export class LobbyController extends Controller {
     private games: Game[] = [];
 
-    constructor() {
-        super({ path: "/games" });
+    constructor(
+        @Provide(LobbyService) private readonly lobbyService: LobbyService
+    ) {
+        super({ path: "/lobby" });
         //create subscriptions for this controller
         this.on("create", this.handleCreate.bind(this));
         this.on("join", this.handleJoin.bind(this));

@@ -3,12 +3,13 @@ import { Express } from "express";
 import expressWs from "express-ws";
 import { Controller } from "./Controller";
 import { Server } from "http";
-
-type ControllerConstructor = { new (): Controller };
+import { Controllable, Instantiable, Providable } from "../types/Instantiable";
+import { DependencyResolver } from "./DependencyResolver";
 
 export type AppConfig = {
     port: number;
-    controllers: ControllerConstructor[];
+    controllers: Controllable[];
+    providers: Providable[];
 };
 
 export class App {
@@ -23,9 +24,11 @@ export class App {
         this.app = express();
         this.socket = expressWs(this.app);
         //apply controllers
-        for (const controllerInit of this.config.controllers) {
-            const controller = new controllerInit();
-            this.controllers.push(controller);
+        new DependencyResolver({
+            controllerClasses: config.controllers,
+            providerClasses: config.providers,
+        }).build();
+        for (const controller of this.controllers) {
             this.socket.app.ws(
                 controller.path,
                 controller.subscribe.bind(controller)
