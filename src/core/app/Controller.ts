@@ -1,7 +1,7 @@
 import { WebSocket } from "ws";
 import { Request } from "express";
 import { Instantiable } from "../types/Instantiable";
-import { validate, validateSync } from "class-validator";
+import { validateSync } from "class-validator";
 
 export type ControllerOptions<RessourceKeyObject = {}> = {
     topic: string;
