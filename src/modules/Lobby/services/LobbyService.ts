@@ -1,5 +1,5 @@
-import { Provide } from "../../core/decorators/Provide";
-import { GameDataManager } from "../data/GameDataManager";
+import { GameDataManager } from "../../Game/data/GameDataManager";
+import { Provide } from "../../../core/decorators/Provide";
 
 export class LobbyService {
     constructor(

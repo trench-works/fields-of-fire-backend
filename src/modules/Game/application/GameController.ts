@@ -1,7 +1,6 @@
-import { Controller } from "../../core/app/Controller";
-import { Provide } from "../../core/decorators/Provide";
 import { GameService } from "../services/GameService";
-import { LobbyService } from "../services/LobbyService";
+import { Controller } from "../../../core/app/Controller";
+import { Provide } from "../../../core/decorators/Provide";
 
 export class GameController extends Controller {
     constructor(

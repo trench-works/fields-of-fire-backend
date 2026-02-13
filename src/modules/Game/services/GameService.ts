@@ -1,4 +1,4 @@
-import { Provide } from "../../core/decorators/Provide";
+import { Provide } from "../../../core/decorators/Provide";
 import { GameDataManager } from "../data/GameDataManager";
 
 export class GameService {

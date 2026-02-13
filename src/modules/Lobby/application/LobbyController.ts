@@ -1,9 +1,9 @@
-import { Controller } from "../../core/app/Controller";
+import { Controller } from "../../../core/app/Controller";
 import { v4 as uuidv4 } from "uuid";
-import { LobbyService } from "../services/LobbyService";
-import { Provide } from "../../core/decorators/Provide";
+import { Provide } from "../../../core/decorators/Provide";
 import { IsNumber, IsString } from "class-validator";
 import { LobbyKeys } from "./interfaces/LobbyKeys";
+import { LobbyService } from "../services/LobbyService";
 
 class CreatePayload {
     @IsString()
