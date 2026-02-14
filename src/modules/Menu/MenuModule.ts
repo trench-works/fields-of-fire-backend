@@ -5,7 +5,6 @@ export class MenuModule extends Module {
     constructor() {
         super({
             controllers: [MenuController],
-            providers: [],
         });
     }
 }

@@ -1,61 +1,32 @@
 import { Controller } from "../../../core/app/Controller";
-import { v4 as uuidv4 } from "uuid";
 import { Provide } from "../../../core/decorators/Provide";
-import { IsNumber, IsString } from "class-validator";
 import { LobbyKeys } from "./interfaces/LobbyKeys";
 import { LobbyService } from "../services/LobbyService";
-
-class CreatePayload {
-    @IsString()
-    userId!: string;
-}
-
-type GamePlayer = {
-    userId: string;
-};
-
-type Game = {
-    id: string;
-    creator: GamePlayer;
-    players: GamePlayer[];
-};
-
-class JoinGamePayload {
-    @IsString()
-    gameId!: string;
-    @IsString()
-    userId!: string;
-}
+import { GameService } from "../../Game/services/GameService";
 
 export class LobbyController extends Controller<LobbyKeys> {
-    private games: Game[] = [];
-
     constructor(
-        @Provide(LobbyService) private readonly lobbyService: LobbyService
+        @Provide(LobbyService) private readonly lobbyService: LobbyService,
+        @Provide(GameService) private readonly gameService: GameService
     ) {
         super({ topic: "lobby", key: LobbyKeys });
         //create subscriptions for this controller
-        this.on("join", this.handleJoin.bind(this), JoinGamePayload);
-        this.on("create", this.handleCreate.bind(this), CreatePayload);
+        this.on("leave", this.handleLeave.bind(this));
+        this.on("start", this.startGame.bind(this));
     }
 
-    handleJoin(payload: JoinGamePayload, keys?: LobbyKeys) {
-        const game = this.games.find((game) => game.id === payload.gameId);
-        if (game) {
-            game.players.push({ userId: payload.userId });
-            this.emit({
-                actionId: "joined",
-                payload: game,
-            });
-        }
+    startGame() {
+        /*
+            some logic to transform this lobby into a running game
+            and send event to all this lobby client to quit lobby screen and join game,
+            then delete lobby and kill socket connections
+        */
     }
 
-    handleCreate(payload: CreatePayload) {
-        this.games.push({
-            id: uuidv4(),
-            creator: { userId: payload.userId },
-            players: [{ userId: payload.userId }],
-        });
-        console.log(JSON.stringify(this.games));
+    handleLeave() {
+        /*
+            Some Logic to handle when player clicks on "quit" button
+            or when client socket gets disconnected
+        */
     }
 }
