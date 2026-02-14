@@ -2,35 +2,62 @@ import { WebSocket } from "ws";
 import { Request } from "express";
 import { Instantiable } from "../types/Instantiable";
 import { validateSync } from "class-validator";
-import { Guardable } from "../types/Guardable";
-import { Guard } from "./Guard";
+import { IGuard, RessourceAccessLevel } from "./Guard";
+import { AccessRefused } from "../errors";
 
 type ControllerConfig<RessourceKeyObject extends object> = {
     topic: string;
-    key?: Instantiable<RessourceKeyObject>;
-    guards?: Guard[];
+    key: Instantiable<RessourceKeyObject>;
+    guards?: IGuard[];
 };
 
 type ControllerOptions<RessourceKeyObject extends object> = {
     topic: string;
     key?: Instantiable<RessourceKeyObject>;
-    guards?: Guard[];
+    guards?: IGuard[];
 };
 
-type Listener<RessourceKeyObject extends object> = (
-    payload: any,
-    key?: RessourceKeyObject
-) => any;
+type Listener<
+    RessourceKeyObject extends object,
+    PayloadObject extends object = any
+> = (options: ListenerOptions<RessourceKeyObject, PayloadObject>) => any;
 
 type Action<RessourceKeyObject extends object> = {
     actionId: string;
     key?: RessourceKeyObject;
     payload: any;
+    user: UserInfos;
 };
 
-type Handler<RessourceKeyObject extends object> = {
-    listener: Listener<RessourceKeyObject>;
-    payloadType?: Instantiable;
+type Handler<
+    RessourceKeyObject extends object,
+    PayloadObject extends object = any
+> = {
+    listener: Listener<RessourceKeyObject, PayloadObject>;
+    payloadType?: Instantiable<PayloadObject>;
+    accessLevel?: RessourceAccessLevel;
+};
+
+type UserInfos = {
+    id: string;
+};
+
+export type ListenerOptions<
+    RessourceKeyObject extends object = {},
+    PayloadObject extends object = any
+> = {
+    payload: PayloadObject;
+    key: RessourceKeyObject;
+    socket: WebSocket;
+    user: UserInfos;
+};
+
+type OnOptions<
+    RessourceKeyObject extends object,
+    PayloadObject extends object = any
+> = {
+    payloadType?: Instantiable<PayloadObject>;
+    accessLevel?: RessourceAccessLevel;
 };
 
 export class Controller<RessourceKeyObject extends object = {}> {
@@ -44,8 +71,8 @@ export class Controller<RessourceKeyObject extends object = {}> {
         this.wsHandlers = new Map();
         this.config = {
             topic,
-            key,
-            guards: [],
+            key: key ?? ({} as any),
+            guards: guards,
         };
     }
 
@@ -56,19 +83,24 @@ export class Controller<RessourceKeyObject extends object = {}> {
     on(
         action: string,
         listener: Listener<RessourceKeyObject>,
-        payloadType?: Instantiable
+        options?: OnOptions<RessourceKeyObject>
     ): this {
-        this.wsHandlers.set(action, { listener, payloadType });
+        this.wsHandlers.set(action, {
+            listener,
+            payloadType: options?.payloadType,
+            accessLevel: options?.accessLevel,
+        });
         return this;
     }
 
-    private handleMessage(socket: WebSocket, message: string) {
+    private handleMessage(socket: WebSocket, message: string): void {
         try {
-            let { actionId, key, payload } = JSON.parse(
+            let { actionId, key, payload, user } = JSON.parse(
                 message
             ) as Action<RessourceKeyObject>;
             const handler = this.wsHandlers.get(actionId);
             if (handler) {
+                // key validation
                 if (key && Object.keys(key).length > 0 && this.config.key) {
                     const keyDto = new this.config.key();
                     Object.assign(keyDto, payload);
@@ -78,6 +110,7 @@ export class Controller<RessourceKeyObject extends object = {}> {
                     }
                     key = keyDto;
                 }
+                // payload validation
                 if (handler.payloadType) {
                     const dtoPayload = new handler.payloadType();
                     Object.assign(dtoPayload, payload);
@@ -87,9 +120,32 @@ export class Controller<RessourceKeyObject extends object = {}> {
                     }
                     payload = dtoPayload;
                 }
-                const result = handler.listener(payload, key);
+                //TODO: user validation
+                // listener options prep
+                const listenerOptions: ListenerOptions<RessourceKeyObject> = {
+                    payload,
+                    key: key ?? ({} as any),
+                    socket,
+                    user,
+                };
+                // payload validation
+                if (
+                    handler.accessLevel !== undefined &&
+                    this.config.guards?.length
+                ) {
+                    const highestAccessLevel = this.config.guards
+                        .map((guard) => guard.validate(listenerOptions))
+                        .sort((a, b) => b - a)[0];
+                    if (highestAccessLevel < handler.accessLevel) {
+                        socket.send(JSON.stringify(new AccessRefused()));
+                        return;
+                    }
+                }
+                // if user with payload is authorized
+                const result = handler.listener(listenerOptions);
                 if (result) {
                     socket.send(JSON.stringify(result));
+                    return;
                 }
             }
         } catch {

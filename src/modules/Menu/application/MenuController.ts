@@ -1,4 +1,4 @@
-import { Controller } from "../../../core/app/Controller";
+import { Controller, ListenerOptions } from "../../../core/app/Controller";
 import { Provide } from "../../../core/decorators/Provide";
 import { LobbyService } from "../../Lobby/services/LobbyService";
 import { CreateLobbyInterface } from "./interfaces/CreateLobbyInterface";
@@ -6,11 +6,13 @@ import { CreateLobbyInterface } from "./interfaces/CreateLobbyInterface";
 export class MenuController extends Controller {
     constructor(@Provide(LobbyService) lobbyService: LobbyService) {
         super({ topic: "menu" });
-        this.on("create", this.createLobby.bind(this), CreateLobbyInterface);
+        this.on("create", this.createLobby.bind(this), {
+            payloadType: CreateLobbyInterface,
+        });
         this.on("join", this.joinLobby.bind(this));
     }
 
-    createLobby(payload: CreateLobbyInterface) {
+    createLobby({ payload }: ListenerOptions<{}, CreateLobbyInterface>) {
         /**
          * Do some logic to create a lobby
          * and then send event to client to move to lobby room

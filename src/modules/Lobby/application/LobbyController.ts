@@ -1,5 +1,4 @@
-import { Controller } from "../../../core/app/Controller";
-import { Provide } from "../../../core/decorators/Provide";
+import { Controller, Provide, RessourceAccessLevel } from "../../../core";
 import { LobbyKeys } from "./interfaces/LobbyKeys";
 import { LobbyService } from "../services/LobbyService";
 import { GameService } from "../../Game/services/GameService";
@@ -14,7 +13,9 @@ export class LobbyController extends Controller<LobbyKeys> {
         super({ topic: "lobby", key: LobbyKeys, guards: [lobbyGuard] });
         //create subscriptions for this controller
         this.on("leave", this.handleLeave.bind(this));
-        this.on("start", this.startGame.bind(this));
+        this.on("start", this.startGame.bind(this), {
+            accessLevel: RessourceAccessLevel.DELETE,
+        });
     }
 
     startGame() {

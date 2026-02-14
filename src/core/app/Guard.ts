@@ -1,11 +1,13 @@
+import { ListenerOptions } from ".";
+
 export enum RessourceAccessLevel {
-    DELETE = "DELETE",
-    UPDATE = "UPDATE",
-    CREATE = "CREATE",
-    READ = "READ",
-    NONE = "NONE",
+    DELETE = 4,
+    UPDATE = 3,
+    CREATE = 2,
+    READ = 1,
+    NONE = 0,
 }
 
-export interface Guard {
-    validate(): RessourceAccessLevel;
+export interface IGuard {
+    validate(options: ListenerOptions): RessourceAccessLevel;
 }
