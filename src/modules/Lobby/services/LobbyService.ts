@@ -1,7 +1,8 @@
 import { GameDataManager } from "../../Game/data/GameDataManager";
-import { Provide } from "../../../core/decorators/Provide";
+import { Provide } from "../../../core";
 import { CreateLobbyInterface } from "../../Menu/application/interfaces/CreateLobbyInterface";
 import { LobbyDataManager } from "../data/LobbyDataManager";
+import { LobbyInfo } from "../application/interfaces/LobbyInfo";
 
 export class LobbyService {
     constructor(
@@ -12,4 +13,13 @@ export class LobbyService {
     ) {}
 
     createLobby(createLobbyInterface: CreateLobbyInterface) {}
+
+    getLobbiesList(): LobbyInfo[] {
+        return this.lobbyDataManager.getLobbies().map(
+            (lobby): LobbyInfo => ({
+                lobbyId: lobby.id,
+                playersCount: lobby.playersId.length,
+            })
+        );
+    }
 }

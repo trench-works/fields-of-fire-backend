@@ -9,5 +9,5 @@ export enum RessourceAccessLevel {
 }
 
 export interface IGuard {
-    validate(options: ListenerOptions): RessourceAccessLevel;
+    validate(options: ListenerOptions<{}>): RessourceAccessLevel;
 }

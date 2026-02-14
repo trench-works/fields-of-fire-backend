@@ -13,6 +13,10 @@ export class LobbyDataManager {
         return lobby;
     }
 
+    getLobbies(): Lobby[] {
+        return this.lobbies;
+    }
+
     addLobby(lobby: Lobby): Lobby {
         if (lobby.id === undefined) {
             lobby.id = uuidv4();

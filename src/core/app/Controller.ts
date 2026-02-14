@@ -4,33 +4,38 @@ import { Instantiable } from "../types/Instantiable";
 import { validateSync } from "class-validator";
 import { IGuard, RessourceAccessLevel } from "./Guard";
 import { AccessRefused } from "../errors";
+import { UserInfos } from "./interfaces/UserInfos";
+import { RessourceKey } from "./interfaces/RessourceKey";
 
-type ControllerConfig<RessourceKeyObject extends object> = {
+type ControllerConfig<RessourceKeyObject extends Record<string, any>> = {
     topic: string;
     key: Instantiable<RessourceKeyObject>;
     guards?: IGuard[];
 };
 
-type ControllerOptions<RessourceKeyObject extends object> = {
+type ControllerOptions<RessourceKeyObject extends Record<string, any>> = {
     topic: string;
     key?: Instantiable<RessourceKeyObject>;
     guards?: IGuard[];
 };
 
 type Listener<
-    RessourceKeyObject extends object,
+    RessourceKeyObject extends Record<string, any>,
     PayloadObject extends object = any
 > = (options: ListenerOptions<RessourceKeyObject, PayloadObject>) => any;
 
-type Action<RessourceKeyObject extends object> = {
+type Action<
+    RessourceKeyObject extends Record<string, any> = {},
+    PayloadObject extends object = any
+> = {
     actionId: string;
     key?: RessourceKeyObject;
-    payload: any;
+    payload: PayloadObject;
     user: UserInfos;
 };
 
 type Handler<
-    RessourceKeyObject extends object,
+    RessourceKeyObject extends Record<string, any>,
     PayloadObject extends object = any
 > = {
     listener: Listener<RessourceKeyObject, PayloadObject>;
@@ -38,12 +43,8 @@ type Handler<
     accessLevel?: RessourceAccessLevel;
 };
 
-type UserInfos = {
-    id: string;
-};
-
 export type ListenerOptions<
-    RessourceKeyObject extends object = {},
+    RessourceKeyObject extends Record<string, any> = {},
     PayloadObject extends object = any
 > = {
     payload: PayloadObject;
@@ -52,16 +53,18 @@ export type ListenerOptions<
     user: UserInfos;
 };
 
-type OnOptions<
-    RessourceKeyObject extends object,
-    PayloadObject extends object = any
-> = {
+type OnOptions<PayloadObject extends object = any> = {
     payloadType?: Instantiable<PayloadObject>;
     accessLevel?: RessourceAccessLevel;
 };
 
-export class Controller<RessourceKeyObject extends object = {}> {
-    public clients: Map<string, WebSocket>;
+type RessourceClient<RessourceKeyObject extends Record<string, any>> = {
+    socket: WebSocket;
+    key: RessourceKeyObject;
+};
+
+export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
+    public clients: Map<string, RessourceClient<RessourceKeyObject>>;
     public wsHandlers: Map<string, Handler<RessourceKeyObject>>;
 
     private config: ControllerConfig<RessourceKeyObject>;
@@ -83,7 +86,7 @@ export class Controller<RessourceKeyObject extends object = {}> {
     on(
         action: string,
         listener: Listener<RessourceKeyObject>,
-        options?: OnOptions<RessourceKeyObject>
+        options?: OnOptions
     ): this {
         this.wsHandlers.set(action, {
             listener,
@@ -106,7 +109,7 @@ export class Controller<RessourceKeyObject extends object = {}> {
                     Object.assign(keyDto, payload);
                     const validationErrors = validateSync(keyDto);
                     if (validationErrors.length > 0) {
-                        socket.send(JSON.stringify(validationErrors));
+                        this.send(socket, validationErrors);
                     }
                     key = keyDto;
                 }
@@ -116,7 +119,7 @@ export class Controller<RessourceKeyObject extends object = {}> {
                     Object.assign(dtoPayload, payload);
                     const validationErrors = validateSync(dtoPayload);
                     if (validationErrors.length > 0) {
-                        socket.send(JSON.stringify(validationErrors));
+                        this.send(socket, validationErrors);
                     }
                     payload = dtoPayload;
                 }
@@ -137,14 +140,14 @@ export class Controller<RessourceKeyObject extends object = {}> {
                         .map((guard) => guard.validate(listenerOptions))
                         .sort((a, b) => b - a)[0];
                     if (highestAccessLevel < handler.accessLevel) {
-                        socket.send(JSON.stringify(new AccessRefused()));
+                        this.send(socket, new AccessRefused());
                         return;
                     }
                 }
                 // if user with payload is authorized
                 const result = handler.listener(listenerOptions);
                 if (result) {
-                    socket.send(JSON.stringify(result));
+                    this.send(socket, result);
                     return;
                 }
             }
@@ -155,18 +158,41 @@ export class Controller<RessourceKeyObject extends object = {}> {
         }
     }
 
-    subscribe(socket: WebSocket, request: Request): void {
-        const clientIP = request.socket.remoteAddress ?? "";
+    subscribe(
+        socket: WebSocket,
+        {
+            body: { user, key },
+        }: Request<{}, {}, { key: RessourceKeyObject; user: UserInfos }>
+    ): void {
+        validateSync(key);
+        validateSync(user);
         socket.on("message", (data) =>
             this.handleMessage(socket, data.toString())
         );
         //socket.onclose;
-        this.clients.set(clientIP, socket);
+        this.clients.set(user.id, { socket, key });
+    }
+
+    send(socket: WebSocket, payload: any) {
+        try {
+            const message = JSON.stringify(payload);
+            socket.send(message);
+        } catch {
+            socket.send(payload);
+        }
     }
 
     emit(action: Action<RessourceKeyObject>) {
         for (const client of this.clients.values()) {
-            client.send(JSON.stringify(action));
+            if (
+                !action.key ||
+                RessourceKey.compareKeys<RessourceKeyObject>(
+                    client.key,
+                    action.key
+                )
+            ) {
+                this.send(client.socket, action);
+            }
         }
     }
 }
