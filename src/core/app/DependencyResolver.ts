@@ -1,4 +1,4 @@
-import { Controllable, Providable } from "../types/Instantiable";
+import { Controllable, Instantiable, Providable } from "../types/Instantiable";
 import "reflect-metadata";
 import { Provider } from "../types/Provider";
 import { Controller } from "./Controller";
@@ -31,10 +31,10 @@ export class DependencyResolver {
         console.log("Dependencies tree ready for compiling !");
     }
 
-    private instantiate(
-        instantiator: Providable | Controllable,
+    private instantiate<ToInstantiate = Provider | Controller>(
+        instantiator: Instantiable<ToInstantiate>,
         dependenciesNames: string[]
-    ): Provider | Controller {
+    ): ToInstantiate {
         const dependencies: Provider[] = [];
         for (const dependencyName of dependenciesNames) {
             const dep = this.resolvedProviders.get(dependencyName);
@@ -45,29 +45,29 @@ export class DependencyResolver {
         return provider;
     }
 
-    private resolveAsyncDependencies(provider: Provider & AsyncProvided): void {
-        const dependencies: Provider[] = [];
-        console.log(Reflect.getMetadataKeys(provider, "asyncProvide"));
-        for (const dependencyName of Reflect.getMetadataKeys(
-            provider,
-            "asyncProvide"
-        )
-            .filter((key) => String(key).startsWith("asyncProvider"))
-            .map((key) => Number(String(key).split("-")[1]))
-            .sort((a, b) => a - b)
-            .map((mdKeyId) =>
-                Reflect.getMetadata(
-                    `asyncProvider-${mdKeyId}`,
-                    provider,
-                    "asyncProvide"
-                )
-            )) {
-            const dep = this.resolvedProviders.get(dependencyName);
-            dep && dependencies.push(dep);
-        }
-        console.log(dependencies);
-        provider.asyncProvide(dependencies);
-    }
+    // private resolveAsyncDependencies(provider: Provider & AsyncProvided): void {
+    //     const dependencies: Provider[] = [];
+    //     console.log(Reflect.getMetadataKeys(provider, "asyncProvide"));
+    //     for (const dependencyName of Reflect.getMetadataKeys(
+    //         provider,
+    //         "asyncProvide"
+    //     )
+    //         .filter((key) => String(key).startsWith("asyncProvider"))
+    //         .map((key) => Number(String(key).split("-")[1]))
+    //         .sort((a, b) => a - b)
+    //         .map((mdKeyId) =>
+    //             Reflect.getMetadata(
+    //                 `asyncProvider-${mdKeyId}`,
+    //                 provider,
+    //                 "asyncProvide"
+    //             )
+    //         )) {
+    //         const dep = this.resolvedProviders.get(dependencyName);
+    //         dep && dependencies.push(dep);
+    //     }
+    //     console.log(dependencies);
+    //     provider.asyncProvide(dependencies);
+    // }
 
     build(): Controller[] {
         console.log("Dependency tree compiling...");
@@ -130,11 +130,9 @@ export class DependencyResolver {
                                 controllerClass
                             )
                         )
-                ) as Controller
+                )
         );
         console.log("Dependencies are fully resolved and ready to go !");
         return resolvedControllers;
     }
-
-    buildAsync() {}
 }
