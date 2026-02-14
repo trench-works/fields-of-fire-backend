@@ -1,4 +1,4 @@
-import { Module } from "../../core/app/Module";
+import { Module } from "../../core";
 import { GameController } from "./application/GameController";
 import { GameDataManager } from "./data/GameDataManager";
 import { GameService } from "./services/GameService";

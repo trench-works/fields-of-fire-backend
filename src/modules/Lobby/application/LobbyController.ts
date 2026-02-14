@@ -3,13 +3,15 @@ import { Provide } from "../../../core/decorators/Provide";
 import { LobbyKeys } from "./interfaces/LobbyKeys";
 import { LobbyService } from "../services/LobbyService";
 import { GameService } from "../../Game/services/GameService";
+import { LobbyGuard } from "../services/LobbyGuard";
 
 export class LobbyController extends Controller<LobbyKeys> {
     constructor(
         @Provide(LobbyService) private readonly lobbyService: LobbyService,
-        @Provide(GameService) private readonly gameService: GameService
+        @Provide(GameService) private readonly gameService: GameService,
+        @Provide(LobbyGuard) lobbyGuard: LobbyGuard
     ) {
-        super({ topic: "lobby", key: LobbyKeys });
+        super({ topic: "lobby", key: LobbyKeys, guards: [lobbyGuard] });
         //create subscriptions for this controller
         this.on("leave", this.handleLeave.bind(this));
         this.on("start", this.startGame.bind(this));

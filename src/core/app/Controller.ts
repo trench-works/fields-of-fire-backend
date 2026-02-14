@@ -2,10 +2,19 @@ import { WebSocket } from "ws";
 import { Request } from "express";
 import { Instantiable } from "../types/Instantiable";
 import { validateSync } from "class-validator";
+import { Guardable } from "../types/Guardable";
+import { Guard } from "./Guard";
+
+type ControllerConfig<RessourceKeyObject extends object> = {
+    topic: string;
+    key?: Instantiable<RessourceKeyObject>;
+    guards?: Guard[];
+};
 
 type ControllerOptions<RessourceKeyObject extends object> = {
     topic: string;
     key?: Instantiable<RessourceKeyObject>;
+    guards?: Guard[];
 };
 
 type Listener<RessourceKeyObject extends object> = (
@@ -28,11 +37,16 @@ export class Controller<RessourceKeyObject extends object = {}> {
     public clients: Map<string, WebSocket>;
     public wsHandlers: Map<string, Handler<RessourceKeyObject>>;
 
-    constructor(
-        private readonly config: ControllerOptions<RessourceKeyObject>
-    ) {
+    private config: ControllerConfig<RessourceKeyObject>;
+
+    constructor({ topic, key, guards }: ControllerOptions<RessourceKeyObject>) {
         this.clients = new Map();
         this.wsHandlers = new Map();
+        this.config = {
+            topic,
+            key,
+            guards: [],
+        };
     }
 
     get topic(): string {

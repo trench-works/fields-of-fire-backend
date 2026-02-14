@@ -6,9 +6,6 @@
     "bugs": {
         "url": "https://github.com/aalafTeam/lesMemoiresOubliees_server/issues"
     },
-    "imports": {
-        "#*": "./src/*"
-    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/aalafTeam/lesMemoiresOubliees_server.git"

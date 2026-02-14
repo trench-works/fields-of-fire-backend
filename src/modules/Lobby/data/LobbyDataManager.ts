@@ -3,7 +3,15 @@ import { Lobby } from "./Lobby";
 import { v4 as uuidv4 } from "uuid";
 
 export class LobbyDataManager {
-    lobbies: Lobby[] = [];
+    private lobbies: Lobby[] = [];
+
+    getLobby(lobbyId: string): Lobby | NotFoundError {
+        const lobby = this.lobbies.find((lobby) => (lobby.id = lobbyId));
+        if (!lobby) {
+            return new NotFoundError();
+        }
+        return lobby;
+    }
 
     addLobby(lobby: Lobby): Lobby {
         if (lobby.id === undefined) {
