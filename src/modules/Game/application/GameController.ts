@@ -1,17 +1,12 @@
 import { GameService } from "../services/GameService";
 import { Provide, Controller, ListenerOptions } from "../../../core";
-import { MovePlayer } from "../../Player/application/interfaces/MovePlayer";
-import { PlayerService } from "../../Player/services/PlayerService";
-import { GameSocketManager } from "./GameSocketManager";
 import { GameKey } from "./interfaces/GameKey";
 
 export class GameController extends Controller<GameKey> {
     constructor(
-        @Provide(GameService) private readonly gameService: GameService,
-        @Provide(GameSocketManager)
-        socketManager: GameSocketManager
+        @Provide(GameService) private readonly gameService: GameService
     ) {
-        super({ topic: "game", socketManager });
+        super({ topic: "game" });
         this.on("subscribe", this.subscribeMe.bind(this));
     }
 

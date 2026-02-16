@@ -1,5 +1,4 @@
 import { Controller, ListenerOptions, Provide } from "../../../core";
-import { GameSocketManager } from "../../Game/application/GameSocketManager";
 import { GameKey } from "../../Game/application/interfaces/GameKey";
 import { MovePlayer } from "./interfaces/MovePlayer";
 import { PlayerService } from "../services/PlayerService";
