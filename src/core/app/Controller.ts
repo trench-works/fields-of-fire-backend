@@ -6,7 +6,7 @@ import { IGuard, RessourceAccessLevel } from "./Guard";
 import { AccessRefused } from "../errors";
 import { UserInfos } from "./interfaces/UserInfos";
 import { WebSocketManager } from "./WebSocketManager";
-import { Action } from "../types/Action";
+import { InputAction } from "../types/Action";
 
 type ControllerConfig<RessourceKeyObject extends Record<string, any>> = {
     topic: string;
@@ -54,7 +54,7 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
     public wsHandlers: Map<string, Handler<RessourceKeyObject>>;
 
     private config: ControllerConfig<RessourceKeyObject>;
-    private socketManager: WebSocketManager<RessourceKeyObject>;
+    protected socketManager: WebSocketManager<RessourceKeyObject>;
 
     constructor({
         topic,
@@ -92,7 +92,7 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
         try {
             let { actionId, key, payload, user } = JSON.parse(
                 message
-            ) as Action<RessourceKeyObject>;
+            ) as InputAction<RessourceKeyObject>;
             const handler = this.wsHandlers.get(actionId);
             if (handler) {
                 // key validation
@@ -101,7 +101,10 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
                     Object.assign(keyDto, payload);
                     const validationErrors = validateSync(keyDto);
                     if (validationErrors.length > 0) {
-                        this.socketManager.send(socket, validationErrors);
+                        this.socketManager.send(socket, {
+                            actionId: "error",
+                            payload: validationErrors,
+                        });
                     }
                     key = keyDto;
                 }
@@ -111,7 +114,10 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
                     Object.assign(dtoPayload, payload);
                     const validationErrors = validateSync(dtoPayload);
                     if (validationErrors.length > 0) {
-                        this.socketManager.send(socket, validationErrors);
+                        this.socketManager.send(socket, {
+                            actionId: "error",
+                            payload: validationErrors,
+                        });
                     }
                     payload = dtoPayload;
                 }
@@ -132,7 +138,10 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
                         .map((guard) => guard.validate(listenerOptions))
                         .sort((a, b) => b - a)[0];
                     if (highestAccessLevel < handler.accessLevel) {
-                        this.socketManager.send(socket, new AccessRefused());
+                        this.socketManager.send(socket, {
+                            actionId: "error",
+                            payload: new AccessRefused(),
+                        });
                         return;
                     }
                 }

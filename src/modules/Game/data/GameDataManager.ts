@@ -1,10 +1,31 @@
 import { Game } from "./Game";
 
 export class GameDataManager {
-    private readonly games: Game[] = [];
+    private readonly games: Game[] = [
+        {
+            id: "3630",
+            creatorId: "arthur",
+            players: [
+                {
+                    id: "arthurchar",
+                    userId: "arthur",
+                    characterClass: {},
+                    stats: {
+                        speed: 10,
+                        hp: 200,
+                    },
+                    position: {
+                        x: 2,
+                        y: 2,
+                    },
+                    modifier: [],
+                },
+            ],
+        },
+    ];
 
-    createGame() {
-        this.games.push({ id: "oui" });
+    createGame(game: Game) {
+        this.games.push(game);
     }
 
     getGamesList() {

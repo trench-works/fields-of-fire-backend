@@ -1,4 +1,6 @@
+import { AccessRefused, NotFoundError } from "../../../core";
 import { Provide } from "../../../core/decorators/Provide";
+import { Game } from "../data/Game";
 import { GameDataManager } from "../data/GameDataManager";
 
 export class GameService {
@@ -7,9 +9,17 @@ export class GameService {
         private readonly gameDataManager: GameDataManager
     ) {}
 
-    // asyncProvide(@Provide(LobbyService) lobbyService: LobbyService): void {
-    //     this.lobbyService = lobbyService;
-    //     console.log("oui");
-    //     lobbyService.getTest();
-    // }
+    subscribe(
+        userId: string,
+        gameId: string
+    ): NotFoundError | AccessRefused | Game {
+        const game = this.gameDataManager.getGame(gameId);
+        if (!game) {
+            return new NotFoundError();
+        }
+        if (game.players.some((player) => player.userId === userId)) {
+            return game;
+        }
+        return new AccessRefused();
+    }
 }

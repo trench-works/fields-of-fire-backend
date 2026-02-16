@@ -1,6 +1,6 @@
 import { WebSocket } from "ws";
 import { RessourceKey } from "./interfaces/RessourceKey";
-import { Action } from "../types/Action";
+import { InputAction, OutputAction } from "../types/Action";
 
 type RessourceClient<RessourceKeyObject extends Record<string, any>> = {
     socket: WebSocket;
@@ -30,16 +30,16 @@ export class WebSocketManager<
         this.clients.delete(userId);
     }
 
-    send(socket: WebSocket, payload: any) {
+    send(socket: WebSocket, action: OutputAction<RessourceKeyObject>) {
         try {
-            const message = JSON.stringify(payload);
+            const message = JSON.stringify(action);
             socket.send(message);
         } catch {
-            socket.send(payload);
+            console.error("CANT SEND PAYLOAD", action);
         }
     }
 
-    emit(action: Action<RessourceKeyObject>) {
+    emit(action: OutputAction<RessourceKeyObject>) {
         for (const client of this.clients.values()) {
             if (
                 !action.key ||
