@@ -15,7 +15,9 @@ export type MultipleClientsOutputAction<
     PayloadObject extends object = any
 > = {
     actionId: string;
-    key: RessourceKeyObject extends undefined ? undefined : RessourceKeyObject;
+    key: RessourceKeyObject extends undefined
+        ? undefined
+        : Partial<RessourceKeyObject>;
     payload: PayloadObject;
 };
 

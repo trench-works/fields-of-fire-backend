@@ -1,5 +1,5 @@
 import { AccessRefused, NotFoundError, Provide } from "../../../core";
-import { MovePlayer } from "../../Game/application/interfaces/MovePlayer";
+import { MovePlayer } from "../application/interfaces/MovePlayer";
 import { GameDataManager } from "../../Game/data/GameDataManager";
 
 export class PlayerService {
