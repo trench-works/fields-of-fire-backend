@@ -1,14 +1,19 @@
 import { WebSocket } from "ws";
 import { RessourceKey } from "./interfaces/RessourceKey";
-import { InputAction, OutputAction } from "../types/Action";
+import {
+    MultipleClientsOutputAction,
+    SingleClientOutputAction,
+} from "../types/Action";
 
-type RessourceClient<RessourceKeyObject extends Record<string, any>> = {
+type RessourceClient<
+    RessourceKeyObject extends Record<string, any> | undefined
+> = {
     socket: WebSocket;
     key: RessourceKeyObject;
 };
 
 export class WebSocketManager<
-    RessourceKeyObject extends Record<string, any> = {}
+    RessourceKeyObject extends Record<string, any> | undefined = undefined
 > {
     public clients: Map<string, RessourceClient<RessourceKeyObject>>;
 
@@ -30,7 +35,7 @@ export class WebSocketManager<
         this.clients.delete(userId);
     }
 
-    send(socket: WebSocket, action: OutputAction<RessourceKeyObject>) {
+    send(socket: WebSocket, action: SingleClientOutputAction) {
         try {
             const message = JSON.stringify(action);
             socket.send(message);
@@ -39,15 +44,9 @@ export class WebSocketManager<
         }
     }
 
-    emit(action: OutputAction<RessourceKeyObject>) {
+    emit(action: MultipleClientsOutputAction<RessourceKeyObject>) {
         for (const client of this.clients.values()) {
-            if (
-                !action.key ||
-                RessourceKey.compareKeys<RessourceKeyObject>(
-                    client.key,
-                    action.key
-                )
-            ) {
+            if (RessourceKey.compareKeys(client.key, action.key)) {
                 this.send(client.socket, action);
             }
         }

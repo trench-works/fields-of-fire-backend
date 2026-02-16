@@ -1,8 +1,8 @@
 export class RessourceKey {
-    static compareKeys<KeyType extends Record<string, any>>(
-        clientKey: KeyType,
-        actionKey: KeyType
-    ): boolean {
+    static compareKeys(clientKey: any, actionKey: any): boolean {
+        if (clientKey === undefined || actionKey === undefined) {
+            return false;
+        }
         return Object.keys(clientKey).every(
             (key: string) =>
                 actionKey[`${key}`] === undefined ||

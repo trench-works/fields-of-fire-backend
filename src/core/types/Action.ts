@@ -10,11 +10,16 @@ export type InputAction<
     user: UserInfos;
 };
 
-export type OutputAction<
-    RessourceKeyObject extends Record<string, any> = {},
+export type MultipleClientsOutputAction<
+    RessourceKeyObject extends Record<string, any> | undefined = undefined,
     PayloadObject extends object = any
 > = {
     actionId: string;
-    key?: RessourceKeyObject;
+    key: RessourceKeyObject extends undefined ? undefined : RessourceKeyObject;
+    payload: PayloadObject;
+};
+
+export type SingleClientOutputAction<PayloadObject extends object = any> = {
+    actionId: string;
     payload: PayloadObject;
 };
