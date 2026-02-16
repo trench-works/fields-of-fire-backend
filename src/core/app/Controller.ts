@@ -5,7 +5,8 @@ import { validateSync } from "class-validator";
 import { IGuard, RessourceAccessLevel } from "./Guard";
 import { AccessRefused } from "../errors";
 import { UserInfos } from "./interfaces/UserInfos";
-import { RessourceKey } from "./interfaces/RessourceKey";
+import { WebSocketManager } from "./WebSocketManager";
+import { Action } from "../types/Action";
 
 type ControllerConfig<RessourceKeyObject extends Record<string, any>> = {
     topic: string;
@@ -17,22 +18,13 @@ type ControllerOptions<RessourceKeyObject extends Record<string, any>> = {
     topic: string;
     key?: Instantiable<RessourceKeyObject>;
     guards?: IGuard[];
+    socketManager?: WebSocketManager<RessourceKeyObject>;
 };
 
 type Listener<
     RessourceKeyObject extends Record<string, any>,
     PayloadObject extends object = any
 > = (options: ListenerOptions<RessourceKeyObject, PayloadObject>) => any;
-
-type Action<
-    RessourceKeyObject extends Record<string, any> = {},
-    PayloadObject extends object = any
-> = {
-    actionId: string;
-    key?: RessourceKeyObject;
-    payload: PayloadObject;
-    user: UserInfos;
-};
 
 type Handler<
     RessourceKeyObject extends Record<string, any>,
@@ -58,19 +50,19 @@ type OnOptions<PayloadObject extends object = any> = {
     accessLevel?: RessourceAccessLevel;
 };
 
-type RessourceClient<RessourceKeyObject extends Record<string, any>> = {
-    socket: WebSocket;
-    key: RessourceKeyObject;
-};
-
 export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
-    public clients: Map<string, RessourceClient<RessourceKeyObject>>;
     public wsHandlers: Map<string, Handler<RessourceKeyObject>>;
 
     private config: ControllerConfig<RessourceKeyObject>;
+    private socketManager: WebSocketManager<RessourceKeyObject>;
 
-    constructor({ topic, key, guards }: ControllerOptions<RessourceKeyObject>) {
-        this.clients = new Map();
+    constructor({
+        topic,
+        key,
+        guards,
+        socketManager,
+    }: ControllerOptions<RessourceKeyObject>) {
+        this.socketManager = socketManager ?? new WebSocketManager();
         this.wsHandlers = new Map();
         this.config = {
             topic,
@@ -109,7 +101,7 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
                     Object.assign(keyDto, payload);
                     const validationErrors = validateSync(keyDto);
                     if (validationErrors.length > 0) {
-                        this.send(socket, validationErrors);
+                        this.socketManager.send(socket, validationErrors);
                     }
                     key = keyDto;
                 }
@@ -119,7 +111,7 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
                     Object.assign(dtoPayload, payload);
                     const validationErrors = validateSync(dtoPayload);
                     if (validationErrors.length > 0) {
-                        this.send(socket, validationErrors);
+                        this.socketManager.send(socket, validationErrors);
                     }
                     payload = dtoPayload;
                 }
@@ -140,14 +132,14 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
                         .map((guard) => guard.validate(listenerOptions))
                         .sort((a, b) => b - a)[0];
                     if (highestAccessLevel < handler.accessLevel) {
-                        this.send(socket, new AccessRefused());
+                        this.socketManager.send(socket, new AccessRefused());
                         return;
                     }
                 }
                 // if user with payload is authorized
                 const result = handler.listener(listenerOptions);
                 if (result) {
-                    this.send(socket, result);
+                    this.socketManager.send(socket, result);
                     return;
                 }
             }
@@ -169,30 +161,9 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
         socket.on("message", (data) =>
             this.handleMessage(socket, data.toString())
         );
-        //socket.onclose;
-        this.clients.set(user.id, { socket, key });
-    }
-
-    send(socket: WebSocket, payload: any) {
-        try {
-            const message = JSON.stringify(payload);
-            socket.send(message);
-        } catch {
-            socket.send(payload);
-        }
-    }
-
-    emit(action: Action<RessourceKeyObject>) {
-        for (const client of this.clients.values()) {
-            if (
-                !action.key ||
-                RessourceKey.compareKeys<RessourceKeyObject>(
-                    client.key,
-                    action.key
-                )
-            ) {
-                this.send(client.socket, action);
-            }
-        }
+        socket.on("close", (): void => {
+            this.socketManager.unset(user.id);
+        });
+        this.socketManager.clients.set(user.id, { socket, key });
     }
 }
