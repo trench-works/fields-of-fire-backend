@@ -24,8 +24,10 @@ export class TopicManager {
             .filter((errors): errors is ValidationError[] => Boolean(errors?.length))
             .flat();
         
-        if(validation.length) {
+        if(validation.length === this.controllers.length) {
             socket.close(1, JSON.stringify(validation));
+        } else {
+            socket.send(validation);
         }
 
     }
