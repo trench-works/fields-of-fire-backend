@@ -7,6 +7,7 @@ import { AccessRefused } from "../errors";
 import { UserInfos } from "./interfaces/UserInfos";
 import { WebSocketManager } from "./WebSocketManager";
 import { InputAction } from "../types/Action";
+import { RessourceKey } from "./interfaces/RessourceKey";
 
 type ControllerConfig<RessourceKeyObject extends Record<string, any>> = {
     topic: string;
@@ -88,26 +89,18 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
         return this;
     }
 
-    private handleMessage(socket: WebSocket, message: string): void {
+    private handleMessage(
+        socket: WebSocket,
+        key: RessourceKeyObject,
+        user: UserInfos,
+        message: string
+    ): void {
         try {
-            let { actionId, key, payload, user } = JSON.parse(
+            let { actionId, payload } = JSON.parse(
                 message
             ) as InputAction<RessourceKeyObject>;
             const handler = this.wsHandlers.get(actionId);
             if (handler) {
-                // key validation
-                if (key && Object.keys(key).length > 0 && this.config.key) {
-                    const keyDto = new this.config.key();
-                    Object.assign(keyDto, payload);
-                    const validationErrors = validateSync(keyDto);
-                    if (validationErrors.length > 0) {
-                        this.socketManager.send(socket, {
-                            actionId: "error",
-                            payload: validationErrors,
-                        });
-                    }
-                    key = keyDto;
-                }
                 // payload validation
                 if (handler.payloadType) {
                     const dtoPayload = new handler.payloadType();
@@ -161,16 +154,20 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
 
     subscribe(
         socket: WebSocket,
-        {
-            body: { user, key },
-        }: Request<{}, {}, { key: RessourceKeyObject; user: UserInfos }>
+        { user, key }: { key: RessourceKeyObject; user: UserInfos }
     ): void | ValidationError[] {
-        const keyValidation = validateSync(key);
-        if(keyValidation.length) {
-            return keyValidation;
+        console.log("TRYING TO CONNECT ONE CONTROLLER");
+        if (key && Object.keys(key).length > 0 && this.config.key) {
+            const keyDto = new this.config.key();
+            Object.assign(keyDto, key);
+            const validationErrors = validateSync(keyDto);
+            if (validationErrors.length > 0) {
+                return validationErrors;
+            }
+            key = keyDto;
         }
         socket.on("message", (data) =>
-            this.handleMessage(socket, data.toString())
+            this.handleMessage(socket, key, user, data.toString())
         );
         socket.on("close", (): void => {
             this.socketManager.unset(user.id);

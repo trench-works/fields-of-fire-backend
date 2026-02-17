@@ -11,6 +11,7 @@ export class GameController extends Controller<GameKey> {
     }
 
     subscribeMe({ key: { gameId }, user }: ListenerOptions<GameKey>) {
+        console.log("subscribe");
         return this.gameService.subscribe(user.id, gameId);
     }
 }

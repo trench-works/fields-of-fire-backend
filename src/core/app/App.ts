@@ -31,7 +31,7 @@ export class App {
         for (const topicManager of topicManagers) {
             this.socket.app.ws(
                 `/${topicManager.topic}`,
-                topicManager.subscribe.bind(topicManager)
+                topicManager.open.bind(topicManager)
             );
         }
     }
