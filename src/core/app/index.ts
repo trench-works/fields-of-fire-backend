@@ -4,3 +4,5 @@ export * from "./DataManager";
 export * from "./Guard";
 export * from "./Module";
 export * from "./Service";
+export * from "./TopicManager";
+export * from "./TopicResolver";

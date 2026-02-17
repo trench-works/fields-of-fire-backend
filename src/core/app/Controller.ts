@@ -1,7 +1,7 @@
 import { WebSocket } from "ws";
 import { Request } from "express";
 import { Instantiable } from "../types/Instantiable";
-import { validateSync } from "class-validator";
+import { validateSync, ValidationError } from "class-validator";
 import { IGuard, RessourceAccessLevel } from "./Guard";
 import { AccessRefused } from "../errors";
 import { UserInfos } from "./interfaces/UserInfos";
@@ -164,9 +164,11 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
         {
             body: { user, key },
         }: Request<{}, {}, { key: RessourceKeyObject; user: UserInfos }>
-    ): void {
-        validateSync(key);
-        validateSync(user);
+    ): void | ValidationError[] {
+        const keyValidation = validateSync(key);
+        if(keyValidation.length) {
+            return keyValidation;
+        }
         socket.on("message", (data) =>
             this.handleMessage(socket, data.toString())
         );

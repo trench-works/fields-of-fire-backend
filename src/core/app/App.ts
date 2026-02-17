@@ -5,6 +5,7 @@ import { Server } from "http";
 import { Controllable, Modullable, Providable } from "../types/Instantiable";
 import { DependencyResolver } from "./DependencyResolver";
 import { ModulesResolver } from "./ModulesResolver";
+import { TopicResolver } from "./TopicResolver";
 
 export type AppConfig = {
     port: number;
@@ -26,10 +27,11 @@ export class App {
         const controllers = new DependencyResolver(
             ModulesResolver.resolve(config)
         ).build();
-        for (const controller of controllers) {
+        const topicManagers = new TopicResolver(controllers).build();
+        for (const topicManager of topicManagers) {
             this.socket.app.ws(
-                `/${controller.topic}`,
-                controller.subscribe.bind(controller)
+                `/${topicManager.topic}`,
+                topicManager.subscribe.bind(topicManager)
             );
         }
     }
