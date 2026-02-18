@@ -13,7 +13,9 @@ type RessourceClient<
 };
 
 export class WebSocketManager<
-    RessourceKeyObject extends Record<string, any> | undefined = undefined
+    RessourceKeyObject extends Record<string, any> | undefined = undefined,
+    OutputActions = string,
+    ReturnActions = string
 > {
     public clients: Map<string, RessourceClient<RessourceKeyObject>>;
 
@@ -35,7 +37,13 @@ export class WebSocketManager<
         this.clients.delete(userId);
     }
 
-    send(socket: WebSocket, action: SingleClientOutputAction) {
+    send<PayloadObject extends object = any>(
+        socket: WebSocket,
+        action: SingleClientOutputAction<
+            PayloadObject,
+            OutputActions | ReturnActions
+        >
+    ) {
         try {
             const message = JSON.stringify(action);
             socket.send(message);
@@ -44,7 +52,9 @@ export class WebSocketManager<
         }
     }
 
-    emit(action: MultipleClientsOutputAction<RessourceKeyObject>) {
+    emit(
+        action: MultipleClientsOutputAction<RessourceKeyObject, OutputActions>
+    ) {
         for (const client of this.clients.values()) {
             if (RessourceKey.compareKeys(client.key, action.key)) {
                 this.send(client.socket, action);

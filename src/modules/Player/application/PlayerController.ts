@@ -4,12 +4,26 @@ import { MovePlayer } from "./interfaces/MovePlayer";
 import { PlayerService } from "../services/PlayerService";
 import { PlayerKey } from "./interfaces/PlayerKey";
 
-export class PlayerController extends Controller<PlayerKey> {
+enum InputActions {
+    MOVE = "move",
+}
+
+enum OutputActions {
+    MOVE = "move",
+}
+
+export class PlayerController extends Controller<
+    PlayerKey,
+    InputActions,
+    OutputActions
+> {
     constructor(
         @Provide(PlayerService) private readonly playerService: PlayerService
     ) {
         super({ topic: "game" });
-        this.on("move", this.move.bind(this), { payloadType: MovePlayer });
+        this.on(InputActions.MOVE, this.move.bind(this), {
+            payloadType: MovePlayer,
+        });
     }
 
     move({
@@ -19,10 +33,10 @@ export class PlayerController extends Controller<PlayerKey> {
     }: ListenerOptions<GameKey, MovePlayer>) {
         const moved = this.playerService.move(user.id, gameId, payload);
         if (moved instanceof Error) {
-            return moved;
+            return { actionId: "error", payload: moved };
         }
-        this.socketManager.emit({
-            actionId: "move",
+        this.emit({
+            actionId: OutputActions.MOVE,
             key: { gameId },
             payload: moved,
         });

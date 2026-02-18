@@ -10,6 +10,7 @@ import {
     MultipleClientsOutputAction,
     SingleClientOutputAction,
 } from "../types/Action";
+import { ActionsEnums } from "../types/ActionsEnums";
 
 type ControllerConfig<RessourceKeyObject extends Record<string, any>> = {
     topic: string;
@@ -17,23 +18,35 @@ type ControllerConfig<RessourceKeyObject extends Record<string, any>> = {
     guards?: IGuard[];
 };
 
-type ControllerOptions<RessourceKeyObject extends Record<string, any>> = {
+type ControllerOptions<
+    RessourceKeyObject extends Record<string, any>,
+    OutputActions,
+    ReturnActions
+> = {
     topic: string;
     key?: Instantiable<RessourceKeyObject>;
     guards?: IGuard[];
-    socketManager?: WebSocketManager<RessourceKeyObject>;
+    socketManager?: WebSocketManager<
+        RessourceKeyObject,
+        OutputActions,
+        ReturnActions
+    >;
 };
 
 type Listener<
     RessourceKeyObject extends Record<string, any>,
-    PayloadObject extends object = any
-> = (options: ListenerOptions<RessourceKeyObject, PayloadObject>) => any;
+    PayloadObject extends object = any,
+    ReturnActions = string
+> = (
+    options: ListenerOptions<RessourceKeyObject, PayloadObject>
+) => SingleClientOutputAction<PayloadObject, ReturnActions> | void;
 
 type Handler<
     RessourceKeyObject extends Record<string, any>,
-    PayloadObject extends object = any
+    PayloadObject extends object = any,
+    ReturnActions = string
 > = {
-    listener: Listener<RessourceKeyObject, PayloadObject>;
+    listener: Listener<RessourceKeyObject, PayloadObject, ReturnActions>;
     payloadType?: Instantiable<PayloadObject>;
     accessLevel?: RessourceAccessLevel;
 };
@@ -53,19 +66,37 @@ type OnOptions<PayloadObject extends object = any> = {
     accessLevel?: RessourceAccessLevel;
 };
 
-export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
-    public wsHandlers: Map<string, Handler<RessourceKeyObject>>;
+export class Controller<
+    RessourceKeyObject extends Record<string, any> = {},
+    InputActions = string,
+    OutputActions = string,
+    ReturnActions = string
+> {
+    public wsHandlers: Map<
+        string,
+        Handler<RessourceKeyObject, any, ReturnActions>
+    >;
 
     private config: ControllerConfig<RessourceKeyObject>;
-    protected socketManager: WebSocketManager<RessourceKeyObject>;
+    private socketManager: WebSocketManager<
+        RessourceKeyObject,
+        OutputActions,
+        ReturnActions
+    >;
 
     constructor({
         topic,
         key,
         guards,
         socketManager,
-    }: ControllerOptions<RessourceKeyObject>) {
-        this.socketManager = socketManager ?? new WebSocketManager();
+    }: ControllerOptions<RessourceKeyObject, OutputActions, ReturnActions>) {
+        this.socketManager =
+            socketManager ??
+            new WebSocketManager<
+                RessourceKeyObject,
+                OutputActions,
+                ReturnActions
+            >();
         this.wsHandlers = new Map();
         this.config = {
             topic,
@@ -80,21 +111,23 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
 
     send<PayloadObject extends object = any>(
         socket: WebSocket,
-        action: SingleClientOutputAction<PayloadObject>
+        action: SingleClientOutputAction<PayloadObject, OutputActions>
     ) {
         this.socketManager.send(socket, action);
     }
 
-    emit(action: MultipleClientsOutputAction<RessourceKeyObject>) {
+    emit(
+        action: MultipleClientsOutputAction<RessourceKeyObject, OutputActions>
+    ) {
         this.socketManager.emit(action);
     }
 
     on(
-        action: string,
-        listener: Listener<RessourceKeyObject>,
+        action: InputActions,
+        listener: Listener<RessourceKeyObject, any, ReturnActions>,
         options?: OnOptions
     ): this {
-        this.wsHandlers.set(action, {
+        this.wsHandlers.set(action as string, {
             listener,
             payloadType: options?.payloadType,
             accessLevel: options?.accessLevel,
@@ -154,7 +187,10 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
                 // if user with payload is authorized
                 const result = handler.listener(listenerOptions);
                 if (result) {
-                    this.socketManager.send(socket, result);
+                    this.socketManager.send(
+                        socket,
+                        result as SingleClientOutputAction<any, ReturnActions>
+                    );
                     return;
                 }
             }
