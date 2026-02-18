@@ -8,7 +8,7 @@ export class PlayerController extends Controller<PlayerKey> {
     constructor(
         @Provide(PlayerService) private readonly playerService: PlayerService
     ) {
-        super({ topic: "player" });
+        super({ topic: "game" });
         this.on("move", this.move.bind(this), { payloadType: MovePlayer });
     }
 
