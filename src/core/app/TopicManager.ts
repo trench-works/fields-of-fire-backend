@@ -13,24 +13,28 @@ export class TopicManager {
     ) {}
 
     open(socket: WebSocket) {
-        socket.on(
-            "message",
-            ({ actionId, payload }: InputAction<SubcribePayload>) =>
-                actionId === "subscribe" && this.subscribe(socket, payload)
-        );
+        socket.on("message", (rawData: string) => {
+            const { actionId, payload }: InputAction<SubcribePayload> =
+                JSON.parse(rawData);
+            if (actionId === "subscribe") {
+                this.subscribe(socket, payload);
+            }
+        });
     }
 
-    subscribe(socket: WebSocket, { key, user }: { key: any; user: UserInfos }) {
-        console.log("trying to connect", JSON.stringify(key));
+    subscribe(socket: WebSocket, payload: SubcribePayload) {
+        const user = new UserInfos();
+        Object.assign(user, payload.user);
         const validateUser = validateSync(user);
-        console.log("user data validated", JSON.stringify(validateUser));
         //TODO: verify as well that user is authenticated and authorized
         if (validateUser?.length) {
             socket.close(0, JSON.stringify(validateUser));
         }
 
         const validation = this.controllers
-            .map((controller) => controller.subscribe(socket, { key, user }))
+            .map((controller) =>
+                controller.subscribe(socket, { key: payload.key, user })
+            )
             .filter((errors): errors is ValidationError[] =>
                 Boolean(errors?.length)
             )

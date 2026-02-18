@@ -7,11 +7,20 @@ export class GameController extends Controller<GameKey> {
         @Provide(GameService) private readonly gameService: GameService
     ) {
         super({ topic: "game" });
-        this.on("subscribe", this.subscribeMe.bind(this));
+        this.on("join", this.joinMe.bind(this));
     }
 
-    subscribeMe({ key: { gameId }, user }: ListenerOptions<GameKey>) {
-        console.log("subscribe");
-        return this.gameService.subscribe(user.id, gameId);
+    joinMe({ payload, user }: ListenerOptions<GameKey>) {
+        const subscribed = this.gameService.subscribe(user.id, payload.gameId);
+        if (subscribed instanceof Error) {
+            return subscribed;
+        }
+        const { game, player } = subscribed;
+        this.emit({
+            actionId: "joined",
+            key: { gameId: game.id },
+            payload: { playerId: player.id },
+        });
+        return { actionId: "join", payload: subscribed };
     }
 }

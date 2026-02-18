@@ -4,11 +4,11 @@ export class GameDataManager {
     private readonly games: Game[] = [
         {
             id: "3630",
-            creatorId: "arthur",
+            creatorId: "dev",
             players: [
                 {
                     id: "arthurchar",
-                    userId: "arthur",
+                    userId: "dev",
                     characterClass: {},
                     stats: {
                         speed: 10,

@@ -1,13 +1,15 @@
 import { WebSocket } from "ws";
-import { Request } from "express";
 import { Instantiable } from "../types/Instantiable";
 import { validateSync, ValidationError } from "class-validator";
 import { IGuard, RessourceAccessLevel } from "./Guard";
 import { AccessRefused } from "../errors";
 import { UserInfos } from "./interfaces/UserInfos";
 import { WebSocketManager } from "./WebSocketManager";
-import { InputAction } from "../types/Action";
-import { RessourceKey } from "./interfaces/RessourceKey";
+import {
+    InputAction,
+    MultipleClientsOutputAction,
+    SingleClientOutputAction,
+} from "../types/Action";
 
 type ControllerConfig<RessourceKeyObject extends Record<string, any>> = {
     topic: string;
@@ -74,6 +76,17 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
 
     get topic(): string {
         return this.config.topic;
+    }
+
+    send<PayloadObject extends object = any>(
+        socket: WebSocket,
+        action: SingleClientOutputAction<PayloadObject>
+    ) {
+        this.socketManager.send(socket, action);
+    }
+
+    emit(action: MultipleClientsOutputAction<RessourceKeyObject>) {
+        this.socketManager.emit(action);
     }
 
     on(
@@ -156,7 +169,6 @@ export class Controller<RessourceKeyObject extends Record<string, any> = {}> {
         socket: WebSocket,
         { user, key }: { key: RessourceKeyObject; user: UserInfos }
     ): void | ValidationError[] {
-        console.log("TRYING TO CONNECT ONE CONTROLLER");
         if (key && Object.keys(key).length > 0 && this.config.key) {
             const keyDto = new this.config.key();
             Object.assign(keyDto, key);
