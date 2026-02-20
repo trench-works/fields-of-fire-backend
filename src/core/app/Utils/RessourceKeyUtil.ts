@@ -1,4 +1,4 @@
-export class RessourceKey {
+export class RessourceKeyUtil {
     static compareKeys(clientKey: any, actionKey: any): boolean {
         if (clientKey === undefined || actionKey === undefined) {
             return false;

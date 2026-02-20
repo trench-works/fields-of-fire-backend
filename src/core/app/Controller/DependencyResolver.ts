@@ -1,21 +1,19 @@
-import { Controllable, Instantiable, Providable } from "../types/Instantiable";
 import "reflect-metadata";
-import { Provider } from "../types/Provider";
-import { Controller } from "./Controller";
-import { AsyncProvided } from "../types/AsyncProvided";
+import { Controllable, Instantiable } from "../Types/Instantiable";
+import { Controller } from "..";
 
 type DependencyResolverOptions = {
     controllers: Controllable[];
-    providers: Providable[];
+    providers: Instantiable[];
 };
 
 export class DependencyResolver {
-    private readonly providerClassesMap = new Map<string, Providable>();
+    private readonly providerClassesMap = new Map<string, any>();
     private readonly providersDependenciesMap = new Map<string, string[]>();
 
     private readonly controllerClasses;
 
-    private readonly resolvedProviders = new Map<string, Provider>();
+    private readonly resolvedProviders = new Map<string, any>();
 
     constructor({ controllers, providers }: DependencyResolverOptions) {
         console.log("Building dependencies tree...");
@@ -31,11 +29,11 @@ export class DependencyResolver {
         console.log("Dependencies tree ready for compiling !");
     }
 
-    private instantiate<ToInstantiate = Provider | Controller>(
+    private instantiate<ToInstantiate = any | Controller>(
         instantiator: Instantiable<ToInstantiate>,
         dependenciesNames: string[]
     ): ToInstantiate {
-        const dependencies: Provider[] = [];
+        const dependencies: any[] = [];
         for (const dependencyName of dependenciesNames) {
             const dep = this.resolvedProviders.get(dependencyName);
             dep && dependencies.push(dep);

@@ -1,4 +1,4 @@
-import { ListenerOptions } from ".";
+import { ListenerOptions } from "..";
 
 export enum RessourceAccessLevel {
     DELETE = 4,

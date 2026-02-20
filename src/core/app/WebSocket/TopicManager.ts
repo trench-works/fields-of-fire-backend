@@ -1,8 +1,8 @@
-import { Controller } from ".";
+import { Controller } from "..";
 import { WebSocket } from "ws";
-import { UserInfos } from "./interfaces/UserInfos";
+import { UserInfos } from "../Types/UserInfos";
 import { validateSync, ValidationError } from "class-validator";
-import { InputAction } from "../types/Action";
+import { InputAction } from "../../types/Action";
 
 type SubcribePayload = { key: any; user: UserInfos };
 

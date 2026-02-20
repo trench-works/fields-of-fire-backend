@@ -1,9 +1,9 @@
 import { WebSocket } from "ws";
-import { RessourceKey } from "./interfaces/RessourceKey";
+import { RessourceKeyUtil } from "../Utils/RessourceKeyUtil";
 import {
     MultipleClientsOutputAction,
     SingleClientOutputAction,
-} from "../types/Action";
+} from "../../types/Action";
 
 type RessourceClient<
     RessourceKeyObject extends Record<string, any> | undefined
@@ -56,7 +56,7 @@ export class WebSocketManager<
         action: MultipleClientsOutputAction<RessourceKeyObject, OutputActions>
     ) {
         for (const client of this.clients.values()) {
-            if (RessourceKey.compareKeys(client.key, action.key)) {
+            if (RessourceKeyUtil.compareKeys(client.key, action.key)) {
                 this.send(client.socket, action);
             }
         }

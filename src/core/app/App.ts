@@ -2,15 +2,15 @@ import express from "express";
 import { Express } from "express";
 import expressWs from "express-ws";
 import { Server } from "http";
-import { Controllable, Modullable, Providable } from "../types/Instantiable";
-import { DependencyResolver } from "./DependencyResolver";
-import { ModulesResolver } from "./ModulesResolver";
-import { TopicResolver } from "./TopicResolver";
+import { Controllable, Instantiable, Modullable } from "./Types/Instantiable";
+import { ModulesResolver } from "./Module/ModulesResolver";
+import { TopicResolver } from "./WebSocket/TopicResolver";
+import { DependencyResolver } from "./Controller/DependencyResolver";
 
-export type AppConfig = {
+type AppConfig = {
     port: number;
     controllers?: Controllable[];
-    providers?: Providable[];
+    providers?: Instantiable[];
     modules?: Modullable[];
 };
 

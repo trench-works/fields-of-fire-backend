@@ -1,13 +1,8 @@
-import { Controller } from "../app/Controller";
-import { Module } from "../app/Module";
-import { Provider } from "./Provider";
+import { Controller } from "../Controller/Controller";
+import { Module } from "../Module/Module";
 
 export interface Instantiable<T = any> extends Function {
     new (...args: any[]): T;
-}
-
-export interface Providable extends Function {
-    new (...providers: any[]): Provider;
 }
 
 export interface Controllable extends Function {

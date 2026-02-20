@@ -1,11 +1,7 @@
-import { Provider } from "./Provider";
-
 export interface AsyncProvided {
-    asyncProvide(...providers: Provider[]): void;
+    asyncProvide(...providers: any[]): void;
 }
 
-export const isAsyncProvided = (
-    provider: Provider
-): provider is AsyncProvided => {
+export const isAsyncProvided = (provider: any): provider is AsyncProvided => {
     return "asyncProvide" in provider;
 };

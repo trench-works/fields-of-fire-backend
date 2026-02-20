@@ -1,16 +1,15 @@
 import { WebSocket } from "ws";
-import { Instantiable } from "../types/Instantiable";
+import { Instantiable } from "../Types/Instantiable";
 import { validateSync, ValidationError } from "class-validator";
-import { IGuard, RessourceAccessLevel } from "./Guard";
-import { AccessRefused } from "../errors";
-import { UserInfos } from "./interfaces/UserInfos";
-import { WebSocketManager } from "./WebSocketManager";
+import { IGuard, RessourceAccessLevel } from "../Providers/Guard";
+import { AccessRefused } from "../../errors";
+import { UserInfos } from "../Types/UserInfos";
+import { WebSocketManager } from "../WebSocket/WebSocketManager";
 import {
     InputAction,
     MultipleClientsOutputAction,
     SingleClientOutputAction,
-} from "../types/Action";
-import { ActionsEnums } from "../types/ActionsEnums";
+} from "../../types/Action";
 
 type ControllerConfig<RessourceKeyObject extends Record<string, any>> = {
     topic: string;

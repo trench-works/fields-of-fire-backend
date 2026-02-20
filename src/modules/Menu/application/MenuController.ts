@@ -1,4 +1,7 @@
-import { Controller, ListenerOptions } from "../../../core/app/Controller";
+import {
+    Controller,
+    ListenerOptions,
+} from "../../../core/app/Controller/Controller";
 import { Provide } from "../../../core/decorators/Provide";
 import { LobbyService } from "../../Lobby/services/LobbyService";
 import { CreateLobbyInterface } from "./interfaces/CreateLobbyInterface";

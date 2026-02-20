@@ -1,7 +1,7 @@
-import { Providable } from "../types/Instantiable";
 import "reflect-metadata";
+import { Instantiable } from "../app/Types/Instantiable";
 
-export const Provide = (providable: Providable): ParameterDecorator => {
+export const Provide = (providable: Instantiable): ParameterDecorator => {
     return (
         target: Object,
         propertyKey: string | symbol | undefined,

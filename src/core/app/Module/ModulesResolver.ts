@@ -1,14 +1,14 @@
-import { Controllable, Modullable, Providable } from "../types/Instantiable";
+import { Controllable, Instantiable, Modullable } from "../Types/Instantiable";
 
 type ModulesResolverProps = {
     modules?: Modullable[];
     controllers?: Controllable[];
-    providers?: Providable[];
+    providers?: Instantiable[];
 };
 
 type ResolvedModules = {
     controllers: Controllable[];
-    providers: Providable[];
+    providers: Instantiable[];
 };
 
 export class ModulesResolver {
@@ -18,7 +18,7 @@ export class ModulesResolver {
         providers,
     }: ModulesResolverProps): ResolvedModules {
         const compiledControllers: Controllable[] = controllers ?? [];
-        const compiledProviders: Providable[] = providers ?? [];
+        const compiledProviders: Instantiable[] = providers ?? [];
         if (modules) {
             for (const modullable of modules) {
                 const { controllers, providers } = new modullable().config;
