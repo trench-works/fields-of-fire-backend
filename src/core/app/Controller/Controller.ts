@@ -2,7 +2,7 @@ import { WebSocket } from "ws";
 import { Instantiable } from "../Types/Instantiable";
 import { validateSync, ValidationError } from "class-validator";
 import { IGuard, RessourceAccessLevel } from "../Providers/Guard";
-import { AccessRefused } from "../../errors";
+import { AccessRefused, SocketError } from "../../errors";
 import { UserInfos } from "../Types/UserInfos";
 import { WebSocketManager } from "../WebSocket/WebSocketManager";
 import {
@@ -186,10 +186,7 @@ export class Controller<
                 // if user with payload is authorized
                 const result = handler.listener(listenerOptions);
                 if (result) {
-                    this.socketManager.send(
-                        socket,
-                        result as SingleClientOutputAction<any, ReturnActions>
-                    );
+                    this.socketManager.send(socket, result);
                     return;
                 }
             }

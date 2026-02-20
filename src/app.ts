@@ -1,4 +1,4 @@
-import { App } from "./core/app/App";
+import { App } from "./core";
 import { MenuModule } from "./modules/Menu/MenuModule";
 import { LobbyModule } from "./modules/Lobby/LobbyModule";
 import { GameModule } from "./modules/Game/GameModule";

@@ -1,7 +1,12 @@
 import { GameService } from "../services/GameService";
-import { Provide, Controller, ListenerOptions } from "../../../core";
+import {
+    Provide,
+    Controller,
+    ListenerOptions,
+    SocketError,
+    SingleClientOutputAction,
+} from "../../../core";
 import { GameKey } from "./interfaces/GameKey";
-import { SingleClientOutputAction } from "../../../core/types/Action";
 
 enum InputActions {
     JOIN = "join",
@@ -32,7 +37,7 @@ export class GameController extends Controller<
         user,
     }: ListenerOptions<GameKey>): SingleClientOutputAction<any, ReturnActions> {
         const subscribed = this.gameService.subscribe(user.id, payload.gameId);
-        if (subscribed instanceof Error) {
+        if (subscribed instanceof SocketError) {
             return { actionId: "error", payload: subscribed };
         }
         const { game, player } = subscribed;

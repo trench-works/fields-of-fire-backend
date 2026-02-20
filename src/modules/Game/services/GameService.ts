@@ -1,5 +1,4 @@
-import { AccessRefused, NotFoundError } from "../../../core";
-import { Provide } from "../../../core/decorators/Provide";
+import { AccessRefused, NotFoundError, Provide } from "../../../core";
 import { Player } from "../../Player/data/Player";
 import { Game } from "../data/Game";
 import { GameDataManager } from "../data/GameDataManager";

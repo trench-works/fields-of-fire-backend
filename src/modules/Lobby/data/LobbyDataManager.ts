@@ -1,4 +1,4 @@
-import { NotFoundError } from "../../../core/errors/NotFound";
+import { NotFoundError } from "../../../core";
 import { Lobby } from "./Lobby";
 import { v4 as uuidv4 } from "uuid";
 
