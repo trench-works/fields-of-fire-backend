@@ -1,21 +1,56 @@
 import "reflect-metadata";
 import { Controllable, Instantiable } from "../Types/Instantiable";
 import { Controller } from "..";
+import { Configurable } from "../Types/Configurable";
+import {
+    ConfigService,
+    DefaultConfig,
+} from "../Providers/Defaults/ConfigService";
+import { EnvObject } from "../Types/Env";
 
-type DependencyResolverOptions = {
+function isConfigurable<Config extends EnvObject = DefaultConfig, T = any>(
+    prop: Configurable<Config, T> | Instantiable<T>
+): prop is Configurable<Config, T> {
+    return prop instanceof Function;
+}
+
+function isInstantiable<Config extends EnvObject = DefaultConfig, T = any>(
+    obj: Configurable<Config, T> | Instantiable<T>
+): obj is Instantiable<T> {
+    const isCtorClass =
+        obj.constructor &&
+        obj.constructor.toString().substring(0, 5) === "class";
+    if (obj.prototype === undefined) {
+        return isCtorClass;
+    }
+    const isPrototypeCtorClass =
+        obj.prototype.constructor &&
+        obj.prototype.constructor.toString &&
+        obj.prototype.constructor.toString().substring(0, 5) === "class";
+    return isCtorClass || isPrototypeCtorClass;
+}
+
+type DependencyResolverOptions<Config extends EnvObject> = {
     controllers: Controllable[];
-    providers: Instantiable[];
+    providers: (Instantiable | Configurable<Config>)[];
 };
 
-export class DependencyResolver {
-    private readonly providerClassesMap = new Map<string, any>();
+export class DependencyResolver<Config extends EnvObject> {
+    private readonly providerClassesMap = new Map<
+        string,
+        Instantiable | Configurable<Config>
+    >();
     private readonly providersDependenciesMap = new Map<string, string[]>();
 
-    private readonly controllerClasses;
+    private readonly controllerClasses: Controllable[];
 
     private readonly resolvedProviders = new Map<string, any>();
 
-    constructor({ controllers, providers }: DependencyResolverOptions) {
+    constructor(
+        { controllers, providers }: DependencyResolverOptions<Config>,
+        private readonly configService: ConfigService<Config>
+    ) {
+        this.resolvedProviders.set("ConfigService", this.configService);
         console.log("Building dependencies tree...");
         this.controllerClasses = controllers;
         for (const providerClass of providers) {
@@ -30,7 +65,9 @@ export class DependencyResolver {
     }
 
     private instantiate<ToInstantiate = any | Controller>(
-        instantiator: Instantiable<ToInstantiate>,
+        instantiator:
+            | Instantiable<ToInstantiate>
+            | Configurable<Config, ToInstantiate>,
         dependenciesNames: string[]
     ): ToInstantiate {
         const dependencies: any[] = [];
@@ -38,9 +75,11 @@ export class DependencyResolver {
             const dep = this.resolvedProviders.get(dependencyName);
             dep && dependencies.push(dep);
         }
-        const provider = new instantiator(...dependencies);
-        //console.log(provider);
-        return provider;
+        if (isInstantiable(instantiator)) {
+            return new instantiator(...dependencies);
+        } else {
+            return instantiator(this.configService);
+        }
     }
 
     // private resolveAsyncDependencies(provider: Provider & AsyncProvided): void {

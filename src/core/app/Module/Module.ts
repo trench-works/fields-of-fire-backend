@@ -1,10 +1,13 @@
+import { DefaultConfig } from "../Providers/Defaults/ConfigService";
+import { Configurable } from "../Types/Configurable";
+import { EnvObject } from "../Types/Env";
 import { Controllable, Instantiable } from "../Types/Instantiable";
 
-type ModuleConfig = {
+type ModuleConfig<Config extends EnvObject> = {
     controllers?: Controllable[];
-    providers?: Instantiable[];
+    providers?: (Instantiable | Configurable<Config>)[];
 };
 
-export class Module {
-    constructor(public readonly config: ModuleConfig) {}
+export class Module<Config extends EnvObject = DefaultConfig> {
+    constructor(public readonly config: ModuleConfig<Config>) {}
 }

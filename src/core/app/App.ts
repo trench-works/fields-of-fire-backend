@@ -6,26 +6,38 @@ import { Controllable, Instantiable, Modullable } from "./Types/Instantiable";
 import { ModulesResolver } from "./Module/ModulesResolver";
 import { TopicResolver } from "./WebSocket/TopicResolver";
 import { DependencyResolver } from "./Controller/DependencyResolver";
+import {
+    ConfigService,
+    DefaultConfig,
+} from "./Providers/Defaults/ConfigService";
+import { Configurable, ConfigurableProp } from "./Types/Configurable";
+import { EnvObject } from "./Types/Env";
+import { getConfigurablePropValue } from "./Utils/Configurable";
 
-type AppConfig = {
-    port: number;
+type AppProps<Config extends EnvObject> = {
+    port: ConfigurableProp<Config, number>;
     controllers?: Controllable[];
-    providers?: Instantiable[];
-    modules?: Modullable[];
+    providers?: (Instantiable | Configurable<Config>)[];
+    modules?: Modullable<Config>[];
+    config?: Config;
 };
 
-export class App {
+export class App<Config extends EnvObject = DefaultConfig> {
     public app: Express;
     public server: Server | undefined;
     public socket: expressWs.Instance;
 
-    constructor(private readonly config: AppConfig) {
+    private configService: ConfigService<Config>;
+
+    constructor(private readonly appProps: AppProps<Config>) {
+        this.configService = new ConfigService<Config>(appProps.config);
         this.server = undefined;
         this.app = express();
         this.socket = expressWs(this.app);
         //apply controllers
-        const controllers = new DependencyResolver(
-            ModulesResolver.resolve(config)
+        const controllers = new DependencyResolver<Config>(
+            ModulesResolver.resolve(appProps),
+            this.configService
         ).build();
         const topicManagers = new TopicResolver(controllers).build();
         for (const topicManager of topicManagers) {
@@ -37,9 +49,13 @@ export class App {
     }
 
     start(): Server {
-        this.server = this.app.listen(this.config.port, () => {
+        const port = getConfigurablePropValue(
+            this.appProps.port,
+            this.configService
+        );
+        this.server = this.app.listen(port, () => {
             return console.log(
-                `SocketAPI is ready to talk on http://localhost:${this.config.port}`
+                `SocketAPI is ready to talk on http://localhost:${port}`
             );
         });
         return this.server;
