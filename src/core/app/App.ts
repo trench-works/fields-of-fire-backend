@@ -13,9 +13,15 @@ import {
 import { Configurable, ConfigurableProp } from "./Types/Configurable";
 import { EnvObject } from "./Types/Env";
 import { getConfigurablePropValue } from "./Utils/Configurable";
+import {
+    Logger,
+    LoggerService,
+    LogLevel,
+} from "./Providers/Defaults/LoggerService";
 
 type AppProps<Config extends EnvObject> = {
     port: ConfigurableProp<Config, number>;
+    logLevel?: ConfigurableProp<Config, LogLevel>;
     controllers?: Controllable[];
     providers?: (Instantiable | Configurable<Config>)[];
     modules?: Modullable<Config>[];
@@ -27,17 +33,23 @@ export class App<Config extends EnvObject = DefaultConfig> {
     public server: Server | undefined;
     public socket: expressWs.Instance;
 
-    private configService: ConfigService<Config>;
+    private readonly configService: ConfigService<Config>;
+    private readonly loggerService: Logger;
 
     constructor(private readonly appProps: AppProps<Config>) {
         this.configService = new ConfigService<Config>(appProps.config);
+        this.loggerService = new LoggerService(
+            getConfigurablePropValue(appProps.logLevel, this.configService)
+        );
         this.server = undefined;
         this.app = express();
         this.socket = expressWs(this.app);
         //apply controllers
         const controllers = new DependencyResolver<Config>(
             ModulesResolver.resolve(appProps),
-            this.configService
+            { logLevel: appProps.logLevel },
+            this.configService,
+            this.loggerService
         ).build();
         const topicManagers = new TopicResolver(controllers).build();
         for (const topicManager of topicManagers) {
@@ -54,8 +66,8 @@ export class App<Config extends EnvObject = DefaultConfig> {
             this.configService
         );
         this.server = this.app.listen(port, () => {
-            return console.log(
-                `SocketAPI is ready to talk on http://localhost:${port}`
+            return this.loggerService.log(
+                `SocketAPI is ready to talk on port ${port}`
             );
         });
         return this.server;

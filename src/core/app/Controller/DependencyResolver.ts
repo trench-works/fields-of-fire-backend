@@ -1,18 +1,18 @@
 import "reflect-metadata";
 import { Controllable, Instantiable } from "../Types/Instantiable";
 import { Controller } from "..";
-import { Configurable } from "../Types/Configurable";
+import { Configurable, ConfigurableProp } from "../Types/Configurable";
 import {
     ConfigService,
     DefaultConfig,
 } from "../Providers/Defaults/ConfigService";
 import { EnvObject } from "../Types/Env";
-
-function isConfigurable<Config extends EnvObject = DefaultConfig, T = any>(
-    prop: Configurable<Config, T> | Instantiable<T>
-): prop is Configurable<Config, T> {
-    return prop instanceof Function;
-}
+import {
+    Logger,
+    LoggerService,
+    LogLevel,
+} from "../Providers/Defaults/LoggerService";
+import { getConfigurablePropValue } from "../Utils/Configurable";
 
 function isInstantiable<Config extends EnvObject = DefaultConfig, T = any>(
     obj: Configurable<Config, T> | Instantiable<T>
@@ -35,6 +35,10 @@ type DependencyResolverOptions<Config extends EnvObject> = {
     providers: (Instantiable | Configurable<Config>)[];
 };
 
+type DependencyResolverConfig<Config extends EnvObject> = {
+    logLevel?: ConfigurableProp<Config, LogLevel>;
+};
+
 export class DependencyResolver<Config extends EnvObject> {
     private readonly providerClassesMap = new Map<
         string,
@@ -48,10 +52,16 @@ export class DependencyResolver<Config extends EnvObject> {
 
     constructor(
         { controllers, providers }: DependencyResolverOptions<Config>,
-        private readonly configService: ConfigService<Config>
+        config: DependencyResolverConfig<Config>,
+        private readonly configService: ConfigService<Config>,
+        private readonly logger: Logger
     ) {
         this.resolvedProviders.set("ConfigService", this.configService);
-        console.log("Building dependencies tree...");
+        this.logger = new LoggerService(
+            getConfigurablePropValue(config.logLevel, this.configService)
+        );
+        this.resolvedProviders.set("Logger", this.logger);
+        this.logger.log("Building dependencies tree...");
         this.controllerClasses = controllers;
         for (const providerClass of providers) {
             this.providerClassesMap.set(providerClass.name, providerClass);
@@ -61,7 +71,7 @@ export class DependencyResolver<Config extends EnvObject> {
             }
             this.providersDependenciesMap.set(providerClass.name, dependencies);
         }
-        console.log("Dependencies tree ready for compiling !");
+        this.logger.log("Dependencies tree ready for compiling !");
     }
 
     private instantiate<ToInstantiate = any | Controller>(
@@ -107,7 +117,7 @@ export class DependencyResolver<Config extends EnvObject> {
     // }
 
     build(): Controller[] {
-        console.log("Dependency tree compiling...");
+        this.logger.log("Dependency tree compiling...");
         // Providers Synchrone Resolving
         while (this.providersDependenciesMap.size > 0) {
             const providersSize = this.providersDependenciesMap.size;
@@ -169,7 +179,7 @@ export class DependencyResolver<Config extends EnvObject> {
                         )
                 )
         );
-        console.log("Dependencies are fully resolved and ready to go !");
+        this.logger.log("Dependencies are fully resolved and ready to go !");
         return resolvedControllers;
     }
 }
