@@ -7,6 +7,7 @@ import { ConfigMap } from "./config/ConfigMap";
 
 const server = new App({
     modules: [MenuModule, LobbyModule, GameModule, PlayerModule],
+    appName: (configService) => configService.getConfig().app.name,
     port: (configService) => configService.getConfig().app.port,
     logLevel: (configService) => configService.getConfig().app.logLevel,
     config: ConfigMap,

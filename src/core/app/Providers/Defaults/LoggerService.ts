@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 enum Colors {
     NONE = "\x1b[0m",
     GREEN = "\x1b[38;5;2m",
@@ -23,7 +25,9 @@ enum PrioritizedLogLevel {
 }
 
 export class LoggerService {
-    private logLevel: PrioritizedLogLevel;
+    private readonly logLevel: PrioritizedLogLevel;
+    private appName: string = "Peregrin";
+
     constructor(logLevel?: LogLevel) {
         this.logLevel = (() => {
             switch (logLevel) {
@@ -42,8 +46,14 @@ export class LoggerService {
         })();
     }
 
+    public setAppName(appName: string): void {
+        this.appName = appName;
+    }
+
     private format(chunk: string, color: Colors) {
-        return `${color}${chunk}${Colors.NONE}`;
+        return `${color}[${this.appName}] ${dayjs().format(
+            "HH:mm:ss"
+        )} ~ ${chunk}${Colors.NONE}`;
     }
 
     private print(
@@ -82,4 +92,5 @@ export interface Logger {
     log(...chunks: string[]): void;
     warn(...chunks: string[]): void;
     error(...chunks: string[]): void;
+    setAppName(appName: string): void;
 }

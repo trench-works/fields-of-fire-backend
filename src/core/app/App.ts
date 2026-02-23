@@ -20,6 +20,7 @@ import {
 } from "./Providers/Defaults/LoggerService";
 
 type AppProps<Config extends EnvObject> = {
+    appName: ConfigurableProp<Config, string>;
     port: ConfigurableProp<Config, number>;
     logLevel?: ConfigurableProp<Config, LogLevel>;
     controllers?: Controllable[];
@@ -65,10 +66,16 @@ export class App<Config extends EnvObject = DefaultConfig> {
             this.appProps.port,
             this.configService
         );
+        const appName = getConfigurablePropValue(
+            this.appProps.appName,
+            this.configService
+        );
         this.server = this.app.listen(port, () => {
-            return this.loggerService.log(
-                `SocketAPI is ready to talk on port ${port}`
+            this.loggerService.log(
+                `${appName} is ready to talk on port ${port}`
             );
+            this.loggerService.setAppName(appName);
+            return;
         });
         return this.server;
     }
