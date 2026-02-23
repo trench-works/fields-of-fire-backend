@@ -5,6 +5,7 @@ import {
     ListenerOptions,
     SocketError,
     SingleClientOutputAction,
+    Logger,
 } from "../../../core";
 import { GameKey } from "./interfaces/GameKey";
 
@@ -26,7 +27,8 @@ export class GameController extends Controller<
     ReturnActions
 > {
     constructor(
-        @Provide(GameService) private readonly gameService: GameService
+        @Provide(GameService) private readonly gameService: GameService,
+        @Provide("Logger") private readonly logger: Logger
     ) {
         super({ topic: "game" });
         this.on(InputActions.JOIN, this.joinMe.bind(this));
@@ -36,6 +38,7 @@ export class GameController extends Controller<
         payload,
         user,
     }: ListenerOptions<GameKey>): SingleClientOutputAction<any, ReturnActions> {
+        this.logger.log("Received call on - Game - JoinMe");
         const subscribed = this.gameService.subscribe(user.id, payload.gameId);
         if (subscribed instanceof SocketError) {
             return { actionId: "error", payload: subscribed };

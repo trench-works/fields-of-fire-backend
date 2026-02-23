@@ -57,10 +57,7 @@ export class DependencyResolver<Config extends EnvObject> {
         private readonly logger: Logger
     ) {
         this.resolvedProviders.set("ConfigService", this.configService);
-        this.logger = new LoggerService(
-            getConfigurablePropValue(config.logLevel, this.configService)
-        );
-        this.resolvedProviders.set("Logger", this.logger);
+        this.resolvedProviders.set("Logger", logger);
         this.logger.log("Building dependencies tree...");
         this.controllerClasses = controllers;
         for (const providerClass of providers) {

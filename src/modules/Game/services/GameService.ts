@@ -1,4 +1,9 @@
-import { AccessRefused, NotFoundError, Provide } from "../../../core";
+import {
+    AccessRefused,
+    NotFoundError,
+    Provide,
+    SocketError,
+} from "../../../core";
 import { Player } from "../../Player/data/Player";
 import { Game } from "../data/Game";
 import { GameDataManager } from "../data/GameDataManager";
@@ -12,7 +17,7 @@ export class GameService {
     subscribe(
         userId: string,
         gameId: string
-    ): NotFoundError | AccessRefused | { game: Game; player: Player } {
+    ): SocketError | { game: Game; player: Player } {
         const game = this.gameDataManager.getGame(gameId);
         if (!game) {
             return new NotFoundError();

@@ -4,3 +4,4 @@ export * from "./Providers/Guard";
 export * from "./Module/Module";
 export * from "./WebSocket/TopicManager";
 export * from "./Types/UserInfos";
+export * from "./Providers";

@@ -92,5 +92,4 @@ export interface Logger {
     log(...chunks: string[]): void;
     warn(...chunks: string[]): void;
     error(...chunks: string[]): void;
-    setAppName(appName: string): void;
 }

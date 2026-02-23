@@ -35,7 +35,7 @@ export class App<Config extends EnvObject = DefaultConfig> {
     public socket: expressWs.Instance;
 
     private readonly configService: ConfigService<Config>;
-    private readonly loggerService: Logger;
+    private readonly loggerService: LoggerService;
 
     constructor(private readonly appProps: AppProps<Config>) {
         this.configService = new ConfigService<Config>(appProps.config);

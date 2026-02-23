@@ -1,7 +1,15 @@
 import "reflect-metadata";
 import { Instantiable } from "../app/Types/Instantiable";
 
-export const Provide = (providable: Instantiable): ParameterDecorator => {
+function isInstantiable<T = any>(
+    obj: string | Instantiable<T>
+): obj is Instantiable<T> {
+    return typeof obj !== "string";
+}
+
+export const Provide = (
+    providable: Instantiable | string
+): ParameterDecorator => {
     return (
         target: Object,
         propertyKey: string | symbol | undefined,
@@ -11,9 +19,9 @@ export const Provide = (providable: Instantiable): ParameterDecorator => {
             propertyKey === "asyncProvide" ? "asyncProvider" : "provider";
         Reflect.defineMetadata(
             `${provideType}-${parameterIndex}`,
-            providable.name,
+            isInstantiable(providable) ? providable.name : providable,
             target,
-            propertyKey as string | symbol
+            propertyKey as string
         );
     };
 };
