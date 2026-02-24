@@ -23,7 +23,7 @@ type ControllerOptions<
     ReturnActions
 > = {
     topic: string;
-    key?: Instantiable<RessourceKeyObject>;
+    key: Instantiable<RessourceKeyObject>;
     guards?: IGuard[];
     socketManager?: WebSocketManager<
         RessourceKeyObject,
@@ -99,7 +99,7 @@ export class Controller<
         this.wsHandlers = new Map();
         this.config = {
             topic,
-            key: key ?? ({} as any),
+            key: key,
             guards: guards,
         };
     }

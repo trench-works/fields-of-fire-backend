@@ -30,7 +30,7 @@ export class GameController extends Controller<
         @Provide(GameService) private readonly gameService: GameService,
         @Provide("Logger") private readonly logger: Logger
     ) {
-        super({ topic: "game" });
+        super({ topic: "game", key: GameKey });
         this.on(InputActions.JOIN, this.joinMe.bind(this));
     }
 

@@ -3,9 +3,12 @@ import { GameKey } from "../../Game/application/interfaces/GameKey";
 import { MovePlayer } from "./interfaces/MovePlayer";
 import { PlayerService } from "../services/PlayerService";
 import { PlayerKey } from "./interfaces/PlayerKey";
+import { PlayerAction } from "./interfaces/PlayerAction";
+import { PlayerActionService } from "../services/PlayerActionService";
 
 enum InputActions {
     MOVE = "move",
+    ACTION = "action",
 }
 
 enum OutputActions {
@@ -18,11 +21,15 @@ export class PlayerController extends Controller<
     OutputActions
 > {
     constructor(
-        @Provide(PlayerService) private readonly playerService: PlayerService
+        @Provide(PlayerService) private readonly playerService: PlayerService, 
+        @Provide(PlayerActionService) private readonly playerActionService: PlayerActionService,
     ) {
-        super({ topic: "game" });
+        super({ topic: "game", key : PlayerKey });
         this.on(InputActions.MOVE, this.move.bind(this), {
             payloadType: MovePlayer,
+        });
+        this.on(InputActions.ACTION, this.action.bind(this), {
+            payloadType: PlayerAction,
         });
     }
 
@@ -40,5 +47,9 @@ export class PlayerController extends Controller<
             key: { gameId },
             payload: moved,
         });
+    }
+
+    action({ key, user, payload }: ListenerOptions<PlayerKey, PlayerAction>) {
+        this.playerActionService.action();
     }
 }

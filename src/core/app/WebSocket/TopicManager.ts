@@ -41,7 +41,7 @@ export class TopicManager {
             .flat();
 
         if (validation.length === this.controllers.length) {
-            socket.close(1, JSON.stringify(validation)); //TODO: custom error message when no key matching
+            socket.close(1008, "BITTE"); //TODO: custom error message when no key matching
         }
     }
 }
