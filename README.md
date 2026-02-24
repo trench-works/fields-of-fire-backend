@@ -23,3 +23,12 @@ Le **WebSocket** du client va venir s'abonner à un **Controller** à l'entrée 
  <img src='peregrin.png' width='20%' />
 </center>
 
+Le framework de l'application (baptisé Peregrin) fournit une interface simple et solide aux développeurs logiciels.
+
+Il est basé sur un système d'injection (simplifiant et optimisation l'utilisation de dépendances inter-modules).
+
+Il fournit aussi des services de base:
+- LoggerService -> Injectable avec le nom "Logger"
+- ConfigService -> Injectable avec le nom "ConfigService"
+
+Il permet aussi notamment de typer l'interface pour le WebSocket, de cette manière, les dev ne risquent pas d'oublier un paramètre lors de l'envoi d'un message, et connaissent l'interface d'un message reçu.
