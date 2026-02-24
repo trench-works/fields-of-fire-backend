@@ -1,5 +1,5 @@
 import { IGuard } from "../app";
 
-export interface Guardable extends Function {
-    new (...providers: any[]): IGuard;
+export interface Guardable {
+    new (...providers: object[]): IGuard;
 }

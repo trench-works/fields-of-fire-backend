@@ -4,17 +4,21 @@ import { UserInfos } from "../Types/UserInfos";
 import { validateSync, ValidationError } from "class-validator";
 import { InputAction } from "../../types/Action";
 
-type SubcribePayload = { key: any; user: UserInfos };
+type SubcribePayload<RessourceKeyObject> = {
+    key: RessourceKeyObject;
+    user: UserInfos;
+};
 
-export class TopicManager {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export class TopicManager<RessourceKeyObject extends Record<string, unknown> = {}> {
     constructor(
         public readonly topic: string,
-        private readonly controllers: Controller[]
+        private readonly controllers: Controller<RessourceKeyObject>[]
     ) {}
 
     open(socket: WebSocket) {
         socket.on("message", (rawData: string) => {
-            const { actionId, payload }: InputAction<SubcribePayload> =
+            const { actionId, payload }: InputAction<SubcribePayload<RessourceKeyObject>> =
                 JSON.parse(rawData);
             if (actionId === "subscribe") {
                 this.subscribe(socket, payload);
@@ -22,7 +26,7 @@ export class TopicManager {
         });
     }
 
-    subscribe(socket: WebSocket, payload: SubcribePayload) {
+    subscribe(socket: WebSocket, payload: SubcribePayload<RessourceKeyObject>) {
         const user = new UserInfos();
         Object.assign(user, payload.user);
         const validateUser = validateSync(user);

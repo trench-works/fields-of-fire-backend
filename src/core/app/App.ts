@@ -14,7 +14,6 @@ import { Configurable, ConfigurableProp } from "./Types/Configurable";
 import { EnvObject } from "./Types/Env";
 import { getConfigurablePropValue } from "./Utils/Configurable";
 import {
-    Logger,
     LoggerService,
     LogLevel,
 } from "./Providers/Defaults/LoggerService";

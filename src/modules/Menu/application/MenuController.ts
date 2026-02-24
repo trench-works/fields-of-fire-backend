@@ -1,10 +1,9 @@
-import { Controller, ListenerOptions, Provide } from "../../../core";
+import { Controller } from "../../../core";
 import { GameKey } from "../../Game/application/interfaces/GameKey";
-import { LobbyService } from "../../Lobby/services/LobbyService";
 import { CreateLobbyInterface } from "./interfaces/CreateLobbyInterface";
 
 export class MenuController extends Controller {
-    constructor(@Provide(LobbyService) lobbyService: LobbyService) {
+    constructor() {
         super({ topic: "menu", key: GameKey });
         this.on("create", this.createLobby.bind(this), {
             payloadType: CreateLobbyInterface,
@@ -12,7 +11,7 @@ export class MenuController extends Controller {
         this.on("join", this.joinLobby.bind(this));
     }
 
-    createLobby({ payload }: ListenerOptions<{}, CreateLobbyInterface>) {
+    createLobby() {
         /**
          * Do some logic to create a lobby
          * and then send event to client to move to lobby room

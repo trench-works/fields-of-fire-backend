@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { WebSocket } from "ws";
 import { Instantiable } from "../Types/Instantiable";
 import { validateSync, ValidationError } from "class-validator";
 import { IGuard, RessourceAccessLevel } from "../Providers/Guard";
-import { AccessRefused, SocketError } from "../../errors";
+import { AccessRefused } from "../../errors";
 import { UserInfos } from "../Types/UserInfos";
 import { WebSocketManager } from "../WebSocket/WebSocketManager";
 import {
@@ -11,14 +12,14 @@ import {
     SingleClientOutputAction,
 } from "../../types/Action";
 
-type ControllerConfig<RessourceKeyObject extends Record<string, any>> = {
+type ControllerConfig<RessourceKeyObject extends Record<string, unknown>> = {
     topic: string;
     key: Instantiable<RessourceKeyObject>;
     guards?: IGuard[];
 };
 
 type ControllerOptions<
-    RessourceKeyObject extends Record<string, any>,
+    RessourceKeyObject extends Record<string, unknown>,
     OutputActions,
     ReturnActions
 > = {
@@ -33,16 +34,16 @@ type ControllerOptions<
 };
 
 type Listener<
-    RessourceKeyObject extends Record<string, any>,
-    PayloadObject extends object = any,
+    RessourceKeyObject extends Record<string, unknown>,
+    PayloadObject extends object = object,
     ReturnActions = string
 > = (
     options: ListenerOptions<RessourceKeyObject, PayloadObject>
 ) => SingleClientOutputAction<PayloadObject, ReturnActions> | void;
 
 type Handler<
-    RessourceKeyObject extends Record<string, any>,
-    PayloadObject extends object = any,
+    RessourceKeyObject extends Record<string, unknown>,
+    PayloadObject extends object = object,
     ReturnActions = string
 > = {
     listener: Listener<RessourceKeyObject, PayloadObject, ReturnActions>;
@@ -51,8 +52,9 @@ type Handler<
 };
 
 export type ListenerOptions<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RessourceKeyObject extends Record<string, any> = {},
-    PayloadObject extends object = any
+    PayloadObject extends object = object
 > = {
     payload: PayloadObject;
     key: RessourceKeyObject;
@@ -60,19 +62,21 @@ export type ListenerOptions<
     user: UserInfos;
 };
 
-type OnOptions<PayloadObject extends object = any> = {
+type OnOptions<PayloadObject extends object = object> = {
     payloadType?: Instantiable<PayloadObject>;
     accessLevel?: RessourceAccessLevel;
 };
 
 export class Controller<
-    RessourceKeyObject extends Record<string, any> = {},
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RessourceKeyObject extends Record<string, any> = any,
     InputActions = string,
     OutputActions = string,
     ReturnActions = string
 > {
     public wsHandlers: Map<
         string,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         Handler<RessourceKeyObject, any, ReturnActions>
     >;
 
@@ -108,7 +112,7 @@ export class Controller<
         return this.config.topic;
     }
 
-    send<PayloadObject extends object = any>(
+    send<PayloadObject extends object = object>(
         socket: WebSocket,
         action: SingleClientOutputAction<PayloadObject, OutputActions>
     ) {
@@ -123,6 +127,7 @@ export class Controller<
 
     on(
         action: InputActions,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         listener: Listener<RessourceKeyObject, any, ReturnActions>,
         options?: OnOptions
     ): this {
@@ -141,9 +146,11 @@ export class Controller<
         message: string
     ): void {
         try {
-            let { actionId, payload } = JSON.parse(
+            const decodedMessage = JSON.parse(
                 message
-            ) as InputAction<RessourceKeyObject>;
+            ) as InputAction;
+            let {payload} = decodedMessage;
+            const {actionId} = decodedMessage;
             const handler = this.wsHandlers.get(actionId);
             if (handler) {
                 // payload validation
@@ -163,7 +170,7 @@ export class Controller<
                 // listener options prep
                 const listenerOptions: ListenerOptions<RessourceKeyObject> = {
                     payload,
-                    key: key ?? ({} as any),
+                    key,
                     socket,
                     user,
                 };

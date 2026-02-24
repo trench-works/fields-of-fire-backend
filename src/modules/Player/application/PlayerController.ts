@@ -49,7 +49,7 @@ export class PlayerController extends Controller<
         });
     }
 
-    action({ key, user, payload }: ListenerOptions<PlayerKey, PlayerAction>) {
+    action() {
         this.playerActionService.action();
     }
 }

@@ -1,6 +1,5 @@
 import { GameDataManager } from "../../Game/data/GameDataManager";
 import { Provide } from "../../../core";
-import { CreateLobbyInterface } from "../../Menu/application/interfaces/CreateLobbyInterface";
 import { LobbyDataManager } from "../data/LobbyDataManager";
 import { LobbyInfo } from "../application/interfaces/LobbyInfo";
 
@@ -12,7 +11,7 @@ export class LobbyService {
         private readonly gameDataManager: GameDataManager
     ) {}
 
-    createLobby(createLobbyInterface: CreateLobbyInterface) {}
+    createLobby() {}
 
     getLobbiesList(): LobbyInfo[] {
         return this.lobbyDataManager.getLobbies().map(

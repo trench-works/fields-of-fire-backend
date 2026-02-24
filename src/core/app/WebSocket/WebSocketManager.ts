@@ -6,14 +6,15 @@ import {
 } from "../../types/Action";
 
 type RessourceClient<
-    RessourceKeyObject extends Record<string, any> | undefined
+    RessourceKeyObject extends Record<string, unknown>
 > = {
     socket: WebSocket;
     key: RessourceKeyObject;
 };
 
 export class WebSocketManager<
-    RessourceKeyObject extends Record<string, any> | undefined = undefined,
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    RessourceKeyObject extends Record<string, unknown> = {},
     OutputActions = string,
     ReturnActions = string
 > {
@@ -37,7 +38,7 @@ export class WebSocketManager<
         this.clients.delete(userId);
     }
 
-    send<PayloadObject extends object = any>(
+    send<PayloadObject extends object = object>(
         socket: WebSocket,
         action: SingleClientOutputAction<
             PayloadObject,

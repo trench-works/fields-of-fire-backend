@@ -9,12 +9,10 @@ import {
 import { EnvObject } from "../Types/Env";
 import {
     Logger,
-    LoggerService,
     LogLevel,
 } from "../Providers/Defaults/LoggerService";
-import { getConfigurablePropValue } from "../Utils/Configurable";
 
-function isInstantiable<Config extends EnvObject = DefaultConfig, T = any>(
+function isInstantiable<Config extends EnvObject = DefaultConfig, T = unknown>(
     obj: Configurable<Config, T> | Instantiable<T>
 ): obj is Instantiable<T> {
     const isCtorClass =
@@ -48,7 +46,7 @@ export class DependencyResolver<Config extends EnvObject> {
 
     private readonly controllerClasses: Controllable[];
 
-    private readonly resolvedProviders = new Map<string, any>();
+    private readonly resolvedProviders = new Map<string, object>();
 
     constructor(
         { controllers, providers }: DependencyResolverOptions<Config>,
@@ -71,16 +69,18 @@ export class DependencyResolver<Config extends EnvObject> {
         this.logger.log("Dependencies tree ready for compiling !");
     }
 
-    private instantiate<ToInstantiate = any | Controller>(
+    private instantiate<ToInstantiate extends object = object | Controller>(
         instantiator:
             | Instantiable<ToInstantiate>
             | Configurable<Config, ToInstantiate>,
         dependenciesNames: string[]
     ): ToInstantiate {
-        const dependencies: any[] = [];
+        const dependencies: object[] = [];
         for (const dependencyName of dependenciesNames) {
             const dep = this.resolvedProviders.get(dependencyName);
-            dep && dependencies.push(dep);
+            if (dep) {
+                dependencies.push(dep);
+            }
         }
         if (isInstantiable(instantiator)) {
             return new instantiator(...dependencies);
@@ -135,11 +135,12 @@ export class DependencyResolver<Config extends EnvObject> {
                     const instantiator =
                         this.providerClassesMap.get(providerName);
 
-                    instantiator &&
+                    if (instantiator) {
                         this.resolvedProviders.set(
                             providerName,
                             this.instantiate(instantiator, providerDependencies)
                         );
+                    }
                     this.providersDependenciesMap.delete(providerName);
                 }
             }

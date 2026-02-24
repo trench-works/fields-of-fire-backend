@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { Instantiable } from "../app/Types/Instantiable";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isInstantiable<T = any>(
     obj: string | Instantiable<T>
 ): obj is Instantiable<T> {
@@ -11,7 +12,7 @@ export const Provide = (
     providable: Instantiable | string
 ): ParameterDecorator => {
     return (
-        target: Object,
+        target: object,
         propertyKey: string | symbol | undefined,
         parameterIndex: number
     ) => {

@@ -35,11 +35,11 @@ export class GameController extends Controller<
     }
 
     joinMe({
-        payload,
+        key,
         user,
-    }: ListenerOptions<GameKey>): SingleClientOutputAction<any, ReturnActions> {
+    }: ListenerOptions<GameKey>): SingleClientOutputAction<object, ReturnActions> {
         this.logger.log("Received call on - Game - JoinMe");
-        const subscribed = this.gameService.subscribe(user.id, payload.gameId);
+        const subscribed = this.gameService.subscribe(user.id, key.gameId);
         if (subscribed instanceof SocketError) {
             return { actionId: "error", payload: subscribed };
         }
