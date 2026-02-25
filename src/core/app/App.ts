@@ -47,7 +47,6 @@ export class App<Config extends EnvObject = DefaultConfig> {
         //apply controllers
         const controllers = new DependencyResolver<Config>(
             ModulesResolver.resolve(appProps),
-            { logLevel: appProps.logLevel },
             this.configService,
             this.loggerService
         ).build();

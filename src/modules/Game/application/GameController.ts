@@ -5,39 +5,30 @@ import {
     ListenerOptions,
     SocketError,
     SingleClientOutputAction,
-    Logger,
 } from "../../../core";
 import { GameKey } from "./interfaces/GameKey";
+import { GameWebSocketManager } from "../web/GameWebSocketManager";
+import { GameInputActions, GameOutputActions, GameReturnActions } from "./interfaces/GameAction";
 
-enum InputActions {
-    JOIN = "join",
-}
 
-enum OutputActions {
-    JOINED = "joined",
-}
-
-enum ReturnActions {
-    JOIN = "join",
-}
 export class GameController extends Controller<
     GameKey,
-    InputActions,
-    OutputActions,
-    ReturnActions
+    GameInputActions,
+    GameOutputActions,
+    GameReturnActions
 > {
     constructor(
         @Provide(GameService) private readonly gameService: GameService,
-        @Provide("Logger") private readonly logger: Logger
+        @Provide(GameWebSocketManager) socketManager: GameWebSocketManager,
     ) {
-        super({ topic: "game", key: GameKey });
-        this.on(InputActions.JOIN, this.joinMe.bind(this));
+        super({ topic: "game", key: GameKey, socketManager });
+        this.on(GameInputActions.JOIN, this.joinMe.bind(this));
     }
 
     joinMe({
         key,
         user,
-    }: ListenerOptions<GameKey>): SingleClientOutputAction<object, ReturnActions> {
+    }: ListenerOptions<GameKey>): SingleClientOutputAction<object, GameReturnActions> {
         this.logger.log("Received call on - Game - JoinMe");
         const subscribed = this.gameService.subscribe(user.id, key.gameId);
         if (subscribed instanceof SocketError) {
@@ -45,10 +36,10 @@ export class GameController extends Controller<
         }
         const { game, player } = subscribed;
         this.emit({
-            actionId: OutputActions.JOINED,
+            actionId: GameOutputActions.JOINED,
             key: { gameId: game.id },
             payload: { playerId: player.id },
         });
-        return { actionId: ReturnActions.JOIN, payload: subscribed };
+        return { actionId: GameReturnActions.JOIN, payload: subscribed };
     }
 }

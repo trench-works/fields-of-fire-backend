@@ -11,6 +11,8 @@ import {
     MultipleClientsOutputAction,
     SingleClientOutputAction,
 } from "../../types/Action";
+import { Provide } from "../../decorators";
+import { Logger } from "../Providers";
 
 type ControllerConfig<RessourceKeyObject extends Record<string, unknown>> = {
     topic: string;
@@ -26,7 +28,7 @@ type ControllerOptions<
     topic: string;
     key: Instantiable<RessourceKeyObject>;
     guards?: IGuard[];
-    socketManager?: WebSocketManager<
+    socketManager: WebSocketManager<
         RessourceKeyObject,
         OutputActions,
         ReturnActions
@@ -70,9 +72,12 @@ type OnOptions<PayloadObject extends object = object> = {
 export class Controller<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RessourceKeyObject extends Record<string, any> = any,
-    InputActions = string,
-    OutputActions = string,
-    ReturnActions = string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    InputActions = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    OutputActions = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ReturnActions = any
 > {
     public wsHandlers: Map<
         string,
@@ -81,11 +86,13 @@ export class Controller<
     >;
 
     private config: ControllerConfig<RessourceKeyObject>;
-    private socketManager: WebSocketManager<
+    protected socketManager: WebSocketManager<
         RessourceKeyObject,
         OutputActions,
         ReturnActions
     >;
+
+    @Provide("Logger") protected logger!: Logger;
 
     constructor({
         topic,
@@ -93,13 +100,7 @@ export class Controller<
         guards,
         socketManager,
     }: ControllerOptions<RessourceKeyObject, OutputActions, ReturnActions>) {
-        this.socketManager =
-            socketManager ??
-            new WebSocketManager<
-                RessourceKeyObject,
-                OutputActions,
-                ReturnActions
-            >();
+        this.socketManager = socketManager;
         this.wsHandlers = new Map();
         this.config = {
             topic,
@@ -198,7 +199,7 @@ export class Controller<
                 }
             }
         } catch {
-            console.error(
+            this.logger.error(
                 `BAD MESSAGE RECEIVED / on path : "${this.topic}" / with payload : "${message}"`
             );
         }

@@ -1,10 +1,13 @@
-import { Controller } from "../../../core";
+import { Controller, Provide } from "../../../core";
 import { GameKey } from "../../Game/application/interfaces/GameKey";
+import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { CreateLobbyInterface } from "./interfaces/CreateLobbyInterface";
 
 export class MenuController extends Controller {
-    constructor() {
-        super({ topic: "menu", key: GameKey });
+    constructor(
+        @Provide(GameWebSocketManager) socketManager: GameWebSocketManager
+    ) {
+        super({ topic: "menu", key: GameKey, socketManager });
         this.on("create", this.createLobby.bind(this), {
             payloadType: CreateLobbyInterface,
         });
