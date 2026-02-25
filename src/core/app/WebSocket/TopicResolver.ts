@@ -1,9 +1,9 @@
-import { Controller, TopicManager } from "..";
+import { Controller, Logger, TopicManager } from "..";
 
 export class TopicResolver {
     private topicMappedControllers: Map<string, Controller[]> = new Map();
 
-    constructor(controllers: Controller[]) {
+    constructor(controllers: Controller[], private readonly logger: Logger) {
         for (const controller of controllers) {
             if (this.topicMappedControllers.has(controller.topic)) {
                 this.topicMappedControllers
@@ -17,7 +17,7 @@ export class TopicResolver {
 
     build(): TopicManager[] {
         return Array.from(this.topicMappedControllers.entries()).map(
-            ([topic, controllers]) => new TopicManager(topic, controllers)
+            ([topic, controllers]) => new TopicManager(topic, controllers, this.logger)
         );
     }
 }

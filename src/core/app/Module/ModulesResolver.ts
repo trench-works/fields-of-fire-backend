@@ -26,8 +26,12 @@ export class ModulesResolver {
         if (modules) {
             for (const modullable of modules) {
                 const { controllers, providers } = new modullable().config;
-                controllers && compiledControllers.push(...controllers);
-                providers && compiledProviders.push(...providers);
+                if (controllers) {
+                    compiledControllers.push(...controllers);
+                }
+                if (providers) {
+                    compiledProviders.push(...providers);
+                }
             }
         }
 

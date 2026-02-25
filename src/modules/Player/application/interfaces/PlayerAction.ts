@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsPositive, IsString, Min, ValidateNested } from "class-validator";
+import { IsInt, IsNotEmpty, IsPositive, IsString, ValidateNested } from "class-validator";
 
 export class PlayerAction {
     @IsString()

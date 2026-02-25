@@ -1,18 +1,20 @@
-import { Controller, ListenerOptions, Provide } from "../../../core";
+import { Controller, Provide } from "../../../core";
 import { GameKey } from "../../Game/application/interfaces/GameKey";
-import { LobbyService } from "../../Lobby/services/LobbyService";
+import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { CreateLobbyInterface } from "./interfaces/CreateLobbyInterface";
 
 export class MenuController extends Controller {
-    constructor(@Provide(LobbyService) lobbyService: LobbyService) {
-        super({ topic: "menu", key: GameKey });
+    constructor(
+        @Provide(GameWebSocketManager) socketManager: GameWebSocketManager
+    ) {
+        super({ topic: "menu", key: GameKey, socketManager });
         this.on("create", this.createLobby.bind(this), {
             payloadType: CreateLobbyInterface,
         });
         this.on("join", this.joinLobby.bind(this));
     }
 
-    createLobby({ payload }: ListenerOptions<{}, CreateLobbyInterface>) {
+    createLobby() {
         /**
          * Do some logic to create a lobby
          * and then send event to client to move to lobby room

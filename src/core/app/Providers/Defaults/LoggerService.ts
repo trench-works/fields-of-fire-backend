@@ -4,8 +4,8 @@ enum Colors {
     NONE = "\x1b[0m",
     GREEN = "\x1b[38;5;2m",
     RED = "\x1b[38;5;124m",
-    BLUE = "\x1b[38;5;20m",
-    ORANGE = "\x1b[38;5;202m",
+    BLUE = "\x1b[38;5;27m",
+    YELLOW = "\x1b[38;5;226m",
 }
 
 export enum LogLevel {
@@ -50,8 +50,8 @@ export class LoggerService {
         this.appName = appName;
     }
 
-    private format(chunk: string, color: Colors) {
-        return `${color}[${this.appName}] ${dayjs().format(
+    private format(chunk: string, color: Colors, caller: string) {
+        return `${color}[${caller}] ${dayjs().format(
             "HH:mm:ss"
         )} ~ ${chunk}${Colors.NONE}`;
     }
@@ -61,9 +61,22 @@ export class LoggerService {
         color: Colors,
         logLevel: PrioritizedLogLevel
     ) {
+        let caller: string = this.appName;
+        const callerInfos = (new Error()).stack?.split("\n")?.[3]?.trim()?.split(" ");
+        if(callerInfos) {
+            if(callerInfos[1] === "new") {
+                caller = callerInfos[2];
+            } else {
+                caller = callerInfos[1].split(".")[0];
+            }
+            if(["Server", "App"].includes(caller)) {
+                caller = this.appName;
+            }
+        }
+        
         if (this.logLevel >= logLevel) {
             for (const chunk of chunks.map((chunk) =>
-                this.format(chunk, color)
+                this.format(chunk, color, caller)
             )) {
                 console.log(chunk);
             }
@@ -79,7 +92,7 @@ export class LoggerService {
     }
 
     public warn(...chunks: string[]) {
-        this.print(chunks, Colors.ORANGE, PrioritizedLogLevel.WARN);
+        this.print(chunks, Colors.YELLOW, PrioritizedLogLevel.WARN);
     }
 
     public error(...chunks: string[]) {

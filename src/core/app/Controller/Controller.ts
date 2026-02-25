@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { WebSocket } from "ws";
 import { Instantiable } from "../Types/Instantiable";
 import { validateSync, ValidationError } from "class-validator";
 import { IGuard, RessourceAccessLevel } from "../Providers/Guard";
-import { AccessRefused, SocketError } from "../../errors";
+import { AccessRefused } from "../../errors";
 import { UserInfos } from "../Types/UserInfos";
 import { WebSocketManager } from "../WebSocket/WebSocketManager";
 import {
@@ -10,22 +11,24 @@ import {
     MultipleClientsOutputAction,
     SingleClientOutputAction,
 } from "../../types/Action";
+import { Provide } from "../../decorators";
+import { Logger } from "../Providers";
 
-type ControllerConfig<RessourceKeyObject extends Record<string, any>> = {
+type ControllerConfig<RessourceKeyObject extends Record<string, unknown>> = {
     topic: string;
     key: Instantiable<RessourceKeyObject>;
     guards?: IGuard[];
 };
 
 type ControllerOptions<
-    RessourceKeyObject extends Record<string, any>,
+    RessourceKeyObject extends Record<string, unknown>,
     OutputActions,
     ReturnActions
 > = {
     topic: string;
     key: Instantiable<RessourceKeyObject>;
     guards?: IGuard[];
-    socketManager?: WebSocketManager<
+    socketManager: WebSocketManager<
         RessourceKeyObject,
         OutputActions,
         ReturnActions
@@ -33,16 +36,16 @@ type ControllerOptions<
 };
 
 type Listener<
-    RessourceKeyObject extends Record<string, any>,
-    PayloadObject extends object = any,
+    RessourceKeyObject extends Record<string, unknown>,
+    PayloadObject extends object = object,
     ReturnActions = string
 > = (
     options: ListenerOptions<RessourceKeyObject, PayloadObject>
 ) => SingleClientOutputAction<PayloadObject, ReturnActions> | void;
 
 type Handler<
-    RessourceKeyObject extends Record<string, any>,
-    PayloadObject extends object = any,
+    RessourceKeyObject extends Record<string, unknown>,
+    PayloadObject extends object = object,
     ReturnActions = string
 > = {
     listener: Listener<RessourceKeyObject, PayloadObject, ReturnActions>;
@@ -51,8 +54,9 @@ type Handler<
 };
 
 export type ListenerOptions<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RessourceKeyObject extends Record<string, any> = {},
-    PayloadObject extends object = any
+    PayloadObject extends object = object
 > = {
     payload: PayloadObject;
     key: RessourceKeyObject;
@@ -60,28 +64,35 @@ export type ListenerOptions<
     user: UserInfos;
 };
 
-type OnOptions<PayloadObject extends object = any> = {
+type OnOptions<PayloadObject extends object = object> = {
     payloadType?: Instantiable<PayloadObject>;
     accessLevel?: RessourceAccessLevel;
 };
 
 export class Controller<
-    RessourceKeyObject extends Record<string, any> = {},
-    InputActions = string,
-    OutputActions = string,
-    ReturnActions = string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RessourceKeyObject extends Record<string, any> = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    InputActions = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    OutputActions = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ReturnActions = any
 > {
     public wsHandlers: Map<
         string,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         Handler<RessourceKeyObject, any, ReturnActions>
     >;
 
     private config: ControllerConfig<RessourceKeyObject>;
-    private socketManager: WebSocketManager<
+    protected socketManager: WebSocketManager<
         RessourceKeyObject,
         OutputActions,
         ReturnActions
     >;
+
+    @Provide("Logger") protected logger!: Logger;
 
     constructor({
         topic,
@@ -89,17 +100,11 @@ export class Controller<
         guards,
         socketManager,
     }: ControllerOptions<RessourceKeyObject, OutputActions, ReturnActions>) {
-        this.socketManager =
-            socketManager ??
-            new WebSocketManager<
-                RessourceKeyObject,
-                OutputActions,
-                ReturnActions
-            >();
+        this.socketManager = socketManager;
         this.wsHandlers = new Map();
         this.config = {
             topic,
-            key: key,
+            key,
             guards: guards,
         };
     }
@@ -108,7 +113,7 @@ export class Controller<
         return this.config.topic;
     }
 
-    send<PayloadObject extends object = any>(
+    send<PayloadObject extends object = object>(
         socket: WebSocket,
         action: SingleClientOutputAction<PayloadObject, OutputActions>
     ) {
@@ -123,6 +128,7 @@ export class Controller<
 
     on(
         action: InputActions,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         listener: Listener<RessourceKeyObject, any, ReturnActions>,
         options?: OnOptions
     ): this {
@@ -141,9 +147,11 @@ export class Controller<
         message: string
     ): void {
         try {
-            let { actionId, payload } = JSON.parse(
+            const decodedMessage = JSON.parse(
                 message
-            ) as InputAction<RessourceKeyObject>;
+            ) as InputAction;
+            let {payload} = decodedMessage;
+            const {actionId} = decodedMessage;
             const handler = this.wsHandlers.get(actionId);
             if (handler) {
                 // payload validation
@@ -152,6 +160,9 @@ export class Controller<
                     Object.assign(dtoPayload, payload);
                     const validationErrors = validateSync(dtoPayload);
                     if (validationErrors.length > 0) {
+                        this.logger.error(
+                            `ERROR ON PAYLOAD VALIDATION "${dtoPayload}"`
+                        );
                         this.socketManager.send(socket, {
                             actionId: "error",
                             payload: validationErrors,
@@ -163,7 +174,7 @@ export class Controller<
                 // listener options prep
                 const listenerOptions: ListenerOptions<RessourceKeyObject> = {
                     payload,
-                    key: key ?? ({} as any),
+                    key,
                     socket,
                     user,
                 };
@@ -190,9 +201,9 @@ export class Controller<
                     return;
                 }
             }
-        } catch {
-            console.error(
-                `BAD MESSAGE RECEIVED / on path : "${this.topic}" / with payload : "${message}"`
+        } catch (err) {
+            this.logger.error(
+                `ERROR HAPPENED WHILE RECEIVING MESSAGE "${err}"`
             );
         }
     }
@@ -210,7 +221,7 @@ export class Controller<
             }
             key = keyDto;
         }
-        socket.on("message", (data) =>
+        socket.on("message", (data) => 
             this.handleMessage(socket, key, user, data.toString())
         );
         socket.on("close", (): void => {

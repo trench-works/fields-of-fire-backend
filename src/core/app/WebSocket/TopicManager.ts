@@ -1,20 +1,25 @@
-import { Controller } from "..";
+import { Controller, Logger } from "..";
 import { WebSocket } from "ws";
 import { UserInfos } from "../Types/UserInfos";
 import { validateSync, ValidationError } from "class-validator";
 import { InputAction } from "../../types/Action";
 
-type SubcribePayload = { key: any; user: UserInfos };
+type SubcribePayload<RessourceKeyObject> = {
+    key: RessourceKeyObject;
+    user: UserInfos;
+};
 
-export class TopicManager {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export class TopicManager<RessourceKeyObject extends Record<string, unknown> = {}> {
     constructor(
         public readonly topic: string,
-        private readonly controllers: Controller[]
+        private readonly controllers: Controller<RessourceKeyObject>[],
+        private readonly logger: Logger
     ) {}
 
     open(socket: WebSocket) {
         socket.on("message", (rawData: string) => {
-            const { actionId, payload }: InputAction<SubcribePayload> =
+            const { actionId, payload }: InputAction<SubcribePayload<RessourceKeyObject>> =
                 JSON.parse(rawData);
             if (actionId === "subscribe") {
                 this.subscribe(socket, payload);
@@ -22,7 +27,7 @@ export class TopicManager {
         });
     }
 
-    subscribe(socket: WebSocket, payload: SubcribePayload) {
+    subscribe(socket: WebSocket, payload: SubcribePayload<RessourceKeyObject>) {
         const user = new UserInfos();
         Object.assign(user, payload.user);
         const validateUser = validateSync(user);
@@ -41,7 +46,8 @@ export class TopicManager {
             .flat();
 
         if (validation.length === this.controllers.length) {
-            socket.close(1008, "BITTE"); //TODO: custom error message when no key matching
+            this.logger.error("ERROR ON IN EVENT, NO MATCHING ENTRYPOINT FOR KEY");
+            socket.close(1008, "WRONG DATA"); //TODO: custom error message when no key matching
         }
     }
 }

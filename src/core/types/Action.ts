@@ -1,22 +1,21 @@
-export type InputAction<PayloadObject extends object = any> = {
+export type InputAction<PayloadObject extends object = object> = {
     actionId: string;
     payload: PayloadObject;
 };
 
 export type MultipleClientsOutputAction<
-    RessourceKeyObject extends Record<string, any> | undefined = undefined,
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    RessourceKeyObject extends Record<string, unknown> = {},
     OutputActions = string,
-    PayloadObject extends object = any
+    PayloadObject extends object = object
 > = {
     actionId: OutputActions;
-    key: RessourceKeyObject extends undefined
-        ? undefined
-        : Partial<RessourceKeyObject>;
+    key: Partial<RessourceKeyObject>;
     payload: PayloadObject;
 };
 
 export type SingleClientOutputAction<
-    PayloadObject extends object = any,
+    PayloadObject extends object = object,
     OutputActions = string
 > = {
     actionId: OutputActions | "error";

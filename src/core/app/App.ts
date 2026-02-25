@@ -14,7 +14,6 @@ import { Configurable, ConfigurableProp } from "./Types/Configurable";
 import { EnvObject } from "./Types/Env";
 import { getConfigurablePropValue } from "./Utils/Configurable";
 import {
-    Logger,
     LoggerService,
     LogLevel,
 } from "./Providers/Defaults/LoggerService";
@@ -48,11 +47,10 @@ export class App<Config extends EnvObject = DefaultConfig> {
         //apply controllers
         const controllers = new DependencyResolver<Config>(
             ModulesResolver.resolve(appProps),
-            { logLevel: appProps.logLevel },
             this.configService,
             this.loggerService
         ).build();
-        const topicManagers = new TopicResolver(controllers).build();
+        const topicManagers = new TopicResolver(controllers, this.loggerService).build();
         for (const topicManager of topicManagers) {
             this.socket.app.ws(
                 `/${topicManager.topic}`,

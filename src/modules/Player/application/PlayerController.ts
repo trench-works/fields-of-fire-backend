@@ -5,30 +5,26 @@ import { PlayerService } from "../services/PlayerService";
 import { PlayerKey } from "./interfaces/PlayerKey";
 import { PlayerAction } from "./interfaces/PlayerAction";
 import { PlayerActionService } from "../services/PlayerActionService";
+import { PlayerInputActions, PlayerOutputActions } from "../web/PlayerSocketActions";
+import { PlayerWebSocketManager } from "../web/PlayerWebSocketManager";
 
-enum InputActions {
-    MOVE = "move",
-    ACTION = "action",
-}
-
-enum OutputActions {
-    MOVE = "move",
-}
 
 export class PlayerController extends Controller<
     PlayerKey,
-    InputActions,
-    OutputActions
+    PlayerInputActions,
+    PlayerOutputActions
 > {
+    
     constructor(
         @Provide(PlayerService) private readonly playerService: PlayerService, 
         @Provide(PlayerActionService) private readonly playerActionService: PlayerActionService,
+        @Provide(PlayerWebSocketManager) socketManager: PlayerWebSocketManager,
     ) {
-        super({ topic: "game", key : PlayerKey });
-        this.on(InputActions.MOVE, this.move.bind(this), {
+        super({ topic: "game", key : PlayerKey, socketManager });
+        this.on(PlayerInputActions.MOVE, this.move.bind(this), {
             payloadType: MovePlayer,
         });
-        this.on(InputActions.ACTION, this.action.bind(this), {
+        this.on(PlayerInputActions.ACTION, this.action.bind(this), {
             payloadType: PlayerAction,
         });
     }
@@ -43,13 +39,13 @@ export class PlayerController extends Controller<
             return { actionId: "error", payload: moved };
         }
         this.emit({
-            actionId: OutputActions.MOVE,
+            actionId: PlayerOutputActions.MOVE,
             key: { gameId },
             payload: moved,
         });
     }
 
-    action({ key, user, payload }: ListenerOptions<PlayerKey, PlayerAction>) {
+    action() {
         this.playerActionService.action();
     }
 }

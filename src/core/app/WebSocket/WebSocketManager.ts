@@ -4,20 +4,25 @@ import {
     MultipleClientsOutputAction,
     SingleClientOutputAction,
 } from "../../types/Action";
+import { Provide } from "../../decorators";
+import { Logger } from "../Providers";
 
 type RessourceClient<
-    RessourceKeyObject extends Record<string, any> | undefined
+    RessourceKeyObject extends Record<string, unknown>
 > = {
     socket: WebSocket;
     key: RessourceKeyObject;
 };
 
 export class WebSocketManager<
-    RessourceKeyObject extends Record<string, any> | undefined = undefined,
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-explicit-any
+    RessourceKeyObject extends Record<string, any> = {},
     OutputActions = string,
     ReturnActions = string
 > {
     public clients: Map<string, RessourceClient<RessourceKeyObject>>;
+    
+    @Provide("Logger") logger!: Logger;
 
     constructor() {
         this.clients = new Map();
@@ -37,7 +42,7 @@ export class WebSocketManager<
         this.clients.delete(userId);
     }
 
-    send<PayloadObject extends object = any>(
+    send<PayloadObject extends object = object>(
         socket: WebSocket,
         action: SingleClientOutputAction<
             PayloadObject,
@@ -48,7 +53,7 @@ export class WebSocketManager<
             const message = JSON.stringify(action);
             socket.send(message);
         } catch {
-            console.error("CANT SEND PAYLOAD", action);
+             this.logger.error("CANT SEND PAYLOAD", JSON.stringify(action));
         }
     }
 

@@ -1,7 +1,7 @@
 export interface AsyncProvided {
-    asyncProvide(...providers: any[]): void;
+    asyncProvide(...providers: object[]): void;
 }
 
-export const isAsyncProvided = (provider: any): provider is AsyncProvided => {
+export const isAsyncProvided = (provider: object): provider is AsyncProvided => {
     return "asyncProvide" in provider;
 };

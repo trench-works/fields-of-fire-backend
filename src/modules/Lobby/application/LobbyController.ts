@@ -3,17 +3,20 @@ import { LobbyKeys } from "./interfaces/LobbyKeys";
 import { LobbyService } from "../services/LobbyService";
 import { GameService } from "../../Game/services/GameService";
 import { LobbyGuard } from "../services/LobbyGuard";
+import { LobbyWebSocketManager } from "../web/LobbyWebSocketManager";
+import { LobbyInputActions, LobbyOutputActions, LobbyReturnActions } from "./interfaces/LobbyAction";
 
-export class LobbyController extends Controller<LobbyKeys> {
+export class LobbyController extends Controller<LobbyKeys, LobbyInputActions, LobbyOutputActions, LobbyReturnActions> {
     constructor(
         @Provide(LobbyService) private readonly lobbyService: LobbyService,
         @Provide(GameService) private readonly gameService: GameService,
-        @Provide(LobbyGuard) lobbyGuard: LobbyGuard
+        @Provide(LobbyGuard) lobbyGuard: LobbyGuard,
+        @Provide(LobbyWebSocketManager) socketManager: LobbyWebSocketManager
     ) {
-        super({ topic: "lobby", key: LobbyKeys, guards: [lobbyGuard] });
+        super({ topic: "lobby", key: LobbyKeys, guards: [lobbyGuard], socketManager });
         //create subscriptions for this controller
-        this.on("leave", this.handleLeave.bind(this));
-        this.on("start", this.startGame.bind(this), {
+        this.on(LobbyInputActions.LEAVE, this.handleLeave.bind(this));
+        this.on(LobbyInputActions.START, this.startGame.bind(this), {
             accessLevel: RessourceAccessLevel.DELETE,
         });
     }
