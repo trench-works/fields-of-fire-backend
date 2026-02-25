@@ -50,7 +50,7 @@ export class App<Config extends EnvObject = DefaultConfig> {
             this.configService,
             this.loggerService
         ).build();
-        const topicManagers = new TopicResolver(controllers).build();
+        const topicManagers = new TopicResolver(controllers, this.loggerService).build();
         for (const topicManager of topicManagers) {
             this.socket.app.ws(
                 `/${topicManager.topic}`,

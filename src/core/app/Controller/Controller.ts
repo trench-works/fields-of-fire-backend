@@ -146,7 +146,6 @@ export class Controller<
         user: UserInfos,
         message: string
     ): void {
-        console.log(key)
         try {
             const decodedMessage = JSON.parse(
                 message
@@ -213,7 +212,6 @@ export class Controller<
         socket: WebSocket,
         { user, key }: { key: RessourceKeyObject; user: UserInfos }
     ): void | ValidationError[] {
-        console.log(user, key)
         if (key && Object.keys(key).length > 0 && this.config.key) {
             const keyDto = new this.config.key();
             Object.assign(keyDto, key);
@@ -223,8 +221,7 @@ export class Controller<
             }
             key = keyDto;
         }
-        console.log(key)
-        socket.on("message", (data) =>
+        socket.on("message", (data) => 
             this.handleMessage(socket, key, user, data.toString())
         );
         socket.on("close", (): void => {
