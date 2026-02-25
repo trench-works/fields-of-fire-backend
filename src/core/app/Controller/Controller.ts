@@ -104,7 +104,7 @@ export class Controller<
         this.wsHandlers = new Map();
         this.config = {
             topic,
-            key: key,
+            key,
             guards: guards,
         };
     }
@@ -146,6 +146,7 @@ export class Controller<
         user: UserInfos,
         message: string
     ): void {
+        console.log(key)
         try {
             const decodedMessage = JSON.parse(
                 message
@@ -160,6 +161,9 @@ export class Controller<
                     Object.assign(dtoPayload, payload);
                     const validationErrors = validateSync(dtoPayload);
                     if (validationErrors.length > 0) {
+                        this.logger.error(
+                            `ERROR ON PAYLOAD VALIDATION "${dtoPayload}"`
+                        );
                         this.socketManager.send(socket, {
                             actionId: "error",
                             payload: validationErrors,
@@ -198,9 +202,9 @@ export class Controller<
                     return;
                 }
             }
-        } catch {
+        } catch (err) {
             this.logger.error(
-                `BAD MESSAGE RECEIVED / on path : "${this.topic}" / with payload : "${message}"`
+                `ERROR HAPPENED WHILE RECEIVING MESSAGE "${err}"`
             );
         }
     }
@@ -209,6 +213,7 @@ export class Controller<
         socket: WebSocket,
         { user, key }: { key: RessourceKeyObject; user: UserInfos }
     ): void | ValidationError[] {
+        console.log(user, key)
         if (key && Object.keys(key).length > 0 && this.config.key) {
             const keyDto = new this.config.key();
             Object.assign(keyDto, key);
@@ -218,6 +223,7 @@ export class Controller<
             }
             key = keyDto;
         }
+        console.log(key)
         socket.on("message", (data) =>
             this.handleMessage(socket, key, user, data.toString())
         );
