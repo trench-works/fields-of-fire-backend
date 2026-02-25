@@ -86,13 +86,16 @@ export class DependencyResolver<Config extends EnvObject> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private resolvePropertyDependencies(provider: any) {
         for(const property of Object.keys(provider)) {
-            if(Reflect.getMetadataKeys(provider, property).includes("provider")) {
-                const providerName: string = Reflect.getMetadata("provider", provider, property);
-                if(this.resolvedProviders.has(providerName)) {
-                    provider[property] = this.resolvedProviders.get(providerName);
-                } else {
-                     
-                    this.logger.error(`Provider ${providerName} doesn't exist for property ${property} of element ${provider.name}`)
+            const keys = Reflect.getMetadataKeys(provider, property);
+            for(const key of keys) {
+                const [type, propName] = key.split("-");
+                if(type === "provider" && property === propName) {
+                    const providerName: string = Reflect.getMetadata(key, provider, property);
+                    if(this.resolvedProviders.has(providerName)) {
+                        provider[property] = this.resolvedProviders.get(providerName);
+                    } else {
+                        this.logger.error(`Provider ${providerName} doesn't exist for property ${property} of element ${JSON.stringify(provider)}`)
+                    }
                 }
             }
         }
@@ -169,19 +172,20 @@ export class DependencyResolver<Config extends EnvObject> {
             // }
         }
 
+
         // Controllers Synchrone Resolving
         const resolvedControllers: Controller[] = this.controllerClasses.map(
             (controllerClass) => {
                 const dependencies = Reflect.getMetadataKeys(controllerClass)
-                        .filter((key) => String(key).startsWith("provider-constructor"))
-                        .map((key) => Number(String(key).split("-")[2]))
-                        .sort((a, b) => a - b)
-                        .map((mdKeyId) =>
-                            Reflect.getMetadata(
-                                `provider-constructor-${mdKeyId}`,
-                                controllerClass
-                            )
-                        );
+                    .filter((key) => String(key).startsWith("provider-constructor"))
+                    .map((key) => Number(String(key).split("-")[2]))
+                    .sort((a, b) => a - b)
+                    .map((mdKeyId) =>
+                        Reflect.getMetadata(
+                            `provider-constructor-${mdKeyId}`,
+                            controllerClass
+                        )
+                    );
                 return this.instantiate(
                     controllerClass,
                     dependencies

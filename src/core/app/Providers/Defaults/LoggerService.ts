@@ -52,7 +52,7 @@ export class LoggerService {
 
     private format(chunk: string, color: Colors) {
         return `${color}[${this.appName}] ${dayjs().format(
-            "HH:mm:ss"
+            "HH:mm:ss:SSS"
         )} ~ ${chunk}${Colors.NONE}`;
     }
 
