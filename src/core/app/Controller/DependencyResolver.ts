@@ -101,30 +101,6 @@ export class DependencyResolver<Config extends EnvObject> {
         }
     }
 
-    // private resolveAsyncDependencies(provider: Provider & AsyncProvided): void {
-    //     const dependencies: Provider[] = [];
-    //     console.log(Reflect.getMetadataKeys(provider, "asyncProvide"));
-    //     for (const dependencyName of Reflect.getMetadataKeys(
-    //         provider,
-    //         "asyncProvide"
-    //     )
-    //         .filter((key) => String(key).startsWith("asyncProvider"))
-    //         .map((key) => Number(String(key).split("-")[1]))
-    //         .sort((a, b) => a - b)
-    //         .map((mdKeyId) =>
-    //             Reflect.getMetadata(
-    //                 `asyncProvider-${mdKeyId}`,
-    //                 provider,
-    //                 "asyncProvide"
-    //             )
-    //         )) {
-    //         const dep = this.resolvedProviders.get(dependencyName);
-    //         dep && dependencies.push(dep);
-    //     }
-    //     console.log(dependencies);
-    //     provider.asyncProvide(dependencies);
-    // }
-
     build(): Controller[] {
         this.logger.log("Dependency tree compiling...");
         // Providers Synchrone Resolving
@@ -166,10 +142,6 @@ export class DependencyResolver<Config extends EnvObject> {
         //Providers Async Resolving
         for (const provider of this.resolvedProviders.values()) {
             this.resolvePropertyDependencies(provider);
-            // console.log(isAsyncProvided(provider));
-            // if (isAsyncProvided(provider)) {
-            //     this.resolveAsyncDependencies(provider);
-            // }
         }
 
 

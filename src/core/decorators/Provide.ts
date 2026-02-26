@@ -47,18 +47,16 @@ const provideParameter = (
     propertyKey: string | undefined,
     parameterIndex: number
 ) => {
-        const provideType = propertyKey === "asyncProvide" ? "asyncProvider" : "provider";
         if(propertyKey) {
             Reflect.defineMetadata(
-                `${provideType}-constructor-${parameterIndex}`,
+                `provider-constructor-${parameterIndex}`,
                 providableName,
                 target,
                 propertyKey
             );
         } else {
-            
             Reflect.defineMetadata(
-                `${provideType}-constructor-${parameterIndex}`,
+                `provider-constructor-${parameterIndex}`,
                 providableName,
                 target
             );
