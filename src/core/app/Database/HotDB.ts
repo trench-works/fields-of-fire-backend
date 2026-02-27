@@ -1,4 +1,5 @@
 import { Provide } from "../../decorators";
+import { DBError } from "./errors/DBError";
 import { NoClientError } from "./errors/NoClientError";
 
 export const HotConnectorProvider = "HotConnector"
@@ -14,7 +15,13 @@ export interface HotConnector {
     getClient(ressourceName: string): Promise<HotClient>
 }
 
-export class HotRessource<Ressource extends object = object> {
+export interface HotRessource<Ressource extends object = object> {
+    list(): Promise<string[] | DBError>;
+    set(key: string, value: Ressource): Promise<Ressource | DBError>;
+    get(key: string): Promise<Ressource | DBError | null>
+}
+
+export class BaseHotRessource<Ressource extends object = object> implements HotRessource<Ressource> {
     private client: HotClient | undefined = undefined;
 
     constructor(private readonly ressourceName: string) {
@@ -31,7 +38,7 @@ export class HotRessource<Ressource extends object = object> {
         if (!this.client) {
             return new NoClientError();
         }
-        return this.client.list();
+        return (await this.client.list()).map((key) => key.split(":")[1]);
     }
 
     public async set(key: string, value: Ressource): Promise<Ressource | NoClientError> {

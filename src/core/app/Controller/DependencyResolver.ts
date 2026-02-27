@@ -78,7 +78,7 @@ export class DependencyResolver<Config extends EnvObject> {
             // prepare maps for resolution
             this.providerClassesMap.set(name, baseProvider);
             const dependencies: string[] = [];
-            for (const mdKey of Reflect.getMetadataKeys(baseProvider)) {
+            for (const mdKey of Reflect.getMetadataKeys(baseProvider).sort((kA, kB) => kA < kB ? -1 : 1)) {
                 dependencies.push(Reflect.getMetadata(mdKey, baseProvider));
             }
             this.providersDependenciesMap.set(name, dependencies);

@@ -34,7 +34,7 @@ export class PlayerController extends Controller<
         user,
         payload,
     }: ListenerOptions<GameKey, MovePlayer>) {
-        const moved = this.playerService.move(user.id, gameId, payload);
+        const moved = await this.playerService.move(user.id, gameId, payload);
         if (moved instanceof Error) {
             return { actionId: "error", payload: moved };
         }
