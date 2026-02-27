@@ -27,15 +27,24 @@ function isInstantiable<Config extends EnvObject = DefaultConfig, T = unknown>(
     return isCtorClass || isPrototypeCtorClass;
 }
 
+type BaseProvider<Config extends EnvObject> = (Instantiable | Configurable<Config>);
+type ComplexProvider<Config extends EnvObject> = { name: (string | BaseProvider<Config>), provider: BaseProvider<Config> };
+export type Provider<Config extends EnvObject> = BaseProvider<Config> | ComplexProvider<Config>;
+function isBaseProvider<Config extends EnvObject>(provider: Provider<Config>): provider is BaseProvider<Config> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (provider as any)["prototype"];
+}
+
+
 type DependencyResolverOptions<Config extends EnvObject> = {
     controllers: Controllable[];
-    providers: (Instantiable | Configurable<Config>)[];
+    providers: Provider<Config>[];
 };
 
 export class DependencyResolver<Config extends EnvObject> {
     private readonly providerClassesMap = new Map<
         string,
-        Instantiable | Configurable<Config>
+        BaseProvider<Config>
     >();
     private readonly providersDependenciesMap = new Map<string, string[]>();
 
@@ -50,17 +59,31 @@ export class DependencyResolver<Config extends EnvObject> {
     ) {
         this.resolvedProviders.set("ConfigService", this.configService);
         this.resolvedProviders.set("Logger", logger);
-        this.logger.log("Building dependencies tree...");
+        this.logger.debug("Building dependencies tree...");
         this.controllerClasses = controllers;
-        for (const providerClass of providers) {
-            this.providerClassesMap.set(providerClass.name, providerClass);
-            const dependencies: string[] = [];
-            for (const mdKey of Reflect.getMetadataKeys(providerClass)) {
-                dependencies.push(Reflect.getMetadata(mdKey, providerClass));
+        for (const provider of providers) {
+            // decode complex providers
+            let name: string;
+            let baseProvider: BaseProvider<Config>;
+            if (isBaseProvider(provider)) {
+                name = provider.name;
+                baseProvider =  provider
+            } else if (typeof provider.name === "string") {
+                name = provider.name;
+                baseProvider =  provider.provider
+            } else {
+                name = provider.name.name;
+                baseProvider =  provider.provider
             }
-            this.providersDependenciesMap.set(providerClass.name, dependencies);
+            // prepare maps for resolution
+            this.providerClassesMap.set(name, baseProvider);
+            const dependencies: string[] = [];
+            for (const mdKey of Reflect.getMetadataKeys(baseProvider).sort((kA, kB) => kA < kB ? -1 : 1)) {
+                dependencies.push(Reflect.getMetadata(mdKey, baseProvider));
+            }
+            this.providersDependenciesMap.set(name, dependencies);
         }
-        this.logger.log("Dependencies tree ready for compiling !");
+        this.logger.debug("Dependencies tree ready for compiling !");
     }
 
     private instantiate<ToInstantiate extends object = object | Controller>(
@@ -85,16 +108,34 @@ export class DependencyResolver<Config extends EnvObject> {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private resolvePropertyDependencies(provider: any) {
-        for(const property of Object.keys(provider)) {
+        for (const property of Object.keys(provider)) {
             const keys = Reflect.getMetadataKeys(provider, property);
+            if (typeof provider[property] === "function") {
+                const providers = [];
+                for (const key of keys.sort((kA, kB) => kA < kB ? -1 : 1)) {
+                    const [type, propName, index] = key.split("-");
+                    if (index !== undefined && type === "provider" && property === propName) {
+                        const providerName: string = Reflect.getMetadata(key, provider, property);
+                        if (this.resolvedProviders.has(providerName)) {
+                            providers.push(this.resolvedProviders.get(providerName));
+                        } else {
+                            this.logger.error(`Provider ${providerName} doesn't exist for property ${property} of element ${JSON.stringify(provider)}`)
+                        }
+                    }
+                }
+                provider[property](...providers);
+                return;
+            }
             for(const key of keys) {
-                const [type, propName] = key.split("-");
-                if(type === "provider" && property === propName) {
-                    const providerName: string = Reflect.getMetadata(key, provider, property);
-                    if(this.resolvedProviders.has(providerName)) {
-                        provider[property] = this.resolvedProviders.get(providerName);
-                    } else {
-                        this.logger.error(`Provider ${providerName} doesn't exist for property ${property} of element ${JSON.stringify(provider)}`)
+                const [type, propName, index] = key.split("-");
+                if (!index) {
+                    if (type === "provider" && property === propName) {
+                        const providerName: string = Reflect.getMetadata(key, provider, property);
+                        if (this.resolvedProviders.has(providerName)) {
+                            provider[property] = this.resolvedProviders.get(providerName);
+                        } else {
+                            this.logger.error(`Provider ${providerName} doesn't exist for property ${property} of element ${JSON.stringify(provider)}`)
+                        }
                     }
                 }
             }
@@ -102,7 +143,7 @@ export class DependencyResolver<Config extends EnvObject> {
     }
 
     build(): Controller[] {
-        this.logger.log("Dependency tree compiling...");
+        this.logger.debug("Dependency tree compiling...");
         // Providers Synchrone Resolving
         while (this.providersDependenciesMap.size > 0) {
             const providersSize = this.providersDependenciesMap.size;
@@ -168,7 +209,7 @@ export class DependencyResolver<Config extends EnvObject> {
             this.resolvePropertyDependencies(controller);
         }
 
-        this.logger.log("Dependencies are fully resolved and ready to go !");
+        this.logger.debug("Dependencies are fully resolved and ready to go !");
         return resolvedControllers;
     }
 }

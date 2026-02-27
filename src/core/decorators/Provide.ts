@@ -49,7 +49,7 @@ const provideParameter = (
 ) => {
         if(propertyKey) {
             Reflect.defineMetadata(
-                `provider-constructor-${parameterIndex}`,
+                `provider-${propertyKey}-${parameterIndex}`,
                 providableName,
                 target,
                 propertyKey

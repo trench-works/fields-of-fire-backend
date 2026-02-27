@@ -1,11 +1,11 @@
+import { Provider } from "../Controller/DependencyResolver";
 import { DefaultConfig } from "../Providers/Defaults/ConfigService";
-import { Configurable } from "../Types/Configurable";
 import { EnvObject } from "../Types/Env";
-import { Controllable, Instantiable } from "../Types/Instantiable";
+import { Controllable } from "../Types/Instantiable";
 
 type ModuleConfig<Config extends EnvObject> = {
     controllers?: Controllable[];
-    providers?: (Instantiable | Configurable<Config>)[];
+    providers?: Provider<Config>[];
 };
 
 export class Module<Config extends EnvObject = DefaultConfig> {

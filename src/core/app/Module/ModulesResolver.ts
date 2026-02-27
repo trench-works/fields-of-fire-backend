@@ -1,17 +1,17 @@
+import { Provider } from "../Controller/DependencyResolver";
 import { DefaultConfig } from "../Providers/Defaults/ConfigService";
-import { Configurable } from "../Types/Configurable";
 import { EnvObject } from "../Types/Env";
-import { Controllable, Instantiable, Modullable } from "../Types/Instantiable";
+import { Controllable, Modullable } from "../Types/Instantiable";
 
 type ModulesResolverProps<Config extends EnvObject> = {
     modules?: Modullable<Config>[];
     controllers?: Controllable[];
-    providers?: (Instantiable | Configurable<Config>)[];
+    providers?: Provider<Config>[];
 };
 
 type ResolvedModules<Config extends EnvObject> = {
     controllers: Controllable[];
-    providers: (Instantiable | Configurable<Config>)[];
+    providers: Provider<Config>[];
 };
 
 export class ModulesResolver {
@@ -21,7 +21,7 @@ export class ModulesResolver {
         providers,
     }: ModulesResolverProps<Config>): ResolvedModules<Config> {
         const compiledControllers: Controllable[] = controllers ?? [];
-        const compiledProviders: (Instantiable | Configurable<Config>)[] =
+        const compiledProviders: Provider<Config>[] =
             providers ?? [];
         if (modules) {
             for (const modullable of modules) {

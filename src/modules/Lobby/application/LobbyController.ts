@@ -21,7 +21,7 @@ export class LobbyController extends Controller<LobbyKeys, LobbyInputActions, Lo
         });
     }
 
-    startGame() {
+    async startGame() {
         /*
             some logic to transform this lobby into a running game
             and send event to all this lobby client to quit lobby screen and join game,
@@ -29,7 +29,7 @@ export class LobbyController extends Controller<LobbyKeys, LobbyInputActions, Lo
         */
     }
 
-    handleLeave() {
+    async handleLeave() {
         /*
             Some Logic to handle when player clicks on "quit" button
             or when client socket gets disconnected

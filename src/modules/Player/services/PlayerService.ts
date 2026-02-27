@@ -8,15 +8,15 @@ export class PlayerService {
         private readonly gameDataManager: GameDataManager
     ) {}
 
-    move(
+    async move(
         userId: string,
         gameId: string,
         movePlayer: MovePlayer
     ):
-        | { x: number; y: number; playerId: string }
+        Promise<{ x: number; y: number; playerId: string }
         | NotFoundError
-        | AccessRefused {
-        const game = this.gameDataManager.getGame(gameId);
+        | AccessRefused> {
+        const game = await this.gameDataManager.get(gameId);
         if (!game) {
             return new NotFoundError();
         }

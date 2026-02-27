@@ -2,15 +2,15 @@ import express from "express";
 import { Express } from "express";
 import expressWs from "express-ws";
 import { Server } from "http";
-import { Controllable, Instantiable, Modullable } from "./Types/Instantiable";
+import { Controllable, Modullable } from "./Types/Instantiable";
 import { ModulesResolver } from "./Module/ModulesResolver";
 import { TopicResolver } from "./WebSocket/TopicResolver";
-import { DependencyResolver } from "./Controller/DependencyResolver";
+import { DependencyResolver, Provider } from "./Controller/DependencyResolver";
 import {
     ConfigService,
     DefaultConfig,
 } from "./Providers/Defaults/ConfigService";
-import { Configurable, ConfigurableProp } from "./Types/Configurable";
+import { ConfigurableProp } from "./Types/Configurable";
 import { EnvObject } from "./Types/Env";
 import { getConfigurablePropValue } from "./Utils/Configurable";
 import {
@@ -18,13 +18,17 @@ import {
     LogLevel,
 } from "./Providers/Defaults/LoggerService";
 
+export type AppConfig = {
+    name: string;
+    port: number;
+    logLevel?: LogLevel;
+}
+
 type AppProps<Config extends EnvObject> = {
-    appName: ConfigurableProp<Config, string>;
-    port: ConfigurableProp<Config, number>;
-    logLevel?: ConfigurableProp<Config, LogLevel>;
     controllers?: Controllable[];
-    providers?: (Instantiable | Configurable<Config>)[];
+    providers?: Provider<Config>[];
     modules?: Modullable<Config>[];
+    appConfig: ConfigurableProp<Config, AppConfig>;
     config?: Config;
 };
 
@@ -39,7 +43,7 @@ export class App<Config extends EnvObject = DefaultConfig> {
     constructor(private readonly appProps: AppProps<Config>) {
         this.configService = new ConfigService<Config>(appProps.config);
         this.loggerService = new LoggerService(
-            getConfigurablePropValue(appProps.logLevel, this.configService)
+            getConfigurablePropValue(appProps.appConfig, this.configService).logLevel
         );
         this.server = undefined;
         this.app = express();
@@ -60,19 +64,15 @@ export class App<Config extends EnvObject = DefaultConfig> {
     }
 
     start(): Server {
-        const port = getConfigurablePropValue(
-            this.appProps.port,
-            this.configService
-        );
-        const appName = getConfigurablePropValue(
-            this.appProps.appName,
+        const {port, name} = getConfigurablePropValue(
+            this.appProps.appConfig,
             this.configService
         );
         this.server = this.app.listen(port, () => {
             this.loggerService.log(
-                `${appName} is ready to talk on port ${port}`
+                `${name} is ready to talk on port ${port}`
             );
-            this.loggerService.setAppName(appName);
+            this.loggerService.setAppName(name);
             return;
         });
         return this.server;
