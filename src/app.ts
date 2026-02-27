@@ -9,6 +9,9 @@ import { HotConnectorProvider } from "./core/app/Database/HotDB";
 import { UserModule } from "./modules/User/UserModule";
 import { MongoConnector } from "./core/app/Database/Mongo";
 import { ColdConnectorProvider } from "./core/app/Database/ColdDB";
+import { CharacterClassModule } from "./modules/CharacterClass/CharacterClassModule";
+import { EffectModule } from "./modules/Effect/EffectModule";
+import { ActionModule } from "./modules/Action/ActionModule";
 
 const server = new App({
     providers: [
@@ -21,7 +24,18 @@ const server = new App({
             provider: (configService) => new MongoConnector(configService.getConfig().mongo)
         }
     ],
-    modules: [MenuModule, LobbyModule, GameModule, PlayerModule, UserModule],
+    modules: [
+        // Game modules
+        MenuModule,
+        LobbyModule,
+        GameModule,
+        PlayerModule,
+        //Settings modules
+        UserModule,
+        CharacterClassModule,
+        EffectModule,
+        ActionModule
+    ],
     appConfig: (configService) => configService.getConfig().app,
     config: ConfigMap,
 });
