@@ -25,12 +25,12 @@ export class GameController extends Controller<
         this.on(GameInputActions.JOIN, this.joinMe.bind(this));
     }
 
-    joinMe({
+    async joinMe({
         key,
         user,
-    }: ListenerOptions<GameKey>): SingleClientOutputAction<object, GameReturnActions> {
+    }: ListenerOptions<GameKey>): Promise<SingleClientOutputAction<object, GameReturnActions>> {
         this.logger.log("Received call on - Game - JoinMe");
-        const subscribed = this.gameService.subscribe(user.id, key.gameId);
+        const subscribed = await this.gameService.subscribe(user.id, key.gameId);
         if (subscribed instanceof SocketError) {
             return { actionId: "error", payload: subscribed };
         }

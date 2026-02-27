@@ -26,6 +26,7 @@
         "dayjs": "^1.11.19",
         "express": "^5.2.1",
         "express-ws": "^5.0.2",
+        "redis": "^5.11.0",
         "reflect-metadata": "^0.2.2",
         "uuid": "^13.0.0"
     },

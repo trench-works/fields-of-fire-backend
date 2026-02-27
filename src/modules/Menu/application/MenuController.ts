@@ -14,7 +14,7 @@ export class MenuController extends Controller {
         this.on("join", this.joinLobby.bind(this));
     }
 
-    createLobby() {
+    async createLobby() {
         /**
          * Do some logic to create a lobby
          * and then send event to client to move to lobby room
@@ -22,7 +22,7 @@ export class MenuController extends Controller {
          */
     }
 
-    joinLobby() {
+    async joinLobby() {
         /**
          * Do some logic to join a lobby
          * and then send event to client to move to lobby room

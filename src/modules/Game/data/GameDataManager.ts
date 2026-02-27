@@ -24,15 +24,15 @@ export class GameDataManager {
         },
     ];
 
-    createGame(game: Game) {
+    set(id: string, game: Game) {
         this.games.push(game);
     }
 
-    getGamesList() {
+    list() {
         return [...this.games];
     }
 
-    getGame(id: string) {
+    get(id: string) {
         return this.games.find((game) => game.id === id);
     }
 }

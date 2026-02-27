@@ -29,7 +29,7 @@ export class PlayerController extends Controller<
         });
     }
 
-    move({
+    async move({
         key: { gameId },
         user,
         payload,
@@ -45,7 +45,7 @@ export class PlayerController extends Controller<
         });
     }
 
-    action() {
+    async action() {
         this.playerActionService.action();
     }
 }

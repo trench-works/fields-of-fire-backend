@@ -16,7 +16,7 @@ export class PlayerService {
         | { x: number; y: number; playerId: string }
         | NotFoundError
         | AccessRefused {
-        const game = this.gameDataManager.getGame(gameId);
+        const game = this.gameDataManager.get(gameId);
         if (!game) {
             return new NotFoundError();
         }

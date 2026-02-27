@@ -41,7 +41,7 @@ type Listener<
     ReturnActions = string
 > = (
     options: ListenerOptions<RessourceKeyObject, PayloadObject>
-) => SingleClientOutputAction<PayloadObject, ReturnActions> | void;
+) => Promise<SingleClientOutputAction<PayloadObject, ReturnActions> | void>;
 
 type Handler<
     RessourceKeyObject extends Record<string, unknown>,
@@ -195,11 +195,10 @@ export class Controller<
                     }
                 }
                 // if user with payload is authorized
-                const result = handler.listener(listenerOptions);
-                if (result) {
-                    this.socketManager.send(socket, result);
-                    return;
-                }
+                handler.listener(listenerOptions).then((result) => {
+                    if (result) {
+                    this.socketManager.send(socket, result)
+                }})
             }
         } catch (err) {
             this.logger.error(
