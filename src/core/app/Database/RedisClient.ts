@@ -42,15 +42,13 @@ export class RedisConnector implements HotConnector {
 
     constructor(
         private readonly props: RedisConnectorProps,
-    ) {
-        this.getClient = this.getClient.bind(this);
-    }
+    ) {}
 
     async getClient(ressourceName: string): Promise<RedisClient> {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         const redisClient: RedisClientType = await createClient<RedisDefaultModules, {}, {}, 2, {}>({
             url: `redis://${this.props.host}:${this.props.port ?? 6379}`,
-        }).on("error", (err) => console.error(err)).connect();
+        }).on("error", (err) => this.logger.error(err)).connect();
         return new RedisClient(ressourceName, redisClient);
     }
 }
