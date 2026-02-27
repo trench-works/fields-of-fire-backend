@@ -1,9 +1,14 @@
 import { HotRessource } from "./HotDB";
 
-export class BrutDataManager<Ressource extends object = object> implements HotRessource<Ressource> {
+export class MappedRepository<Ressource extends object = object> implements HotRessource<Ressource> {
     private dataMap: Map<string, Ressource> = new Map();
 
-    constructor(private readonly ressourceName: string) {
+    constructor(private readonly ressourceName: string, ressources?: Record<string, Ressource>) {
+        if (ressources) {
+            for (const [key, ressource] of Object.entries(ressources)) {
+                this.dataMap.set(key, ressource);
+            }
+        }
     }
     
     public async list(): Promise<string[]> {

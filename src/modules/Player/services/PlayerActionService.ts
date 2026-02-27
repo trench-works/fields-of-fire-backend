@@ -1,5 +1,5 @@
 import { Logger, Provide } from "../../../core";
-import { GameDataManager } from "../../Game/data/GameDataManager";
+import { GameDataManager } from "../../Game/data/GameRepository";
 
 export class PlayerActionService {
   constructor(

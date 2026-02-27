@@ -21,7 +21,7 @@ export interface HotRessource<Ressource extends object = object> {
     get(key: string): Promise<Ressource | DBError | null>
 }
 
-export class BaseHotRessource<Ressource extends object = object> implements HotRessource<Ressource> {
+export class HotRepository<Ressource extends object = object> implements HotRessource<Ressource> {
     private client: HotClient | undefined = undefined;
 
     constructor(private readonly ressourceName: string) {

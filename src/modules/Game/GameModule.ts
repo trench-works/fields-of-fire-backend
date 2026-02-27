@@ -1,6 +1,6 @@
 import { Module } from "../../core";
 import { GameController } from "./application/GameController";
-import { GameDataManager } from "./data/GameDataManager";
+import { GameDataManager } from "./data/GameRepository";
 import { GameService } from "./services/GameService";
 import { GameWebSocketManager } from "./web/GameWebSocketManager";
 

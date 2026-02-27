@@ -1,4 +1,4 @@
-import { GameDataManager } from "../../Game/data/GameDataManager";
+import { GameDataManager } from "../../Game/data/GameRepository";
 import { Provide } from "../../../core";
 import { LobbyDataManager } from "../data/LobbyDataManager";
 import { LobbyInfo } from "../application/interfaces/LobbyInfo";
