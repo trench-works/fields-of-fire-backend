@@ -8,11 +8,11 @@ import { DBError } from "../../../core/app/Database/errors/DBError";
 import { HotRessource } from "../../../core/app/Database/HotDB";
 import { Player } from "../../Player/data/Player";
 import { Game } from "../data/Game";
-import { GameRepository } from "../data/GameRepository";
+import { GameDataManager } from "../data/GameDataManager";
 
 export class GameService {
     constructor(
-        @Provide(GameRepository)
+        @Provide(GameDataManager)
         private readonly gameDataManager: HotRessource<Game>
     ) {}
 
