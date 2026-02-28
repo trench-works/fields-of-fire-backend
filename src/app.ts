@@ -12,6 +12,8 @@ import { ColdConnectorProvider } from "./core/app/Database/ColdDB";
 import { CharacterClassModule } from "./modules/CharacterClass/CharacterClassModule";
 import { EffectModule } from "./modules/Effect/EffectModule";
 import { ActionModule } from "./modules/Action/ActionModule";
+import { HttpResolver } from "./core/app/Resolvers/Http/HttpResolver";
+import { WsResolver } from "./core/app/Resolvers/WebSocket/WsResolver";
 
 const server = new App({
     providers: [
@@ -36,6 +38,7 @@ const server = new App({
         EffectModule,
         ActionModule
     ],
+    resolvers: [WsResolver, HttpResolver],
     appConfig: (configService) => configService.getConfig().app,
     config: ConfigMap,
 });

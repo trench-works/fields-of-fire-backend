@@ -1,8 +1,8 @@
-import { Controller, Logger } from "..";
+import { Controller, Logger } from "../..";
 import { WebSocket } from "ws";
-import { UserInfos } from "../Types/UserInfos";
+import { UserInfos } from "../../Types/UserInfos";
 import { validateSync, ValidationError } from "class-validator";
-import { InputAction } from "../../types/Action";
+import { InputAction } from "../../../types/Action";
 
 type SubcribePayload<RessourceKeyObject> = {
     key: RessourceKeyObject;
@@ -10,9 +10,8 @@ type SubcribePayload<RessourceKeyObject> = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export class TopicManager<RessourceKeyObject extends Record<string, unknown> = {}> {
+export class WsTopicManager<RessourceKeyObject extends Record<string, unknown> = {}> {
     constructor(
-        public readonly topic: string,
         private readonly controllers: Controller<RessourceKeyObject>[],
         private readonly logger: Logger
     ) {}

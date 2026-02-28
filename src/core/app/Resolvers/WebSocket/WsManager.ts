@@ -1,11 +1,11 @@
 import { WebSocket } from "ws";
-import { RessourceKeyUtils } from "../Utils";
+import { RessourceKeyUtils } from "../../Utils";
 import {
     MultipleClientsOutputAction,
     SingleClientOutputAction,
-} from "../../types/Action";
-import { Provide } from "../../decorators";
-import { Logger } from "../Providers";
+} from "../../../types/Action";
+import { Provide } from "../../../decorators";
+import { Logger } from "../../Providers";
 
 type RessourceClient<
     RessourceKeyObject extends Record<string, unknown>
@@ -14,7 +14,7 @@ type RessourceClient<
     key: RessourceKeyObject;
 };
 
-export class WebSocketManager<
+export class WsManager<
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-explicit-any
     RessourceKeyObject extends Record<string, any> = {},
     OutputActions = string,

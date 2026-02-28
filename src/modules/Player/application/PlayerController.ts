@@ -1,4 +1,4 @@
-import { Controller, ListenerOptions, Provide } from "../../../core";
+import { Controller, ListenerOptions, Provide, SocketError } from "../../../core";
 import { GameKey } from "../../Game/application/interfaces/GameKey";
 import { MovePlayer } from "./interfaces/MovePlayer";
 import { PlayerService } from "../services/PlayerService";
@@ -35,7 +35,7 @@ export class PlayerController extends Controller<
         payload,
     }: ListenerOptions<GameKey, MovePlayer>) {
         const moved = await this.playerService.move(user.id, gameId, payload);
-        if (moved instanceof Error) {
+        if (moved instanceof SocketError) {
             return { actionId: "error", payload: moved };
         }
         this.emit({

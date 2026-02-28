@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import { WebSocket } from "ws";
 import { Instantiable } from "../Types/Instantiable";
@@ -5,7 +6,7 @@ import { validateSync, ValidationError } from "class-validator";
 import { IGuard, RessourceAccessLevel } from "../Providers/Guard";
 import { AccessRefused } from "../../errors";
 import { UserInfos } from "../Types/UserInfos";
-import { WebSocketManager } from "../WebSocket/WebSocketManager";
+import { WsManager } from "../Resolvers/WebSocket/WsManager";
 import {
     InputAction,
     MultipleClientsOutputAction,
@@ -28,7 +29,7 @@ type ControllerOptions<
     topic: string;
     key: Instantiable<RessourceKeyObject>;
     guards?: IGuard[];
-    socketManager: WebSocketManager<
+    socketManager: WsManager<
         RessourceKeyObject,
         OutputActions,
         ReturnActions
@@ -53,8 +54,44 @@ type Handler<
     accessLevel?: RessourceAccessLevel;
 };
 
+
+
+export type GetListenerOptions<
+    ParamObject extends Record<string, unknown> = {},
+    QueryObject extends Record<string, unknown> = {}
+> = {
+    param?: ParamObject;
+    query?: QueryObject;
+};
+
+
+type GetListener<
+    ParamObject extends Record<string, unknown> = {},
+    QueryObject extends Record<string, unknown> = {}
+> = (
+    options: GetListenerOptions<ParamObject, QueryObject>
+) => Promise<void>;
+
+
+export type GetHandler<
+    ParamObject extends Record<string, unknown> = {},
+    QueryObject extends Record<string, unknown> = {}
+> = {
+    listener: GetListener<ParamObject, QueryObject>;
+    param?: Instantiable<ParamObject>;
+    query?: Instantiable<QueryObject>;
+}
+
+
+type GetOptions<
+    ParamObject extends Record<string, unknown> = {},
+    QueryObject extends Record<string, unknown> = {}
+> = {
+    param?: Instantiable<ParamObject>;
+    query?: Instantiable<QueryObject>;
+};
+
 export type ListenerOptions<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RessourceKeyObject extends Record<string, any> = {},
     PayloadObject extends object = object
 > = {
@@ -70,23 +107,28 @@ type OnOptions<PayloadObject extends object = object> = {
 };
 
 export class Controller<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     RessourceKeyObject extends Record<string, any> = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     InputActions = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     OutputActions = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     ReturnActions = any
 > {
     public wsHandlers: Map<
         string,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         Handler<RessourceKeyObject, any, ReturnActions>
     >;
+    
+    public getHandlers: Map<
+        string,
+        GetHandler<any, any>
+    >;
+
 
     private config: ControllerConfig<RessourceKeyObject>;
-    protected socketManager: WebSocketManager<
+    protected socketManager: WsManager<
         RessourceKeyObject,
         OutputActions,
         ReturnActions
@@ -102,6 +144,7 @@ export class Controller<
     }: ControllerOptions<RessourceKeyObject, OutputActions, ReturnActions>) {
         this.socketManager = socketManager;
         this.wsHandlers = new Map();
+        this.getHandlers = new Map();
         this.config = {
             topic,
             key,
@@ -126,16 +169,26 @@ export class Controller<
         this.socketManager.emit(action);
     }
 
-    on(
+    on<PayloadObject extends object = object>(
         action: InputActions,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        listener: Listener<RessourceKeyObject, any, ReturnActions>,
-        options?: OnOptions
+        listener: Listener<RessourceKeyObject, PayloadObject, ReturnActions>,
+        options?: OnOptions<PayloadObject>
     ): this {
         this.wsHandlers.set(action as string, {
             listener,
-            payloadType: options?.payloadType,
-            accessLevel: options?.accessLevel,
+            ...options
+        });
+        return this;
+    }
+
+    get<ParamObject extends Record<string, unknown> = any, QueryObject extends Record<string, unknown> = any>(
+        path: string,
+        listener: GetListener<ParamObject, QueryObject>,
+        options: GetOptions<ParamObject, QueryObject>
+    ): this {
+        this.getHandlers.set(path, {
+            listener,
+            ...options
         });
         return this;
     }

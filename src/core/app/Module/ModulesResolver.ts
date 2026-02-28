@@ -3,7 +3,7 @@ import { DefaultConfig } from "../Providers/Defaults/ConfigService";
 import { EnvObject } from "../Types/Env";
 import { Controllable, Modullable } from "../Types/Instantiable";
 
-type ModulesResolverProps<Config extends EnvObject> = {
+export type ModulesResolverProps<Config extends EnvObject> = {
     modules?: Modullable<Config>[];
     controllers?: Controllable[];
     providers?: Provider<Config>[];

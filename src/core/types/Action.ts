@@ -1,3 +1,5 @@
+import { SocketError } from "../errors";
+
 export type InputAction<PayloadObject extends object = object> = {
     actionId: string;
     payload: PayloadObject;
@@ -19,5 +21,8 @@ export type SingleClientOutputAction<
     OutputActions = string
 > = {
     actionId: OutputActions | "error";
-    payload: PayloadObject;
+    payload: PayloadObject | SocketError;
+} | {
+    actionId: "error";
+    payload: SocketError;
 };

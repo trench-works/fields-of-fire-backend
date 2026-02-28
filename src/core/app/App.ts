@@ -2,10 +2,8 @@ import express from "express";
 import { Express } from "express";
 import expressWs from "express-ws";
 import { Server } from "http";
-import { Controllable, Modullable } from "./Types/Instantiable";
-import { ModulesResolver } from "./Module/ModulesResolver";
-import { TopicResolver } from "./WebSocket/TopicResolver";
-import { DependencyResolver, Provider } from "./Controller/DependencyResolver";
+import { ModulesResolver, ModulesResolverProps } from "./Module/ModulesResolver";
+import { DependencyResolver } from "./Controller/DependencyResolver";
 import {
     ConfigService,
     DefaultConfig,
@@ -17,6 +15,9 @@ import {
     LoggerService,
     LogLevel,
 } from "./Providers/Defaults/LoggerService";
+import {Instance} from "express-ws"
+import { Instantiable } from "./Types/Instantiable";
+import { Resolver } from "./Resolvers/Resolver";
 
 export type AppConfig = {
     name: string;
@@ -25,22 +26,20 @@ export type AppConfig = {
 }
 
 type AppProps<Config extends EnvObject> = {
-    controllers?: Controllable[];
-    providers?: Provider<Config>[];
-    modules?: Modullable<Config>[];
     appConfig: ConfigurableProp<Config, AppConfig>;
     config?: Config;
+    resolvers: Instantiable<Resolver>[]
 };
 
 export class App<Config extends EnvObject = DefaultConfig> {
     public app: Express;
     public server: Server | undefined;
-    public socket: expressWs.Instance;
+    public socket: Instance;
 
     private readonly configService: ConfigService<Config>;
     private readonly loggerService: LoggerService;
 
-    constructor(private readonly appProps: AppProps<Config>) {
+    constructor(private readonly appProps: AppProps<Config> & ModulesResolverProps<Config>) {
         this.configService = new ConfigService<Config>(appProps.config);
         this.loggerService = new LoggerService(
             getConfigurablePropValue(appProps.appConfig, this.configService).logLevel
@@ -54,12 +53,8 @@ export class App<Config extends EnvObject = DefaultConfig> {
             this.configService,
             this.loggerService
         ).build();
-        const topicManagers = new TopicResolver(controllers, this.loggerService).build();
-        for (const topicManager of topicManagers) {
-            this.socket.app.ws(
-                `/${topicManager.topic}`,
-                topicManager.open.bind(topicManager)
-            );
+        for (const resolver of appProps.resolvers) {
+            new resolver().prepare(controllers, this.loggerService).apply(this);
         }
     }
 
