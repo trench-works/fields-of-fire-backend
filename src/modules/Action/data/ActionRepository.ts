@@ -4,7 +4,37 @@ import { Action } from "./Action";
 
 
 export class ActionRepository extends FolderRepository<Action> {
+    
+    entityToRessource(entity: Action): Action {
+        return {
+            ...entity
+        }
+    }
+
     constructor() {
-        super("action", {})
+        super("action", {
+            "walk": {
+                id: "walk",
+                name: "Marcher",
+                description: "Se déplacer vers une position ciblée",
+                iconSpriteKey: "action_image_moove",
+                cost: 0,
+                isWalkAction: true,
+            },
+            "shoot": {
+                id: "shoot",
+                name: "Attaquer",
+                description: "Attaquer un ennemi à portée",
+                iconSpriteKey: "action_image_shoot",
+                cost: 2,
+            },
+            "heal": {
+                id: "heal",
+                name: "Soigner",
+                description: "buff un allié",
+                iconSpriteKey: "action_image_arrowup",
+                cost: 1,
+            }
+        })
     }
 }
