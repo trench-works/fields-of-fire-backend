@@ -46,6 +46,7 @@ export class App<Config extends EnvObject = DefaultConfig> {
         );
         this.server = undefined;
         this.app = express();
+        this.app.use(express.json());
         this.socket = expressWs(this.app);
         //apply controllers
         const controllers = new DependencyResolver<Config>(

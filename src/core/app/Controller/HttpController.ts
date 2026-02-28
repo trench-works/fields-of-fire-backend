@@ -6,24 +6,26 @@ export type GetListenerOptions<
     ParamObject extends Record<string, unknown> = {},
     QueryObject extends Record<string, unknown> = {}
 > = {
-    param?: ParamObject;
+    params?: ParamObject;
     query?: QueryObject;
 };
 
 
 type GetListener<
+    ReturnType = void,
     ParamObject extends Record<string, unknown> = {},
-    QueryObject extends Record<string, unknown> = {}
+    QueryObject extends Record<string, unknown> = {},
 > = (
     options: GetListenerOptions<ParamObject, QueryObject>
-) => Promise<void>;
+) => Promise<ReturnType>;
 
 
 export type GetHandler<
+    ReturnType = void,
     ParamObject extends Record<string, unknown> = {},
     QueryObject extends Record<string, unknown> = {}
 > = {
-    listener: GetListener<ParamObject, QueryObject>;
+    listener: GetListener<ReturnType, ParamObject, QueryObject>;
     param?: Instantiable<ParamObject>;
     query?: Instantiable<QueryObject>;
 }
@@ -46,17 +48,17 @@ export class HttpController {
     
     public getHandlers: Map<
         string,
-        GetHandler<any, any>
+        GetHandler<any, any, any>
     >;
 
     constructor() {
         this.getHandlers = new Map();
     }
 
-    get<ParamObject extends Record<string, unknown> = any, QueryObject extends Record<string, unknown> = any>(
+    get<ReturnType = void, ParamObject extends Record<string, unknown> = any, QueryObject extends Record<string, unknown> = any>(
         path: string,
-        listener: GetListener<ParamObject, QueryObject>,
-        options: GetOptions<ParamObject, QueryObject>
+        listener: GetListener<ReturnType, ParamObject, QueryObject>,
+        options?: GetOptions<ParamObject, QueryObject>
     ): this {
         this.getHandlers.set(path, {
             listener,
