@@ -15,13 +15,13 @@ import {
 import { Provide } from "../../decorators";
 import { Logger } from "../Providers";
 
-type ControllerConfig<RessourceKeyObject extends Record<string, unknown>> = {
+type WsControllerConfig<RessourceKeyObject extends Record<string, unknown>> = {
     topic: string;
     key: Instantiable<RessourceKeyObject>;
     guards?: IGuard[];
 };
 
-type ControllerOptions<
+type WsControllerOptions<
     RessourceKeyObject extends Record<string, unknown>,
     OutputActions,
     ReturnActions
@@ -36,62 +36,25 @@ type ControllerOptions<
     >;
 };
 
-type Listener<
+type WsListener<
     RessourceKeyObject extends Record<string, unknown>,
     PayloadObject extends object = object,
     ReturnActions = string
 > = (
-    options: ListenerOptions<RessourceKeyObject, PayloadObject>
+    options: WsListenerOptions<RessourceKeyObject, PayloadObject>
 ) => Promise<SingleClientOutputAction<PayloadObject, ReturnActions> | void>;
 
-type Handler<
+type WsHandler<
     RessourceKeyObject extends Record<string, unknown>,
     PayloadObject extends object = object,
     ReturnActions = string
 > = {
-    listener: Listener<RessourceKeyObject, PayloadObject, ReturnActions>;
+    listener: WsListener<RessourceKeyObject, PayloadObject, ReturnActions>;
     payloadType?: Instantiable<PayloadObject>;
     accessLevel?: RessourceAccessLevel;
 };
 
-
-
-export type GetListenerOptions<
-    ParamObject extends Record<string, unknown> = {},
-    QueryObject extends Record<string, unknown> = {}
-> = {
-    param?: ParamObject;
-    query?: QueryObject;
-};
-
-
-type GetListener<
-    ParamObject extends Record<string, unknown> = {},
-    QueryObject extends Record<string, unknown> = {}
-> = (
-    options: GetListenerOptions<ParamObject, QueryObject>
-) => Promise<void>;
-
-
-export type GetHandler<
-    ParamObject extends Record<string, unknown> = {},
-    QueryObject extends Record<string, unknown> = {}
-> = {
-    listener: GetListener<ParamObject, QueryObject>;
-    param?: Instantiable<ParamObject>;
-    query?: Instantiable<QueryObject>;
-}
-
-
-type GetOptions<
-    ParamObject extends Record<string, unknown> = {},
-    QueryObject extends Record<string, unknown> = {}
-> = {
-    param?: Instantiable<ParamObject>;
-    query?: Instantiable<QueryObject>;
-};
-
-export type ListenerOptions<
+export type WsListenerOptions<
     RessourceKeyObject extends Record<string, any> = {},
     PayloadObject extends object = object
 > = {
@@ -106,28 +69,24 @@ type OnOptions<PayloadObject extends object = object> = {
     accessLevel?: RessourceAccessLevel;
 };
 
-export class Controller<
-     
+export class WsController<
     RessourceKeyObject extends Record<string, any> = any,
-     
     InputActions = any,
-     
     OutputActions = any,
-     
     ReturnActions = any
 > {
+    private readonly _isWsController = true;
+
+    static isWsController(obj: any): obj is WsController {
+        return (obj as WsController)._isWsController === true;
+    }
+    
     public wsHandlers: Map<
         string,
-        Handler<RessourceKeyObject, any, ReturnActions>
-    >;
-    
-    public getHandlers: Map<
-        string,
-        GetHandler<any, any>
+        WsHandler<RessourceKeyObject, any, ReturnActions>
     >;
 
-
-    private config: ControllerConfig<RessourceKeyObject>;
+    private config: WsControllerConfig<RessourceKeyObject>;
     protected socketManager: WsManager<
         RessourceKeyObject,
         OutputActions,
@@ -141,10 +100,9 @@ export class Controller<
         key,
         guards,
         socketManager,
-    }: ControllerOptions<RessourceKeyObject, OutputActions, ReturnActions>) {
+    }: WsControllerOptions<RessourceKeyObject, OutputActions, ReturnActions>) {
         this.socketManager = socketManager;
         this.wsHandlers = new Map();
-        this.getHandlers = new Map();
         this.config = {
             topic,
             key,
@@ -171,22 +129,10 @@ export class Controller<
 
     on<PayloadObject extends object = object>(
         action: InputActions,
-        listener: Listener<RessourceKeyObject, PayloadObject, ReturnActions>,
+        listener: WsListener<RessourceKeyObject, PayloadObject, ReturnActions>,
         options?: OnOptions<PayloadObject>
     ): this {
         this.wsHandlers.set(action as string, {
-            listener,
-            ...options
-        });
-        return this;
-    }
-
-    get<ParamObject extends Record<string, unknown> = any, QueryObject extends Record<string, unknown> = any>(
-        path: string,
-        listener: GetListener<ParamObject, QueryObject>,
-        options: GetOptions<ParamObject, QueryObject>
-    ): this {
-        this.getHandlers.set(path, {
             listener,
             ...options
         });
@@ -225,7 +171,7 @@ export class Controller<
                 }
                 //TODO: user validation
                 // listener options prep
-                const listenerOptions: ListenerOptions<RessourceKeyObject> = {
+                const listenerOptions: WsListenerOptions<RessourceKeyObject> = {
                     payload,
                     key,
                     socket,

@@ -1,8 +1,8 @@
 import { GameService } from "../services/GameService";
 import {
     Provide,
-    Controller,
-    ListenerOptions,
+    WsController,
+    WsListenerOptions,
     SocketError,
     SingleClientOutputAction,
 } from "../../../core";
@@ -11,7 +11,7 @@ import { GameWebSocketManager } from "../web/GameWebSocketManager";
 import { GameInputActions, GameOutputActions, GameReturnActions } from "./interfaces/GameAction";
 
 
-export class GameController extends Controller<
+export class GameController extends WsController<
     GameKey,
     GameInputActions,
     GameOutputActions,
@@ -28,7 +28,7 @@ export class GameController extends Controller<
     async joinMe({
         key,
         user,
-    }: ListenerOptions<GameKey>): Promise<SingleClientOutputAction<object, GameReturnActions>> {
+    }: WsListenerOptions<GameKey>): Promise<SingleClientOutputAction<object, GameReturnActions>> {
         this.logger.log("Received call on - Game - JoinMe");
         const subscribed = await this.gameService.subscribe(user.id, key.gameId);
         if (subscribed instanceof SocketError) {

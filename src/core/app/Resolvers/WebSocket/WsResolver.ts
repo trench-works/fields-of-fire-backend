@@ -1,21 +1,23 @@
-import { App, Controller, Logger } from "../..";
+import { App, WsController, Logger } from "../..";
 import { EnvObject } from "../../Types/Env";
-import { Resolver } from "../Resolver";
+import { Resolver, ResolverApplier } from "../Resolver";
 import { WsTopicManager } from "./WsTopicManager";
 
-export class WsResolver implements Resolver {
-    private topicMappedControllers: Map<string, Controller[]> = new Map();
+export class WsResolver implements Resolver, ResolverApplier {
+    private topicMappedControllers: Map<string, WsController[]> = new Map();
     private logger: Logger | undefined;
 
-    prepare(controllers: Controller[], logger: Logger): this {
+    prepare(controllers: object[], logger: Logger): this {
         this.logger = logger;
         for (const controller of controllers) {
-            if (this.topicMappedControllers.has(controller.topic)) {
-                this.topicMappedControllers
-                    .get(controller.topic)
-                    ?.push(controller);
-            } else {
-                this.topicMappedControllers.set(controller.topic, [controller]);
+            if (WsController.isWsController(controller)) {
+                if (this.topicMappedControllers.has(controller.topic)) {
+                    this.topicMappedControllers
+                        .get(controller.topic)
+                        ?.push(controller);
+                } else {
+                    this.topicMappedControllers.set(controller.topic, [controller]);
+                }
             }
         }
         return this;

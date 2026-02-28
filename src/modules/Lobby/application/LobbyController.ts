@@ -1,4 +1,4 @@
-import { Controller, Provide, RessourceAccessLevel } from "../../../core";
+import { WsController, Provide, RessourceAccessLevel } from "../../../core";
 import { LobbyKeys } from "./interfaces/LobbyKeys";
 import { LobbyService } from "../services/LobbyService";
 import { GameService } from "../../Game/services/GameService";
@@ -6,7 +6,7 @@ import { LobbyGuard } from "../services/LobbyGuard";
 import { LobbyWebSocketManager } from "../web/LobbyWebSocketManager";
 import { LobbyInputActions, LobbyOutputActions, LobbyReturnActions } from "./interfaces/LobbyAction";
 
-export class LobbyController extends Controller<LobbyKeys, LobbyInputActions, LobbyOutputActions, LobbyReturnActions> {
+export class LobbyController extends WsController<LobbyKeys, LobbyInputActions, LobbyOutputActions, LobbyReturnActions> {
     constructor(
         @Provide(LobbyService) private readonly lobbyService: LobbyService,
         @Provide(GameService) private readonly gameService: GameService,

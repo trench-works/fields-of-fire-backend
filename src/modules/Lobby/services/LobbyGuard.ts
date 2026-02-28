@@ -1,6 +1,6 @@
 import {
     IGuard,
-    ListenerOptions,
+    WsListenerOptions,
     NotFoundError,
     Provide,
     RessourceAccessLevel,
@@ -14,7 +14,7 @@ export class LobbyGuard implements IGuard {
         private readonly lobbyDataManager: LobbyDataManager
     ) {}
 
-    validate({ user, key }: ListenerOptions<LobbyKeys>): RessourceAccessLevel {
+    validate({ user, key }: WsListenerOptions<LobbyKeys>): RessourceAccessLevel {
         const lobby = this.lobbyDataManager.getLobby(key.lobbyId);
         if (lobby instanceof NotFoundError) {
             return RessourceAccessLevel.NONE;

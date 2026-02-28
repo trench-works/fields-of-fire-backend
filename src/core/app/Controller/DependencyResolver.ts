@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { Controllable, Instantiable } from "../Types/Instantiable";
-import { Controller } from "..";
+import { WsController } from "..";
 import { Configurable } from "../Types/Configurable";
 import {
     ConfigService,
@@ -86,7 +86,7 @@ export class DependencyResolver<Config extends EnvObject> {
         this.logger.debug("Dependencies tree ready for compiling !");
     }
 
-    private instantiate<ToInstantiate extends object = object | Controller>(
+    private instantiate<ToInstantiate extends object = object | WsController>(
         instantiator:
             | Instantiable<ToInstantiate>
             | Configurable<Config, ToInstantiate>,
@@ -142,7 +142,7 @@ export class DependencyResolver<Config extends EnvObject> {
         }
     }
 
-    build(): Controller[] {
+    build(): object[] {
         this.logger.debug("Dependency tree compiling...");
         // Providers Synchrone Resolving
         while (this.providersDependenciesMap.size > 0) {
@@ -187,7 +187,7 @@ export class DependencyResolver<Config extends EnvObject> {
 
 
         // Controllers Synchrone Resolving
-        const resolvedControllers: Controller[] = this.controllerClasses.map(
+        const resolvedControllers: object[] = this.controllerClasses.map(
             (controllerClass) => {
                 const dependencies = Reflect.getMetadataKeys(controllerClass)
                     .filter((key) => String(key).startsWith("provider-constructor"))

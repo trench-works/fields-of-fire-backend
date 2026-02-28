@@ -1,4 +1,4 @@
-import { Controller, ListenerOptions, Provide, SocketError } from "../../../core";
+import { WsController, WsListenerOptions, Provide, SocketError } from "../../../core";
 import { GameKey } from "../../Game/application/interfaces/GameKey";
 import { MovePlayer } from "./interfaces/MovePlayer";
 import { PlayerService } from "../services/PlayerService";
@@ -9,7 +9,7 @@ import { PlayerInputActions, PlayerOutputActions } from "../web/PlayerSocketActi
 import { PlayerWebSocketManager } from "../web/PlayerWebSocketManager";
 
 
-export class PlayerController extends Controller<
+export class PlayerController extends WsController<
     PlayerKey,
     PlayerInputActions,
     PlayerOutputActions
@@ -33,7 +33,7 @@ export class PlayerController extends Controller<
         key: { gameId },
         user,
         payload,
-    }: ListenerOptions<GameKey, MovePlayer>) {
+    }: WsListenerOptions<GameKey, MovePlayer>) {
         const moved = await this.playerService.move(user.id, gameId, payload);
         if (moved instanceof SocketError) {
             return { actionId: "error", payload: moved };

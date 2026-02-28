@@ -1,9 +1,9 @@
-import { Controller, Provide } from "../../../core";
+import { WsController, Provide } from "../../../core";
 import { GameKey } from "../../Game/application/interfaces/GameKey";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { CreateLobbyInterface } from "./interfaces/CreateLobbyInterface";
 
-export class MenuController extends Controller {
+export class MenuController extends WsController {
     constructor(
         @Provide(GameWebSocketManager) socketManager: GameWebSocketManager
     ) {

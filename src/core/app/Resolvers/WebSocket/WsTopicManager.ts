@@ -1,4 +1,4 @@
-import { Controller, Logger } from "../..";
+import { WsController, Logger } from "../..";
 import { WebSocket } from "ws";
 import { UserInfos } from "../../Types/UserInfos";
 import { validateSync, ValidationError } from "class-validator";
@@ -12,7 +12,7 @@ type SubcribePayload<RessourceKeyObject> = {
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export class WsTopicManager<RessourceKeyObject extends Record<string, unknown> = {}> {
     constructor(
-        private readonly controllers: Controller<RessourceKeyObject>[],
+        private readonly controllers: WsController<RessourceKeyObject>[],
         private readonly logger: Logger
     ) {}
 

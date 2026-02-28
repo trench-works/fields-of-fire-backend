@@ -1,24 +1,26 @@
-import { Controller, GetHandler } from "../../Controller/Controller";
 import { Logger } from "../../Providers";
 import { HttpTopicManager } from "./HttpTopicManager";
 import { App } from "../../App";
 import { EnvObject } from "../../Types/Env";
-import { Resolver } from "../Resolver";
+import { Resolver, ResolverApplier } from "../Resolver";
+import { GetHandler, HttpController } from "../../Controller/HttpController";
 
-export class HttpResolver implements Resolver {
+export class HttpResolver implements Resolver, ResolverApplier {
     private pathMappedControllers: Map<string, GetHandler[]> = new Map();
     private logger: Logger | undefined;
 
-    prepare(controllers: Controller[], logger: Logger): this {
+    prepare(controllers: object[], logger: Logger): this {
         this.logger = logger;
         for (const controller of controllers) {
-            for(const [path, handler] of controller.getHandlers.entries())
-            if (this.pathMappedControllers.has(path)) {
-                this.pathMappedControllers
-                    .get(path)
-                    ?.push(handler);
-            } else {
-                this.pathMappedControllers.set(path, [handler]);
+            if (HttpController.isHttpController(controller)) {
+                for (const [path, handler] of controller.getHandlers.entries())
+                    if (this.pathMappedControllers.has(path)) {
+                        this.pathMappedControllers
+                            .get(path)
+                            ?.push(handler);
+                    } else {
+                        this.pathMappedControllers.set(path, [handler]);
+                    }
             }
         }
         return this;

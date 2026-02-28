@@ -1,4 +1,3 @@
-import { Controller } from "../Controller/Controller";
 import { Module } from "../Module/Module";
 import { DefaultConfig } from "../Providers/Defaults/ConfigService";
 import { EnvObject } from "./Env";
@@ -11,7 +10,7 @@ export interface Instantiable<T = any> {
 
 export interface Controllable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    new (...providers: any[]): Controller;
+    new (...providers: any[]): object;
 }
 
 export interface Modullable<Config extends EnvObject = DefaultConfig> {

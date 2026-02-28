@@ -1,4 +1,4 @@
-import { ListenerOptions } from "..";
+import { WsListenerOptions } from "..";
 
 export enum RessourceAccessLevel {
     DELETE = 4,
@@ -10,5 +10,5 @@ export enum RessourceAccessLevel {
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface IGuard<RessourceKeyObject extends Record<string, unknown> = {}> {
-    validate(options: ListenerOptions<RessourceKeyObject>): RessourceAccessLevel;
+    validate(options: WsListenerOptions<RessourceKeyObject>): RessourceAccessLevel;
 }

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express"
-import { GetHandler } from "../../Controller/Controller"
+import { GetHandler } from "../../Controller/HttpController"
 import { Logger } from "../../Providers"
 
 type GetOptions = {
