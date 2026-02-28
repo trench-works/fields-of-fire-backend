@@ -1,4 +1,4 @@
-import { MappedRepository } from "../../../core/app/Database/MappedRepository";
+import { MappedRepository } from "../../../core";
 import { Game } from "./Game";
 
 export class GameDataManager extends MappedRepository<Game> {

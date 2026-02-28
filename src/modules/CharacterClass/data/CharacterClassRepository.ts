@@ -1,4 +1,4 @@
-import { FolderRepository } from "../../../core/app/Database/FolderRepository";
+import { FolderRepository } from "../../../core";
 import { CharacterClass } from "./CharacterClass";
 
 
