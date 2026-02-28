@@ -3,9 +3,9 @@ import {
     NotFoundError,
     Provide,
     SocketError,
+    HotRessource,
+    DBError
 } from "../../../core";
-import { DBError } from "../../../core/app/Database/errors/DBError";
-import { HotRessource } from "../../../core/app/Database/HotDB";
 import { Player } from "../../Player/data/Player";
 import { Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";

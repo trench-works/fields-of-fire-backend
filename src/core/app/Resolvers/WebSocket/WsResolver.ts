@@ -1,6 +1,7 @@
-import { App, Controller, Logger, WsTopicManager } from "../..";
+import { App, Controller, Logger } from "../..";
 import { EnvObject } from "../../Types/Env";
 import { Resolver } from "../Resolver";
+import { WsTopicManager } from "./WsTopicManager";
 
 export class WsResolver implements Resolver {
     private topicMappedControllers: Map<string, Controller[]> = new Map();

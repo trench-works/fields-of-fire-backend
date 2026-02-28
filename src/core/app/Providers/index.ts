@@ -1,3 +1,3 @@
 export * from "./Guard";
 export * from "./Defaults/ConfigService";
-export * from "./Defaults/LoggerService";
+export { LogLevel, LoggerService, Logger } from "./Defaults/LoggerService";
