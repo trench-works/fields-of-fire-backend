@@ -23,6 +23,7 @@
     },
     "dependencies": {
         "class-validator": "^0.14.3",
+        "cors": "^2.8.6",
         "dayjs": "^1.11.19",
         "express": "^5.2.1",
         "express-ws": "^5.0.2",
@@ -33,6 +34,7 @@
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@types/cors": "^2.8.19",
         "@types/express": "^5.0.6",
         "@types/express-ws": "^3.0.6",
         "@typescript-eslint/eslint-plugin": "^8.56.1",

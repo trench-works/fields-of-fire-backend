@@ -18,6 +18,7 @@ import {
 import {Instance} from "express-ws"
 import { Instantiable } from "./Types/Instantiable";
 import { Resolver } from "./Resolvers/Resolver";
+import cors from "cors";
 
 export type AppConfig = {
     name: string;
@@ -47,6 +48,9 @@ export class App<Config extends EnvObject = DefaultConfig> {
         this.server = undefined;
         this.app = express();
         this.app.use(express.json());
+        this.app.use(cors({
+            origin: '*'
+        }))
         this.socket = expressWs(this.app);
         //apply controllers
         const controllers = new DependencyResolver<Config>(
