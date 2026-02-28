@@ -3,7 +3,7 @@ import { User } from "./User";
 
 
 export class UserRepository extends FolderRepository<User> {
-    entityToRessource(entity: User): User {
+    async entityToRessource(entity: User): Promise<User> {
         return {
             ...entity
         }

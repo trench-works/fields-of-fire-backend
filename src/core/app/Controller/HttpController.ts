@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { HttpError } from "../../errors/http/HttpError";
 import { Instantiable } from "../Types/Instantiable";
 
 export type GetListenerOptions<
@@ -17,7 +18,7 @@ type GetListener<
     QueryObject extends Record<string, unknown> = {},
 > = (
     options: GetListenerOptions<ParamObject, QueryObject>
-) => Promise<ReturnType>;
+) => Promise<ReturnType | HttpError>;
 
 
 export type GetHandler<

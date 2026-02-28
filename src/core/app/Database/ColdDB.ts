@@ -16,7 +16,7 @@ export interface ColdConnector {
 }
 
 export interface ColdRessource<Ressource extends object = object> {
-    list(): Promise<string[] | DBError>;
+    list(): Promise<Ressource[] | DBError>;
     get(key: string): Promise<Ressource | DBError | null>
 }
 
@@ -34,11 +34,12 @@ export class ColdRepository<Ressource extends object = object> implements ColdRe
         });
     }
     
-    public async list(): Promise<string[] | NoClientError> {
+    public async list(): Promise<Ressource[] | NoClientError> {
         if (!this.client) {
             return new NoClientError();
         }
-        return (await this.client.list()).map((key) => key.split(":")[1]);
+        return [];
+        //return await this.client.list();
     }
 
     public async get(key: string): Promise<Ressource | NoClientError | null> {

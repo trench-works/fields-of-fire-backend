@@ -4,7 +4,7 @@ import { Effect } from "./Effect";
 
 
 export class EffectRepository extends FolderRepository<Effect> {
-    entityToRessource(entity: Effect): Effect {
+    async entityToRessource(entity: Effect): Promise<Effect> {
         return {
             ...entity
         }

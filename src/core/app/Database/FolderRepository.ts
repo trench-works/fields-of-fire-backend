@@ -12,17 +12,21 @@ export abstract class FolderRepository<Ressource extends object = object, Entity
         }
     }
 
-    async list(): Promise<string[]> {
-        return Array.from(this.dataMap.keys());
+    async list(): Promise<Ressource[]> {
+        const data: Ressource[] = [];
+        for (const entity of this.dataMap.values()) {
+            data.push(await this.entityToRessource(entity));
+        }
+        return data;
     }
 
-    abstract entityToRessource(entity: Entity): Ressource;
+    abstract entityToRessource(entity: Entity): Promise<Ressource>;
 
     async get(key: string): Promise<Ressource | null> {
         const entity = this.dataMap.get(key);
         if (!entity) {
             return null;
         }
-        return this.entityToRessource(entity);
+        return await this.entityToRessource(entity);
     }
 }

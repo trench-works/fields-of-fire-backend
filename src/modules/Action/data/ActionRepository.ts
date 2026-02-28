@@ -5,7 +5,7 @@ import { Action } from "./Action";
 
 export class ActionRepository extends FolderRepository<Action> {
     
-    entityToRessource(entity: Action): Action {
+    async entityToRessource(entity: Action): Promise<Action> {
         return {
             ...entity
         }
