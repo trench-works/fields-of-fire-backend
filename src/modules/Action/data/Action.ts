@@ -5,7 +5,7 @@ export class Action {
     iconSpriteKey!: string;
     animationSpriteKey?: string;
     animationSpriteConfig?: { frameWidth: number; frameHeight: number };
-    Key?: string;
+    key?: string;
     name!: string;
     description?: string;
     dammage?: number;

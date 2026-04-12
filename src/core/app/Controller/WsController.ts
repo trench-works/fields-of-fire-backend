@@ -14,6 +14,7 @@ import {
 } from "../../types/Action";
 import { Provide } from "../../decorators";
 import { Logger } from "../Providers";
+import { plainToInstance } from "class-transformer";
 
 type WsControllerConfig<RessourceKeyObject extends Record<string, unknown>> = {
     topic: string;
@@ -155,12 +156,11 @@ export class WsController<
             if (handler) {
                 // payload validation
                 if (handler.payloadType) {
-                    const dtoPayload = new handler.payloadType();
-                    Object.assign(dtoPayload, payload);
+                    const dtoPayload = plainToInstance(handler.payloadType, payload);
                     const validationErrors = validateSync(dtoPayload);
                     if (validationErrors.length > 0) {
                         this.logger.error(
-                            `ERROR ON PAYLOAD VALIDATION "${dtoPayload}"`
+                            `ERROR ON PAYLOAD VALIDATION action -> "${actionId}", payload -> "${JSON.stringify(dtoPayload, null, 2)}", errors -> ${JSON.stringify(validationErrors, null, 2)}`
                         );
                         this.socketManager.send(socket, {
                             actionId: "error",
