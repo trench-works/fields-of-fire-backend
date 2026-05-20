@@ -20,7 +20,7 @@ export class PlayerActionService {
         return null;
       }
 
-      const player = game.players.find((player) => player.playerId === playerId);
+      const player = game.players.find((player) => player.playerId === playerId)!;
 
       const destination = await this.checkDestination(game, target);
       if (destination) {
@@ -35,9 +35,9 @@ export class PlayerActionService {
       }
 
       // Libère l'ancienne case
-      game.plateau[foundEntity.position.y][foundEntity.position.x] = null;
+      game.plateau[foundEntity.position.y][foundEntity.position.x].entityId = undefined;
       // Occupe la nouvelle
-      game.plateau[target.y][target.x] = { entityId: player!.entityId };
+      game.plateau[target.y][target.x].entityId=  player.entityId ;
       // Met à jour la position
       foundEntity.position = target;
 

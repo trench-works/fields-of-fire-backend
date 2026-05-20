@@ -10,8 +10,8 @@ export type Entity = {
     name? : string;
     position: { x: number; y: number };
     actionList?: string[];
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-    characterClassId?: string;
+     
+    characterClassId: string;
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     stats?: {};
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type

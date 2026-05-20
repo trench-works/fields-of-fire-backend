@@ -2,7 +2,7 @@ import { Player } from "../../Player/data/Player";
 import { Entity } from "./Entity";
 import { Mob } from "./Mob";
 
-type PlateauCell = { entityId: string } | null;
+type PlateauCell = { entityId?: string, isWall: boolean, isHole: boolean; };
 
 type Plateau = PlateauCell[][];
 

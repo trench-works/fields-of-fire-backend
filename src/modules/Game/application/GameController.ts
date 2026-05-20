@@ -23,7 +23,9 @@ export class GameController extends WsController<
         @Provide(GameWebSocketManager) socketManager: GameWebSocketManager,
     ) {
         super({ topic: "game", key: GameKey, socketManager });
-        this.on(GameInputActions.JOIN, this.joinMe.bind(this), {responsePayloadType: JoinGameResponse});
+        this.on(GameInputActions.JOIN, this.joinMe.bind(this), {
+            responsePayloadType: JoinGameResponse
+        });
     }
 
     async joinMe({

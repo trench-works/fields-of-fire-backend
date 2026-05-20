@@ -8,23 +8,18 @@ export class GameDataManager extends MappedRepository<Game> {
                 id: "3630",
                 creatorId: "dev",
                 plateau: [
-                    [{entityId: "arthurchar"}, null, null, null, null, null, null, null, null, null],
-                    [null, null ,null ,null, null, null, null, null, null, null],
-                    [null, null, null, null, null, null, null, null, null, null],
-                    [null, null, null, null, null, null, null, null, null, null],
-                    [null, null, null, null, null, null, null, null, null, null],
-                    [null, null, null, null, null, null, null, null, null, null],
-                    [null, null, null, null, null, null, null, null, {entityId: "enemy1"}, null],
-                    [null, null, null, null, null, null, null, null, null, null],
-                    [null, null, null, null, null, null, {entityId: "enemy2"}, null, null, null],
-                    [null, null, null, null, null, null, null, null, null, null]
+                    [{isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}],
+                    [{isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}],
+                    [{isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}],
+                    [{isWall: false, isHole: false}, {isWall: true, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: true, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}],
+                    [{isWall: false, isHole: false}, {isWall: true, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: true, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}],
+                    [{isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}],
+                    [{isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false, entityId: "enemy1"}, {isWall: false, isHole: false}],
+                    [{isWall: true, isHole: false}, {isWall: true, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: true, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}],
+                    [{isWall: false, isHole: true}, {isWall: false, isHole: true}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: true, isHole: false}, {isWall: false, isHole: false, entityId: "enemy2"}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}],
+                    [{isWall: false, isHole: true}, {isWall: false, isHole: true}, {isWall: false, isHole: true}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}, {isWall: false, isHole: false}],
                     ],
                 players: [
-                    {
-                        playerId: "dev",
-                        entityId: "arthurchar",
-                        gameId: "3630"
-                    },
                 ],
                 npc : [
                     {
@@ -38,16 +33,8 @@ export class GameDataManager extends MappedRepository<Game> {
                 ],
                 entities: [
                     {
-                        entityId: "arthurchar",
-                        position: {
-                            x: 2,
-                            y: 2,
-                        },
-                        modifier: [],
-                    },
-                    {
                         entityId: "ennemy1",
-                        name: "Fantassin de l'Alliance",
+                        characterClassId: "alliance_fantassin",
                         position: {
                             x: 6,
                             y: 8
@@ -56,7 +43,7 @@ export class GameDataManager extends MappedRepository<Game> {
                     },
                     {
                         entityId: "ennemy2",
-                        name: "Fantassin de l'Alliance",
+                        characterClassId: "alliance_fantassin",
                         position: {
                             x: 8,
                             y: 6

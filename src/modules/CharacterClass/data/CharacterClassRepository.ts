@@ -32,6 +32,7 @@ export class CharacterClassRepository extends FolderRepository<CharacterClass, C
             "entente_fantassin": {
                 id: "entente_fantassin",
                 name: "Fantassin",
+                playable: true,
                 stats:{
                     life: 24,
                     precision: 10,
@@ -48,6 +49,7 @@ export class CharacterClassRepository extends FolderRepository<CharacterClass, C
             "entente_medic": {
                 id: "entente_medic",
                 name: "Medic",
+                playable: true,
                 stats: {
                     life: 16,
                     precision: 5,
@@ -64,6 +66,7 @@ export class CharacterClassRepository extends FolderRepository<CharacterClass, C
             "entente_caporal": {
                 id: "entente_caporal",
                 name: "Caporal",
+                playable: true,
                 stats : {
                     life: 20,
                     precision: 15,
@@ -76,7 +79,24 @@ export class CharacterClassRepository extends FolderRepository<CharacterClass, C
                 },
                 classDescription: "Un combattant robuste et discipliné, le Caporal est équipé d'une armure lourde et d'une hache, ce qui lui permet de résister aux attaques ennemies et de causer des dégâts importants à courte portée. Il excelle dans les combats rapprochés et peut utiliser des compétences pour augmenter sa défense ou infliger des dégâts supplémentaires à ses adversaires.",
                 actionList: ["walk", "shoot", "heal"]
-            }
+            },
+            "alliance_fantassin": {
+                id: "alliance_fantassin",
+                name: "Un Fieffé Coquin",
+                playable: false,
+                stats:{
+                    life: 24,
+                    precision: 10,
+                    strength: 20,
+                    accuracy: 100,
+                    initiative: 80,
+                    dodging: 0,
+                    energy: 4,
+                    mouvement: 3,
+                },
+                classDescription: "Un soldat polyvalent, capable de s'adapter à différentes situations sur le champ de bataille. Il est équipé d'une armure légère et d'une épée, ce qui lui permet de se déplacer rapidement et d'attaquer efficacement à courte portée. Le Fantassin est également capable d'utiliser des compétences de soutien pour renforcer ses alliés ou affaiblir ses ennemis.",
+                actionList: ["walk", "shoot", "heal"]
+            },
         })
     }
 }

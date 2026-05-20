@@ -197,8 +197,9 @@ export class WsController<
                 // if user with payload is authorized
                 handler.listener(listenerOptions).then((result) => {
                     if (result) {
-                    this.socketManager.send(socket, result)
-                }})
+                        this.socketManager.send(socket, result)
+                    }
+                })
             }
         } catch (err) {
             this.logger.error(
