@@ -1,7 +1,4 @@
 import { WsController, WsListenerOptions, Provide, SocketError } from "../../../core";
-import { GameKey } from "../../Game/application/interfaces/GameKey";
-import { MovePlayer } from "./interfaces/MovePlayer";
-import { PlayerService } from "../services/PlayerService";
 import { PlayerKey } from "./interfaces/PlayerKey";
 import { PlayerAction } from "./interfaces/PlayerAction";
 import { PlayerActionService } from "../services/PlayerActionService";
@@ -16,36 +13,49 @@ export class PlayerController extends WsController<
 > {
     
     constructor(
-        @Provide(PlayerService) private readonly playerService: PlayerService, 
         @Provide(PlayerActionService) private readonly playerActionService: PlayerActionService,
         @Provide(PlayerWebSocketManager) socketManager: PlayerWebSocketManager,
     ) {
         super({ topic: "game", key : PlayerKey, socketManager });
-        this.on(PlayerInputActions.MOVE, this.move.bind(this), {
-            payloadType: MovePlayer,
-        });
+        // this.on(PlayerInputActions.MOVE, this.move.bind(this), {
+        //     payloadType: MovePlayer,
+        // });
         this.on(PlayerInputActions.ACTION, this.action.bind(this), {
             payloadType: PlayerAction,
         });
     }
 
-    async move({
-        key: { gameId },
+    // async move({
+    //     key: { gameId },
+    //     user,
+    //     payload,
+    // }: WsListenerOptions<GameKey, MovePlayer>) {
+    //     const moved = await this.playerService.move(user.id, gameId, payload);
+    //     if (moved instanceof SocketError) {
+    //         return { actionId: "error", payload: moved };
+    //     }
+    //     this.emit({
+    //         actionId: PlayerOutputActions.MOVE,
+    //         key: { gameId },
+    //         payload: moved,
+    //     });
+    // }
+
+    async action({
+        key,
         user,
         payload,
-    }: WsListenerOptions<GameKey, MovePlayer>) {
-        const moved = await this.playerService.move(user.id, gameId, payload);
-        if (moved instanceof SocketError) {
-            return { actionId: "error", payload: moved };
+    }: WsListenerOptions<PlayerKey, PlayerAction>) {
+        console.log("payload received:", key, user, payload);
+        const action= this.playerActionService.action(payload.actionId, key.gameId, key.playerId, payload.target);
+        if (action instanceof SocketError) {
+            return { actionId: "error", payload: action};
         }
+        console.log("action result:", action);
         this.emit({
-            actionId: PlayerOutputActions.MOVE,
-            key: { gameId },
-            payload: moved,
+            actionId: PlayerOutputActions.ACTION,
+            key: { gameId: key.gameId },
+            payload: action,
         });
-    }
-
-    async action() {
-        this.playerActionService.action();
     }
 }

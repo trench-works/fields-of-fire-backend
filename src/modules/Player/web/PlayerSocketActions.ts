@@ -6,4 +6,5 @@ export enum PlayerInputActions {
 
 export enum PlayerOutputActions {
     MOVE = "move",
+    ACTION = "action",
 }

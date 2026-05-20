@@ -27,6 +27,7 @@ export class ActionRepository extends FolderRepository<Action> {
                 description: "Attaquer un ennemi à portée",
                 iconSpriteKey: "action_image_shoot",
                 cost: 2,
+                range: 3,
             },
             "heal": {
                 id: "heal",
@@ -34,6 +35,7 @@ export class ActionRepository extends FolderRepository<Action> {
                 description: "buff un allié",
                 iconSpriteKey: "action_image_arrowup",
                 cost: 1,
+                range: 1,
             }
         })
     }
