@@ -20,17 +20,17 @@ export class GameService {
     async subscribe(
         userId: string,
         gameId: string
-    ): Promise<SocketError | { game: Game; player: Player, entity : Entity }> {
+    ): Promise<SocketError | { game: Game; player: Player, playerEntity : Entity}> {
         const game = await this.gameDataManager.get(gameId);
         if ( !game || game instanceof DBError) {
             return new NotFoundError();
         }
-        const player = game.players.find((player) => player.id === userId);
+        const player = game.players.find((player) => player.playerId === userId);
         
         if (player) {
-            const entity = game.entities.find(e => e.entityId === player.entity);
-            if (entity) {
-                return { game, player, entity };
+            const playerEntity = game.entities.find(e => e.entityId === player.entityId);
+            if (playerEntity) {
+                return { game, player, playerEntity };
             }
         }
 

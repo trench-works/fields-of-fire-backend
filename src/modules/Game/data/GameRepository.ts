@@ -21,26 +21,24 @@ export class GameDataManager extends MappedRepository<Game> {
                     ],
                 players: [
                     {
-                        id: "dev",
-                        entity: "arthurchar",
+                        playerId: "dev",
+                        entityId: "arthurchar",
+                        gameId: "3630"
                     },
                 ],
                 npc : [
                     {
-                        entity: "ennemy1",
+                        entityId: "ennemy1",
+                        gameId: "3630"
                     },
                     {
-                        entity: "ennemy2",
+                        entityId: "ennemy2",
+                        gameId: "3630"
                     }
                 ],
                 entities: [
                     {
                         entityId: "arthurchar",
-                        characterClass: {},
-                        stats: {
-                            speed: 10,
-                            hp: 200,
-                        },
                         position: {
                             x: 2,
                             y: 2,
@@ -54,7 +52,6 @@ export class GameDataManager extends MappedRepository<Game> {
                             x: 6,
                             y: 8
                         },
-                        sprite: "alliance_fantassin",
                         modifier: [],
                     },
                     {
@@ -64,7 +61,6 @@ export class GameDataManager extends MappedRepository<Game> {
                             x: 8,
                             y: 6
                         },
-                        sprite: "alliance_fantassin",
                         modifier: [],
                     }
                 ]

@@ -47,15 +47,18 @@ export class PlayerController extends WsController<
         payload,
     }: WsListenerOptions<PlayerKey, PlayerAction>) {
         console.log("payload received:", key, user, payload);
-        const action= this.playerActionService.action(payload.actionId, key.gameId, key.playerId, payload.target);
+        const action = await this.playerActionService.action(payload.actionId, key.gameId, key.playerId, payload.target);
         if (action instanceof SocketError) {
             return { actionId: "error", payload: action};
         }
         console.log("action result:", action);
-        this.emit({
-            actionId: PlayerOutputActions.ACTION,
+
+        if (action) {
+            this.emit({
+            actionId: PlayerOutputActions.MOVE,
             key: { gameId: key.gameId },
             payload: action,
-        });
+            });
+        }
     }
 }

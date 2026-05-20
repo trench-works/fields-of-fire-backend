@@ -1,3 +1,4 @@
 export type Mob = {
-    entity: string;
+    entityId: string;
+    gameId: string;
 }

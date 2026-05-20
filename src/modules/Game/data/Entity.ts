@@ -6,14 +6,12 @@ export enum EntityType {
 
 export type Entity = {
     entityId : string
-    entityType? : string;
+    entityType? : EntityType;
     name? : string;
-    description?: string;
     position: { x: number; y: number };
     actionList?: string[];
-    sprite?: string;
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-    characterClass?: {};
+    characterClassId?: string;
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     stats?: {};
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type

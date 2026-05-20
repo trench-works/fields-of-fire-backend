@@ -12,7 +12,6 @@ export class PlayerActionService {
   async action(actionId: string, gameId: string, playerId: string, target: { x: number; y: number }) {
   this.logger.log("PlayerActionService action method called");
   
-
   switch (actionId) {
     case 'walk': {
       const game = await this.gameDataManager.get(gameId);
@@ -21,7 +20,7 @@ export class PlayerActionService {
         return null;
       }
 
-      const player = game.players.find((player) => player.id === playerId);
+      const player = game.players.find((player) => player.playerId === playerId);
 
       const destination = await this.checkDestination(game, target);
       if (destination) {
@@ -29,7 +28,7 @@ export class PlayerActionService {
         return null;
       }
 
-      const foundEntity = game.entities.find(e => e.entityId === player!.entity);
+      const foundEntity = game.entities.find(e => e.entityId === player!.entityId);
       if (!foundEntity) {
         this.logger.error("Entity not found");
         return null;
@@ -38,7 +37,7 @@ export class PlayerActionService {
       // Libère l'ancienne case
       game.plateau[foundEntity.position.y][foundEntity.position.x] = null;
       // Occupe la nouvelle
-      game.plateau[target.y][target.x] = { entityId: player!.entity };
+      game.plateau[target.y][target.x] = { entityId: player!.entityId };
       // Met à jour la position
       foundEntity.position = target;
 

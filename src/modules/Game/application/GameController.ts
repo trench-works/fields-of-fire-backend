@@ -9,6 +9,7 @@ import {
 import { GameKey } from "./interfaces/GameKey";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
 import { GameInputActions, GameOutputActions, GameReturnActions } from "./interfaces/GameAction";
+import { JoinGameResponse } from "./interfaces/JoinGameResponse";
 
 
 export class GameController extends WsController<
@@ -22,23 +23,24 @@ export class GameController extends WsController<
         @Provide(GameWebSocketManager) socketManager: GameWebSocketManager,
     ) {
         super({ topic: "game", key: GameKey, socketManager });
-        this.on(GameInputActions.JOIN, this.joinMe.bind(this));
+        this.on(GameInputActions.JOIN, this.joinMe.bind(this), {responsePayloadType: JoinGameResponse});
     }
 
     async joinMe({
         key,
         user,
-    }: WsListenerOptions<GameKey>): Promise<SingleClientOutputAction<object, GameReturnActions>> {
+    }: WsListenerOptions<GameKey>): Promise<SingleClientOutputAction<JoinGameResponse, GameReturnActions>> {
         this.logger.log("Received call on - Game - JoinMe");
         const subscribed = await this.gameService.subscribe(user.id, key.gameId);
         if (subscribed instanceof SocketError) {
             return { actionId: "error", payload: subscribed };
         }
         const { game, player } = subscribed;
+        console.log(`Entities in game: ${game.entities}`);
         this.emit({
             actionId: GameOutputActions.JOINED,
             key: { gameId: game.id },
-            payload: { playerId: player.id },
+            payload: { playerId: player.playerId },
         });
         return { actionId: GameReturnActions.JOIN, payload: subscribed };
     }
