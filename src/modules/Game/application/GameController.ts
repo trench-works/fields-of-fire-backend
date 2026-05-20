@@ -10,6 +10,7 @@ import { GameKey } from "./interfaces/GameKey";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
 import { GameInputActions, GameOutputActions, GameReturnActions } from "./interfaces/GameAction";
 import { JoinGameResponse } from "./interfaces/JoinGameResponse";
+import { JoinGameInput } from "./interfaces/JoinGameInput";
 
 
 export class GameController extends WsController<
@@ -24,6 +25,7 @@ export class GameController extends WsController<
     ) {
         super({ topic: "game", key: GameKey, socketManager });
         this.on(GameInputActions.JOIN, this.joinMe.bind(this), {
+            payloadType: JoinGameInput,
             responsePayloadType: JoinGameResponse
         });
     }
@@ -31,9 +33,10 @@ export class GameController extends WsController<
     async joinMe({
         key,
         user,
-    }: WsListenerOptions<GameKey>): Promise<SingleClientOutputAction<JoinGameResponse, GameReturnActions>> {
+        payload
+    }: WsListenerOptions<GameKey, JoinGameInput>): Promise<SingleClientOutputAction<JoinGameResponse, GameReturnActions>> {
         this.logger.log("Received call on - Game - JoinMe");
-        const subscribed = await this.gameService.subscribe(user.id, key.gameId);
+        const subscribed = await this.gameService.subscribe(user.id, key.gameId, payload.characterClassId);
         if (subscribed instanceof SocketError) {
             return { actionId: "error", payload: subscribed };
         }

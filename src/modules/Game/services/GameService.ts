@@ -20,7 +20,8 @@ export class GameService {
 
     async subscribe(
         userId: string,
-        gameId: string
+        gameId: string,
+        characterClassId: string
     ): Promise<SocketError | { game: Game; player: Player, playerEntity : Entity}> {
         const game = await this.gameDataManager.get(gameId);
         if ( !game || game instanceof DBError) {
@@ -40,7 +41,7 @@ export class GameService {
             const player: Player = { userId, gameId, playerId, entityId };
             game.players.push(player);
 
-            const entity: Entity = { entityId, position: { x: 0, y: 0 }, characterClassId: "entente_fantassin" };
+            const entity: Entity = { entityId, position: { x: 0, y: 0 }, characterClassId };
             game.entities.push(entity); // TODO plutot essayer de calculer la première position disponible sur le plateau
 
             game.plateau[0][0].entityId = entityId ;

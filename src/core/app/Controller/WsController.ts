@@ -40,18 +40,21 @@ type WsControllerOptions<
 type WsListener<
     RessourceKeyObject extends Record<string, unknown>,
     PayloadObject extends object = object,
+    PayloadResponseObject extends object = object,
     ReturnActions = string
 > = (
     options: WsListenerOptions<RessourceKeyObject, PayloadObject>
-) => Promise<SingleClientOutputAction<PayloadObject, ReturnActions> | void>;
+) => Promise<SingleClientOutputAction<PayloadResponseObject, ReturnActions> | void>;
 
 type WsHandler<
     RessourceKeyObject extends Record<string, unknown>,
     PayloadObject extends object = object,
+    PayloadResponseObject extends object = object,
     ReturnActions = string
 > = {
-    listener: WsListener<RessourceKeyObject, PayloadObject, ReturnActions>;
+    listener: WsListener<RessourceKeyObject, PayloadObject,PayloadResponseObject, ReturnActions>;
     payloadType?: Instantiable<PayloadObject>;
+    responsePayloadType?: Instantiable<PayloadObject>;
     accessLevel?: RessourceAccessLevel;
 };
 
@@ -65,9 +68,9 @@ export type WsListenerOptions<
     user: UserInfos;
 };
 
-type OnOptions<PayloadObject extends object = object, ResponsePayloadObject extends object = object> = {
+type OnOptions<PayloadObject extends object = object, PayloadResponseObject extends object = object> = {
     payloadType?: Instantiable<PayloadObject>;
-    responsePayloadType?: Instantiable<ResponsePayloadObject>;
+    responsePayloadType?: Instantiable<PayloadResponseObject>;
     accessLevel?: RessourceAccessLevel;
 };
 
@@ -85,7 +88,7 @@ export class WsController<
     
     public wsHandlers: Map<
         string,
-        WsHandler<RessourceKeyObject, any, ReturnActions>
+        WsHandler<RessourceKeyObject, any, any, ReturnActions>
     >;
 
     private config: WsControllerConfig<RessourceKeyObject>;
@@ -116,9 +119,9 @@ export class WsController<
         return this.config.topic;
     }
 
-    send<PayloadObject extends object = object>(
+    send<PayloadResponseObject extends object = object>(
         socket: WebSocket,
-        action: SingleClientOutputAction<PayloadObject, OutputActions>
+        action: SingleClientOutputAction<PayloadResponseObject, OutputActions>
     ) {
         this.socketManager.send(socket, action);
     }
@@ -129,10 +132,10 @@ export class WsController<
         this.socketManager.emit(action);
     }
 
-    on<PayloadObject extends object = object, ResponsePayloadObject extends object = object>(
+    on<PayloadObject extends object = object, PayloadResponseObject extends object = object>(
         action: InputActions,
-        listener: WsListener<RessourceKeyObject, PayloadObject, ReturnActions>,
-        options?: OnOptions<PayloadObject, ResponsePayloadObject>
+        listener: WsListener<RessourceKeyObject, PayloadObject, PayloadResponseObject, ReturnActions>,
+        options?: OnOptions<PayloadObject, PayloadResponseObject>
     ): this {
         this.wsHandlers.set(action as string, {
             listener,
