@@ -35,13 +35,13 @@ export class GameController extends WsController<
         user,
         payload
     }: WsListenerOptions<GameKey, JoinGameInput>): Promise<SingleClientOutputAction<JoinGameResponse, GameReturnActions>> {
-        this.logger.log("Received call on - Game - JoinMe");
+        this.logger.debug("Received call on - Game - JoinMe");
         const subscribed = await this.gameService.subscribe(user.id, key.gameId, payload.characterClassId);
         if (subscribed instanceof SocketError) {
             return { actionId: "error", payload: subscribed };
         }
         const { game, player } = subscribed;
-        console.log(`Entities in game: ${game.entities}`);
+        
         this.emit({
             actionId: GameOutputActions.JOINED,
             key: { gameId: game.id },

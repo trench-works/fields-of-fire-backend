@@ -25,33 +25,17 @@ export class PlayerController extends WsController<
         });
     }
 
-    // async move({
-    //     key: { gameId },
-    //     user,
-    //     payload,
-    // }: WsListenerOptions<GameKey, MovePlayer>) {
-    //     const moved = await this.playerService.move(user.id, gameId, payload);
-    //     if (moved instanceof SocketError) {
-    //         return { actionId: "error", payload: moved };
-    //     }
-    //     this.emit({
-    //         actionId: PlayerOutputActions.MOVE,
-    //         key: { gameId },
-    //         payload: moved,
-    //     });
-    // }
-
     async action({
         key,
         user,
         payload,
     }: WsListenerOptions<PlayerKey, PlayerAction>) {
-        console.log("payload received:", key, user, payload);
+        this.logger.debug("payload received:", key, user, payload);
         const action = await this.playerActionService.action(payload.actionId, key.gameId, key.playerId, payload.target);
         if (action instanceof SocketError) {
             return { actionId: "error", payload: action};
         }
-        console.log("action result:", action);
+        this.logger.debug("action result:", action);
 
         if (action) {
             this.emit({
