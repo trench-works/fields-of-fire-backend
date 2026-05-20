@@ -65,8 +65,9 @@ export type WsListenerOptions<
     user: UserInfos;
 };
 
-type OnOptions<PayloadObject extends object = object> = {
+type OnOptions<PayloadObject extends object = object, ResponsePayloadObject extends object = object> = {
     payloadType?: Instantiable<PayloadObject>;
+    responsePayloadType?: Instantiable<ResponsePayloadObject>;
     accessLevel?: RessourceAccessLevel;
 };
 
@@ -128,10 +129,10 @@ export class WsController<
         this.socketManager.emit(action);
     }
 
-    on<PayloadObject extends object = object>(
+    on<PayloadObject extends object = object, ResponsePayloadObject extends object = object>(
         action: InputActions,
         listener: WsListener<RessourceKeyObject, PayloadObject, ReturnActions>,
-        options?: OnOptions<PayloadObject>
+        options?: OnOptions<PayloadObject, ResponsePayloadObject>
     ): this {
         this.wsHandlers.set(action as string, {
             listener,
