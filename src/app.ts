@@ -17,6 +17,13 @@ import { CharacterClassModule } from "./modules/CharacterClass/CharacterClassMod
 import { EffectModule } from "./modules/Effect/EffectModule";
 import { ActionModule } from "./modules/Action/ActionModule";
 
+import * as dotenv from "dotenv";
+
+
+if (process.env.ENV !== "PROD") {
+    dotenv.config({ path: [__dirname + "/../env/.env.local"] });
+}
+
 const server = new App({
     providers: [
         {

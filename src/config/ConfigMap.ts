@@ -14,7 +14,7 @@ export type MemoireOublieesConfig = {
 export const ConfigMap: MemoireOublieesConfig = {
     app: {
         name: process.env.APP_NAME ?? "Memoires Oubliees",
-        port: Number(process.env.APP_PORT ?? "3000"),
+        port: Number(process.env.SERVER_PORT ?? 80),
         logLevel: LogLevel.DEBUG,
     },
     redis: {
