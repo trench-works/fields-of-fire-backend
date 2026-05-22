@@ -1,10 +1,8 @@
 export enum LobbyInputActions {
-    LEAVE = "leave",
-    START = "start"
+  LEAVE = "leave",
+  START = "start",
 }
 
-export enum LobbyOutputActions {
-}
+export enum LobbyOutputActions {}
 
-export enum LobbyReturnActions {
-}
+export enum LobbyReturnActions {}

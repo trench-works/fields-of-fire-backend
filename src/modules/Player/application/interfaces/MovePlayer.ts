@@ -1,4 +1,4 @@
 export class MovePlayer {
-    x!: number;
-    y!: number;
+  x!: number;
+  y!: number;
 }

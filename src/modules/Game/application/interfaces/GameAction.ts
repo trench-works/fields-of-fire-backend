@@ -1,11 +1,11 @@
 export enum GameInputActions {
-    JOIN = "join",
+  JOIN = "join",
 }
 
 export enum GameOutputActions {
-    JOINED = "joined",
+  JOINED = "joined",
 }
 
 export enum GameReturnActions {
-    JOIN = "join",
+  JOIN = "join",
 }

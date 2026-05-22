@@ -6,10 +6,15 @@ import { LobbyService } from "./services/LobbyService";
 import { LobbyWebSocketManager } from "./web/LobbyWebSocketManager";
 
 export class LobbyModule extends Module {
-    constructor() {
-        super({
-            controllers: [LobbyController],
-            providers: [LobbyDataManager, LobbyService, LobbyGuard, LobbyWebSocketManager],
-        });
-    }
+  constructor() {
+    super({
+      controllers: [LobbyController],
+      providers: [
+        LobbyDataManager,
+        LobbyService,
+        LobbyGuard,
+        LobbyWebSocketManager,
+      ],
+    });
+  }
 }

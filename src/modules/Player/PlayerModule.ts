@@ -4,10 +4,10 @@ import { PlayerActionService } from "./services/PlayerActionService";
 import { PlayerWebSocketManager } from "./web/PlayerWebSocketManager";
 
 export class PlayerModule extends Module {
-    constructor() {
-        super({
-            controllers: [PlayerController],
-            providers: [PlayerActionService, PlayerWebSocketManager],
-        });
-    }
+  constructor() {
+    super({
+      controllers: [PlayerController],
+      providers: [PlayerActionService, PlayerWebSocketManager],
+    });
+  }
 }
