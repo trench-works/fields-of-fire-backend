@@ -1,35 +1,34 @@
-import { NotFoundError } from "../../../core";
+import { MappedRepository, NotFoundError } from "../../../core";
 import { Lobby } from "./Lobby";
 import { v4 as uuidv4 } from "uuid";
 
-export class LobbyDataManager {
-  private lobbies: Lobby[] = [];
-
-  getLobby(lobbyId: string): Lobby | NotFoundError {
-    const lobby = this.lobbies.find((lobby) => (lobby.id = lobbyId));
-    if (!lobby) {
-      return new NotFoundError();
+export class LobbyDataManager extends MappedRepository<Lobby> {
+    async getLobby(lobbyId: string): Promise<Lobby | NotFoundError> {
+        const lobby = await this.get(lobbyId);
+        if (!lobby) {
+            return new NotFoundError();
+        }
+        return lobby;
     }
-    return lobby;
-  }
 
-  getLobbies(): Lobby[] {
-    return this.lobbies;
-  }
-
-  addLobby(lobby: Lobby): Lobby {
-    if (lobby.id === undefined) {
-      lobby.id = uuidv4();
+    async addLobby(lobby: Omit<Lobby, "id" | "players">): Promise<Lobby> {
+        const lobbyId = uuidv4();
+        return await this.set(lobbyId, { ...lobby, id: lobbyId, players: [] });
     }
-    this.lobbies.push(lobby);
-    return lobby;
-  }
 
-  addPlayerToLobby(lobbyId: string, newPlayerId: string): NotFoundError | void {
-    const lobby = this.lobbies.find((lobby) => (lobby.id = lobbyId));
-    if (!lobby) {
-      return new NotFoundError();
+    async addPlayerToLobby(
+        lobbyId: string,
+        userId: string
+    ): Promise<NotFoundError | Lobby> {
+        const lobby = await this.get(lobbyId);
+        if (!lobby) {
+            return new NotFoundError();
+        }
+        lobby.players.push({
+            userId,
+            playerId: uuidv4(),
+            classId: "entente_fantassin",
+        });
+        return lobby;
     }
-    lobby.playersId.push(newPlayerId);
-  }
 }

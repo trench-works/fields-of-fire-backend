@@ -8,7 +8,7 @@ export type Cell = {
     isHole: boolean;
 };
 
-type Plateau = Cell[][];
+export type Plateau = Cell[][];
 
 export type Game = {
     id: string;

@@ -1,32 +1,63 @@
-import { WsController, Provide } from "../../../core";
-import { GameKey } from "../../Game/application/interfaces/GameKey";
-import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
-import { CreateLobbyInterface } from "./interfaces/CreateLobbyInterface";
+import {
+    WsController,
+    Provide,
+    WsListenerOptions,
+    SingleClientOutputAction,
+    NotFoundError,
+} from "../../../core";
+import { LobbyService } from "../../Lobby/services/LobbyService";
+import { MenuWebSocketManager } from "../web/MenuWebSocketManager";
+import { JoinLobby } from "./interfaces/JoinLobby";
+import { JoinLobbyResponse } from "./interfaces/JoinLobbyResponse";
+import {
+    MenuInputActions,
+    MenuOutputActions,
+    MenuReturnActions,
+} from "./interfaces/MenuActions";
+import { MenuKey } from "./interfaces/MenuKey";
 
-export class MenuController extends WsController {
-  constructor(
-    @Provide(GameWebSocketManager) socketManager: GameWebSocketManager,
-  ) {
-    super({ topic: "menu", key: GameKey, socketManager });
-    this.on("create", this.createLobby.bind(this), {
-      payloadType: CreateLobbyInterface,
-    });
-    this.on("join", this.joinLobby.bind(this));
-  }
+export class MenuController extends WsController<
+    MenuKey,
+    MenuInputActions,
+    MenuOutputActions,
+    MenuReturnActions
+> {
+    @Provide(LobbyService)
+    private readonly lobbyService!: LobbyService;
 
-  async createLobby() {
-    /**
-     * Do some logic to create a lobby
-     * and then send event to client to move to lobby room
-     * then kill client socket connection
-     */
-  }
+    constructor(
+        @Provide(MenuWebSocketManager) socketManager: MenuWebSocketManager
+    ) {
+        super({ topic: "menu", key: MenuKey, socketManager });
+        this.on(MenuInputActions.CREATE, this.createLobby.bind(this));
+        this.on(MenuInputActions.JOIN, this.joinLobby.bind(this), {
+            payloadType: JoinLobby,
+            responsePayloadType: JoinLobbyResponse,
+        });
+        //TODO: add something to handle on connection event and answer potentially with "reconnect" callback
+    }
 
-  async joinLobby() {
-    /**
-     * Do some logic to join a lobby
-     * and then send event to client to move to lobby room
-     * then kill client socket connection
-     */
-  }
+    async createLobby({ user: { id } }: WsListenerOptions<MenuKey>) {
+        this.lobbyService.createLobby(id);
+    }
+
+    async joinLobby({
+        user: { id },
+        payload: { lobbyId },
+    }: WsListenerOptions<MenuKey, JoinLobby>): Promise<
+        SingleClientOutputAction<JoinLobbyResponse, MenuReturnActions>
+    > {
+        const lobby = await this.lobbyService.joinLobby(lobbyId, id);
+        if (lobby instanceof NotFoundError) {
+            return { error: lobby };
+        }
+        return {
+            actionId: MenuReturnActions.JOIN,
+            payload: {
+                lobbyId: lobby.id,
+                playerId: lobby.players.find((player) => player.userId === id)!
+                    .playerId,
+            },
+        };
+    }
 }

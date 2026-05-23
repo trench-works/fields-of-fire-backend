@@ -1,6 +1,7 @@
-import { IsNumber } from "class-validator";
+import { IsNotEmpty, IsNumber } from "class-validator";
 
 export class LobbyKeys {
-  @IsNumber()
-  lobbyId!: string;
+    @IsNumber()
+    @IsNotEmpty()
+    lobbyId!: string;
 }

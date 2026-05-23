@@ -1,52 +1,103 @@
-import { WsController, Provide, RessourceAccessLevel } from "../../../core";
+import {
+    WsController,
+    Provide,
+    WsListenerOptions,
+    NotFoundError,
+    SocketError,
+} from "../../../core";
 import { LobbyKeys } from "./interfaces/LobbyKeys";
 import { LobbyService } from "../services/LobbyService";
 import { GameService } from "../../Game/services/GameService";
-import { LobbyGuard } from "../services/LobbyGuard";
 import { LobbyWebSocketManager } from "../web/LobbyWebSocketManager";
 import {
-  LobbyInputActions,
-  LobbyOutputActions,
-  LobbyReturnActions,
+    LobbyInputActions,
+    LobbyOutputActions,
+    LobbyReturnActions,
 } from "./interfaces/LobbyAction";
+import { ChangeClass } from "./interfaces/ChangeClass";
+import { SingleClientOutputError } from "../../../core/types/Action";
+import { Lobby } from "../data/Lobby";
+import { Game } from "../../Game/data/Game";
 
 export class LobbyController extends WsController<
-  LobbyKeys,
-  LobbyInputActions,
-  LobbyOutputActions,
-  LobbyReturnActions
+    LobbyKeys,
+    LobbyInputActions,
+    LobbyOutputActions,
+    LobbyReturnActions
 > {
-  constructor(
-    @Provide(LobbyService) private readonly lobbyService: LobbyService,
-    @Provide(GameService) private readonly gameService: GameService,
-    @Provide(LobbyGuard) lobbyGuard: LobbyGuard,
-    @Provide(LobbyWebSocketManager) socketManager: LobbyWebSocketManager,
-  ) {
-    super({
-      topic: "lobby",
-      key: LobbyKeys,
-      guards: [lobbyGuard],
-      socketManager,
-    });
-    //create subscriptions for this controller
-    this.on(LobbyInputActions.LEAVE, this.handleLeave.bind(this));
-    this.on(LobbyInputActions.START, this.startGame.bind(this), {
-      accessLevel: RessourceAccessLevel.DELETE,
-    });
-  }
+    constructor(
+        @Provide(LobbyService) private readonly lobbyService: LobbyService,
+        @Provide(GameService) private readonly gameService: GameService,
+        @Provide(LobbyWebSocketManager) socketManager: LobbyWebSocketManager
+    ) {
+        super({
+            topic: "lobby",
+            key: LobbyKeys,
+            socketManager,
+        });
+        //create subscriptions for this controller
+        this.on(LobbyInputActions.LEAVE, this.handleLeave.bind(this));
+        this.on(
+            LobbyInputActions.CHANGE_CLASS,
+            this.handleClassChange.bind(this),
+            { payloadType: ChangeClass }
+        );
+        this.on(LobbyInputActions.START, this.startGame.bind(this));
+    }
 
-  async startGame() {
-    /*
-            some logic to transform this lobby into a running game
-            and send event to all this lobby client to quit lobby screen and join game,
-            then delete lobby and kill socket connections
-        */
-  }
+    async startGame({
+        key: { lobbyId },
+        user,
+    }: WsListenerOptions<LobbyKeys>): Promise<void | SingleClientOutputError> {
+        const game = await this.gameService.createGameFromLobby(
+            lobbyId,
+            user.id
+        );
+        if (game instanceof SocketError) {
+            return { error: game };
+        }
+        this.emit<Game>({
+            actionId: LobbyOutputActions.START,
+            key: { lobbyId },
+            payload: game,
+        });
+    }
 
-  async handleLeave() {
-    /*
-            Some Logic to handle when player clicks on "quit" button
-            or when client socket gets disconnected
-        */
-  }
+    async handleLeave({
+        key: { lobbyId },
+        user,
+    }: WsListenerOptions<LobbyKeys>): Promise<void | SingleClientOutputError> {
+        const lobby = await this.lobbyService.removePlayer(lobbyId, user.id);
+        if (lobby instanceof NotFoundError) {
+            return { error: lobby };
+        }
+        this.emit<Lobby>({
+            actionId: LobbyOutputActions.UPDATE,
+            key: { lobbyId },
+            payload: lobby,
+        });
+    }
+
+    async handleClassChange({
+        key: { lobbyId },
+        user,
+        payload: { classId },
+    }: WsListenerOptions<
+        LobbyKeys,
+        ChangeClass
+    >): Promise<void | SingleClientOutputError> {
+        const lobby = await this.lobbyService.changeClass(
+            lobbyId,
+            user.id,
+            classId
+        );
+        if (lobby instanceof NotFoundError) {
+            return { error: lobby };
+        }
+        this.emit<Lobby>({
+            actionId: LobbyOutputActions.UPDATE,
+            key: { lobbyId },
+            payload: lobby,
+        });
+    }
 }
