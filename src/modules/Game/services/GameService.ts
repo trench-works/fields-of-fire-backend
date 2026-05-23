@@ -3,7 +3,6 @@ import {
     NotFoundError,
     Provide,
     SocketError,
-    DBError,
 } from "../../../core";
 import { Player } from "../../Player/data/Player";
 import { Cell, Game, Plateau } from "../data/Game";
@@ -104,48 +103,5 @@ export class GameService {
         };
         await this.lobbyDataManager.delete(lobbyId);
         return this.gameDataManager.set(gameId, game);
-    }
-
-    async subscribe(
-        userId: string,
-        gameId: string,
-        characterClassId: string
-    ): Promise<
-        SocketError | { game: Game; player: Player; playerEntity: Entity }
-    > {
-        const game = await this.gameDataManager.get(gameId);
-        if (!game || game instanceof DBError) {
-            return new NotFoundError();
-        }
-        const player = game.players.find((player) => player.userId === userId);
-
-        if (player) {
-            // user is already a player -> so handle data finding
-            const playerEntity = game.entities.find(
-                (e) => e.entityId === player.entityId
-            );
-            if (playerEntity) {
-                return { game, player, playerEntity };
-            }
-        } else {
-            // user is joining this game for the first time
-            const playerId = uuidv4();
-            const entityId = uuidv4();
-
-            const player: Player = { userId, gameId, playerId, entityId };
-            game.players.push(player);
-
-            const entity: Entity = {
-                entityId,
-                position: { x: 0, y: 0 },
-                characterClassId,
-            };
-            game.entities.push(entity); // TODO plutot essayer de calculer la première position disponible sur le plateau
-
-            game.plateau[0][0].entityId = entityId;
-            return { game, player, playerEntity: entity };
-        }
-
-        return new AccessRefused();
     }
 }
