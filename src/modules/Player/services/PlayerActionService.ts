@@ -29,7 +29,7 @@ export class PlayerActionService {
                     (player) => player.playerId === playerId
                 )!;
 
-                const destination = game.plateau[target.y][target.x];
+                const destination = game.plateau[target.x][target.y];
                 if (!this.checkDestination(destination)) {
                     this.logger.error("Destination cell is already occupied");
                     return null;
@@ -45,8 +45,8 @@ export class PlayerActionService {
 
                 // Libère l'ancienne case
                 const currentCase =
-                    game.plateau[foundEntity.position.y][
-                        foundEntity.position.x
+                    game.plateau[foundEntity.position.x][
+                        foundEntity.position.y
                     ];
                 currentCase.entityId = undefined;
                 // Occupe la nouvelle case
