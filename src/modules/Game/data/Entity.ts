@@ -1,19 +1,22 @@
+import { Stats } from "../../Stat/data/Stats";
+
 export enum EntityType {
-  ALLY = "allié",
-  ENNEMI = "ennemi",
-  NEUTRAL = "neutre",
+    ALLY = "ALLY",
+    ENEMY = "ENEMY",
+    NEUTRAL = "NEUTRAL",
 }
 
-export type Entity = {
-  entityId: string;
-  entityType?: EntityType;
-  name?: string;
-  position: { x: number; y: number };
-  actionList?: string[];
+export class Entity {
+    classId!: string;
+    entityId!: string;
 
-  characterClassId: string;
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  stats?: {};
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  modifier?: {}[];
-};
+    entityType!: EntityType;
+
+    name?: string;
+
+    position!: { x: number; y: number };
+    actionList?: string[];
+
+    stats?: Stats;
+    modifier?: Stats[];
+}

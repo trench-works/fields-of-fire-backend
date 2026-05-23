@@ -1,6 +1,5 @@
-import { MappedRepository, NotFoundError } from "../../../core";
+import { Id, MappedRepository, NotFoundError } from "../../../core";
 import { Lobby } from "./Lobby";
-import { v4 as uuidv4 } from "uuid";
 
 export class LobbyDataManager extends MappedRepository<Lobby> {
     async getLobby(lobbyId: string): Promise<Lobby | NotFoundError> {
@@ -12,7 +11,7 @@ export class LobbyDataManager extends MappedRepository<Lobby> {
     }
 
     async addLobby(lobby: Omit<Lobby, "id" | "players">): Promise<Lobby> {
-        const lobbyId = uuidv4();
+        const lobbyId = Id.get();
         return await this.set(lobbyId, { ...lobby, id: lobbyId, players: [] });
     }
 
@@ -26,7 +25,7 @@ export class LobbyDataManager extends MappedRepository<Lobby> {
         }
         lobby.players.push({
             userId,
-            playerId: uuidv4(),
+            playerId: Id.get(),
             classId: "entente_fantassin",
         });
         return lobby;

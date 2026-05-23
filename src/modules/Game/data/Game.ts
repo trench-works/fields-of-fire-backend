@@ -6,14 +6,14 @@ export type Cell = {
     entityId?: string;
     isWall: boolean;
     isHole: boolean;
+    isPlayerStart: boolean;
+    isMobStart: boolean;
 };
-
-export type Plateau = Cell[][];
 
 export type Game = {
     id: string;
     creatorId: string;
-    plateau: Plateau;
+    plateau: Cell[][];
     players: Player[];
     npc: Mob[];
     entities: Entity[];

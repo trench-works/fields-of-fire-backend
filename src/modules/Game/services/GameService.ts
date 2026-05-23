@@ -3,15 +3,16 @@ import {
     NotFoundError,
     Provide,
     SocketError,
+    Id,
 } from "../../../core";
-import { Player } from "../../Player/data/Player";
-import { Cell, Game, Plateau } from "../data/Game";
+import { Cell, Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
-import { Entity } from "../data/Entity";
 import { LobbyDataManager } from "../../Lobby/data/LobbyDataManager";
-import { v4 as uuidv4 } from "uuid";
-import { Mob } from "../data/Mob";
 import { JoinGameResponse } from "../application/interfaces/JoinGameResponse";
+import { Board } from "../data/Board";
+import { Mob } from "../data/Mob";
+import { Entity, EntityType } from "../data/Entity";
+import { Player } from "../../Player/data/Player";
 
 export class GameService {
     constructor(
@@ -48,18 +49,12 @@ export class GameService {
         if (lobby.creatorId !== userId) {
             return new AccessRefused();
         }
-        const gameId = uuidv4();
-        const plateau: Plateau = [];
-        for (let x = 0; x < 10; x++) {
-            const line: Cell[] = [];
-            plateau.push(line);
-            for (let y = 0; y < 10; y++) {
-                line.push({ isHole: false, isWall: false });
-            }
-        }
+        const gameId = Id.get();
+        const plateau: Cell[][] = Board.getRandomPremade();
         const npcsAndEntities: { npc: Mob; entity: Entity }[] = []; //TODO: do something random here
         for (let i = 0; i < 2; i++) {
-            const entityId = uuidv4();
+            const entityId = Id.get();
+            plateau[i][5].entityId = entityId;
             npcsAndEntities.push({
                 npc: {
                     entityId,
@@ -67,29 +62,33 @@ export class GameService {
                 },
                 entity: {
                     entityId,
-                    position: { x: i, y: 4 }, //TODO: add something to randomize this and avoid superposition with empty or already occupied cells
-                    characterClassId: "alliance_fantassin",
+                    position: { x: i, y: 5 }, //TODO: add something to randomize this and avoid superposition with empty or already occupied cells
+                    classId: "alliance_fantassin",
+                    entityType: EntityType.ENEMY,
                 },
             });
         }
         const entitiesAndPlayers: { player: Player; entity: Entity }[] =
-            lobby.players.map((lobbyPlayer, i) => {
-                const entityId = uuidv4();
-                plateau[i][0].entityId = entityId;
-                return {
-                    player: {
-                        playerId: lobbyPlayer.playerId,
-                        userId: lobbyPlayer.userId,
-                        entityId,
-                        gameId,
-                    },
-                    entity: {
-                        entityId,
-                        position: { x: i, y: 0 }, //TODO: add something to randomize this and avoid superposition with empty or already occupied cells
-                        characterClassId: lobbyPlayer.classId,
-                    },
-                };
-            });
+            lobby.players.map<{ player: Player; entity: Entity }>(
+                (lobbyPlayer, i) => {
+                    const entityId = Id.get();
+                    plateau[i][0].entityId = entityId;
+                    return {
+                        player: {
+                            playerId: lobbyPlayer.playerId,
+                            userId: lobbyPlayer.userId,
+                            entityId,
+                            gameId,
+                        },
+                        entity: {
+                            entityId,
+                            position: { x: i, y: 0 }, //TODO: add something to randomize this and avoid superposition with empty or already occupied cells
+                            classId: lobbyPlayer.classId,
+                            entityType: EntityType.ALLY,
+                        },
+                    };
+                }
+            );
         const game: Game = {
             id: gameId,
             creatorId: userId,
