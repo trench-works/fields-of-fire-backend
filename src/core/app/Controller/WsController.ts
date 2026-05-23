@@ -33,6 +33,17 @@ type WsControllerOptions<
     socketManager: WsManager<RessourceKeyObject, OutputActions, ReturnActions>;
 };
 
+type WsBaseListener<
+    RessourceKeyObject extends Record<string, unknown>,
+    PayloadResponseObject extends object = object,
+    ReturnActions = string,
+> = (
+    options: WsBaseListenerOptions<RessourceKeyObject>
+) => Promise<SingleClientOutputAction<
+    PayloadResponseObject,
+    ReturnActions
+> | void>;
+
 type WsListener<
     RessourceKeyObject extends Record<string, unknown>,
     PayloadObject extends object = object,
@@ -44,6 +55,19 @@ type WsListener<
     PayloadResponseObject,
     ReturnActions
 > | void>;
+
+type WsBaseHandler<
+    RessourceKeyObject extends Record<string, unknown>,
+    PayloadResponseObject extends object = object,
+    ReturnActions = string,
+> = {
+    listener: WsBaseListener<
+        RessourceKeyObject,
+        PayloadResponseObject,
+        ReturnActions
+    >;
+    responsePayloadType?: Instantiable<PayloadResponseObject>;
+};
 
 type WsHandler<
     RessourceKeyObject extends Record<string, unknown>,
@@ -58,18 +82,23 @@ type WsHandler<
         ReturnActions
     >;
     payloadType?: Instantiable<PayloadObject>;
-    responsePayloadType?: Instantiable<PayloadObject>;
+    responsePayloadType?: Instantiable<PayloadResponseObject>;
     accessLevel?: RessourceAccessLevel;
+};
+
+export type WsBaseListenerOptions<
+    RessourceKeyObject extends Record<string, any> = {},
+> = {
+    key: RessourceKeyObject;
+    socket: WebSocket;
+    user: UserInfos;
 };
 
 export type WsListenerOptions<
     RessourceKeyObject extends Record<string, any> = {},
     PayloadObject extends object = object,
-> = {
+> = WsBaseListenerOptions<RessourceKeyObject> & {
     payload: PayloadObject;
-    key: RessourceKeyObject;
-    socket: WebSocket;
-    user: UserInfos;
 };
 
 type OnOptions<
@@ -93,6 +122,12 @@ export class WsController<
         return (obj as WsController)._isWsController === true;
     }
 
+    public onSubscribeWsHandlers: WsBaseHandler<
+        RessourceKeyObject,
+        any,
+        ReturnActions
+    >[];
+
     public wsHandlers: Map<
         string,
         WsHandler<RessourceKeyObject, any, any, ReturnActions>
@@ -115,6 +150,7 @@ export class WsController<
     }: WsControllerOptions<RessourceKeyObject, OutputActions, ReturnActions>) {
         this.socketManager = socketManager;
         this.wsHandlers = new Map();
+        this.onSubscribeWsHandlers = [];
         this.config = {
             topic,
             key,
@@ -159,6 +195,19 @@ export class WsController<
         this.wsHandlers.set(action as string, {
             listener,
             ...options,
+        });
+        return this;
+    }
+
+    onSubscribe<PayloadResponseObject extends object = object>(
+        listener: WsBaseListener<
+            RessourceKeyObject,
+            PayloadResponseObject,
+            ReturnActions
+        >
+    ): this {
+        this.onSubscribeWsHandlers.push({
+            listener,
         });
         return this;
     }
@@ -247,6 +296,18 @@ export class WsController<
             }
             key = keyDto;
         }
+        const listenerOptions: WsBaseListenerOptions<RessourceKeyObject> = {
+            key,
+            socket,
+            user,
+        };
+        this.onSubscribeWsHandlers.forEach((handler) =>
+            handler.listener(listenerOptions).then((result) => {
+                if (result) {
+                    this.socketManager.send(socket, result);
+                }
+            })
+        );
         socket.on("message", (data) =>
             this.handleMessage(socket, key, user, data.toString())
         );

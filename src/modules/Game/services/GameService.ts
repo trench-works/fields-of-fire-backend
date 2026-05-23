@@ -3,7 +3,6 @@ import {
     NotFoundError,
     Provide,
     SocketError,
-    HotRessource,
     DBError,
 } from "../../../core";
 import { Player } from "../../Player/data/Player";
@@ -13,14 +12,31 @@ import { Entity } from "../data/Entity";
 import { LobbyDataManager } from "../../Lobby/data/LobbyDataManager";
 import { v4 as uuidv4 } from "uuid";
 import { Mob } from "../data/Mob";
+import { JoinGameResponse } from "../application/interfaces/JoinGameResponse";
 
 export class GameService {
     constructor(
         @Provide(GameDataManager)
-        private readonly gameDataManager: HotRessource<Game>,
+        private readonly gameDataManager: GameDataManager,
         @Provide(LobbyDataManager)
         private readonly lobbyDataManager: LobbyDataManager
     ) {}
+
+    async getPlayerCurrentGame(
+        userId: string
+    ): Promise<JoinGameResponse | null> {
+        const game = (await this.gameDataManager.getAll()).find((game) =>
+            game.players.some((player) => player.userId === userId)
+        );
+        if (!game) {
+            return null;
+        }
+        const player = game.players.find((player) => player.userId === userId)!;
+        const playerEntity = game.entities.find(
+            (entity) => entity.entityId === player.entityId
+        )!;
+        return { game, player, playerEntity };
+    }
 
     async createGameFromLobby(
         lobbyId: string,

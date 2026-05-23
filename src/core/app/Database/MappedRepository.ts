@@ -20,6 +20,10 @@ export class MappedRepository<
         return Array.from(this.dataMap.keys());
     }
 
+    async getAll(): Promise<Ressource[]> {
+        return Array.from(this.dataMap.values());
+    }
+
     public async set(key: string, value: Ressource): Promise<Ressource> {
         this.dataMap.set(key, value);
         return value;

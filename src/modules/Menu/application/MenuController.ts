@@ -4,7 +4,10 @@ import {
     WsListenerOptions,
     SingleClientOutputAction,
     NotFoundError,
+    WsBaseListenerOptions,
 } from "../../../core";
+import { JoinGameResponse } from "../../Game/application/interfaces/JoinGameResponse";
+import { GameService } from "../../Game/services/GameService";
 import { LobbyService } from "../../Lobby/services/LobbyService";
 import { MenuWebSocketManager } from "../web/MenuWebSocketManager";
 import { JoinLobby } from "./interfaces/JoinLobby";
@@ -24,6 +27,8 @@ export class MenuController extends WsController<
 > {
     @Provide(LobbyService)
     private readonly lobbyService!: LobbyService;
+    @Provide(GameService)
+    private readonly gameService!: GameService;
 
     constructor(
         @Provide(MenuWebSocketManager) socketManager: MenuWebSocketManager
@@ -34,11 +39,37 @@ export class MenuController extends WsController<
             payloadType: JoinLobby,
             responsePayloadType: JoinLobbyResponse,
         });
+        this.onSubscribe(this.onConnect.bind(this));
         //TODO: add something to handle on connection event and answer potentially with "reconnect" callback
     }
 
-    async createLobby({ user: { id } }: WsListenerOptions<MenuKey>) {
-        this.lobbyService.createLobby(id);
+    async onConnect({
+        user: { id },
+    }: WsBaseListenerOptions<MenuKey>): Promise<void | SingleClientOutputAction<
+        JoinGameResponse,
+        MenuReturnActions
+    >> {
+        const game = await this.gameService.getPlayerCurrentGame(id);
+        if (game) {
+            return { actionId: MenuReturnActions.RECONNECT, payload: game };
+        }
+        this.logger.debug("user connected to menu controller", id);
+    }
+
+    async createLobby({
+        user: { id },
+    }: WsListenerOptions<MenuKey>): Promise<
+        SingleClientOutputAction<JoinLobbyResponse, MenuReturnActions>
+    > {
+        const lobby = await this.lobbyService.createLobby(id);
+        return {
+            actionId: MenuReturnActions.JOIN,
+            payload: {
+                lobbyId: lobby.id,
+                playerId: lobby.players.find((player) => player.userId === id)!
+                    .playerId,
+            },
+        };
     }
 
     async joinLobby({
