@@ -14,11 +14,12 @@ import {
 } from "../web/PlayerSocketActions";
 import { PlayerWebSocketManager } from "../web/PlayerWebSocketManager";
 import { Game } from "../../Game/data/Game";
+import { GameOutputActions } from "../../Game/application/interfaces/GameAction";
 
 export class PlayerController extends WsController<
     PlayerKey,
     PlayerInputActions,
-    PlayerOutputActions
+    PlayerOutputActions | GameOutputActions
 > {
     constructor(
         @Provide(PlayerActionService)
@@ -59,7 +60,7 @@ export class PlayerController extends WsController<
 
         if (game) {
             this.emit({
-                actionId: PlayerOutputActions.UPDATE,
+                actionId: GameOutputActions.UPDATE,
                 key: { gameId: key.gameId },
                 payload: game,
             });
