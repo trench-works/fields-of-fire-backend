@@ -17,4 +17,5 @@ export type Game = {
     players: Player[];
     npc: Mob[];
     entities: Entity[];
+    entityTurn: number;
 };

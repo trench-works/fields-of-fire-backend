@@ -4,6 +4,7 @@ import {
     Provide,
     SocketError,
     Id,
+    LoggerService,
 } from "../../../core";
 import { Cell, Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
@@ -13,14 +14,17 @@ import { Board } from "../data/Board";
 import { Mob } from "../data/Mob";
 import { Entity, EntityType } from "../data/Entity";
 import { Player } from "../../Player/data/Player";
+import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 
 export class GameService {
-    constructor(
-        @Provide(GameDataManager)
-        private readonly gameDataManager: GameDataManager,
-        @Provide(LobbyDataManager)
-        private readonly lobbyDataManager: LobbyDataManager
-    ) {}
+    @Provide(GameDataManager)
+    private readonly gameDataManager!: GameDataManager;
+    @Provide(LobbyDataManager)
+    private readonly lobbyDataManager!: LobbyDataManager;
+    @Provide(CharacterClassRepository)
+    private readonly classRepository!: CharacterClassRepository;
+    @Provide("Logger")
+    private readonly logger!: LoggerService;
 
     async getPlayerCurrentGame(
         userId: string
@@ -89,16 +93,29 @@ export class GameService {
                     };
                 }
             );
+        const entities = [
+            ...entitiesAndPlayers.map(({ entity }) => entity),
+            ...npcsAndEntities.map(({ entity }) => entity),
+        ];
+        const classes = await this.classRepository.list();
         const game: Game = {
             id: gameId,
             creatorId: userId,
             plateau: plateau,
             players: entitiesAndPlayers.map(({ player }) => player),
             npc: npcsAndEntities.map(({ npc }) => npc),
-            entities: [
-                ...entitiesAndPlayers.map(({ entity }) => entity),
-                ...npcsAndEntities.map(({ entity }) => entity),
-            ],
+            entities: entities.sort((entityA, entityB) => {
+                const classA = classes.find(
+                    (charClass) => charClass.id === entityA.classId
+                )!;
+                const classB = classes.find(
+                    (charClass) => charClass.id === entityB.classId
+                )!;
+                return classA.stats.initiative < classB.stats.initiative
+                    ? 1
+                    : -1;
+            }),
+            entityTurn: 0,
         };
         await this.lobbyDataManager.delete(lobbyId);
         return this.gameDataManager.set(gameId, game);
