@@ -6,6 +6,7 @@ export class LobbyPlayer {
 
 export class Lobby {
     id!: string;
+    maxPlayers!: number;
     creatorId!: string;
     players!: LobbyPlayer[];
 }

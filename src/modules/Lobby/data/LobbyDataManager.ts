@@ -14,20 +14,4 @@ export class LobbyDataManager extends MappedRepository<Lobby> {
         const lobbyId = Id.get();
         return await this.set(lobbyId, { ...lobby, id: lobbyId, players: [] });
     }
-
-    async addPlayerToLobby(
-        lobbyId: string,
-        userId: string
-    ): Promise<NotFoundError | Lobby> {
-        const lobby = await this.get(lobbyId);
-        if (!lobby) {
-            return new NotFoundError();
-        }
-        lobby.players.push({
-            userId,
-            playerId: Id.get(),
-            classId: "entente_fantassin",
-        });
-        return lobby;
-    }
 }

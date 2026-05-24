@@ -1,21 +1,21 @@
-import { GameDataManager } from "../../Game/data/GameRepository";
-import { NotFoundError, Provide } from "../../../core";
+import { Id, NotFoundError, Provide, SocketError } from "../../../core";
 import { LobbyDataManager } from "../data/LobbyDataManager";
 import { Lobby } from "../data/Lobby";
 
 export class LobbyService {
-    constructor(
-        @Provide(LobbyDataManager)
-        private readonly lobbyDataManager: LobbyDataManager,
-        @Provide(GameDataManager)
-        private readonly gameDataManager: GameDataManager
-    ) {}
+    @Provide(LobbyDataManager)
+    private readonly lobbyDataManager!: LobbyDataManager;
 
     async createLobby(userId: string) {
         const lobby = await this.lobbyDataManager.addLobby({
             creatorId: userId,
+            maxPlayers: 4,
         });
-        this.lobbyDataManager.addPlayerToLobby(lobby.id, userId);
+        lobby.players.push({
+            userId,
+            playerId: Id.get(),
+            classId: "entente_fantassin",
+        });
         return lobby;
     }
 
@@ -47,11 +47,22 @@ export class LobbyService {
         return lobby;
     }
 
-    async joinLobby(lobbyId: string, userId: string) {
-        const lobby = await this.lobbyDataManager.addPlayerToLobby(
-            lobbyId,
-            userId
-        );
+    async addPlayerToLobby(
+        lobbyId: string,
+        userId: string
+    ): Promise<Lobby | SocketError> {
+        const lobby = await this.lobbyDataManager.get(lobbyId);
+        if (!lobby) {
+            return new NotFoundError();
+        }
+        if (lobby.players.length === lobby.maxPlayers) {
+            return new SocketError("Lobby is already full !");
+        }
+        lobby.players.push({
+            userId,
+            playerId: Id.get(),
+            classId: "entente_fantassin",
+        });
         return lobby;
     }
 }

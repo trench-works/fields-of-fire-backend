@@ -3,8 +3,8 @@ import {
     Provide,
     WsListenerOptions,
     SingleClientOutputAction,
-    NotFoundError,
     WsBaseListenerOptions,
+    SocketError,
 } from "../../../core";
 import { JoinGameResponse } from "../../Game/application/interfaces/JoinGameResponse";
 import { GameService } from "../../Game/services/GameService";
@@ -53,7 +53,6 @@ export class MenuController extends WsController<
         if (game) {
             return { actionId: MenuReturnActions.RECONNECT, payload: game };
         }
-        this.logger.debug("user connected to menu controller", id);
     }
 
     async createLobby({
@@ -78,8 +77,8 @@ export class MenuController extends WsController<
     }: WsListenerOptions<MenuKey, JoinLobby>): Promise<
         SingleClientOutputAction<JoinLobbyResponse, MenuReturnActions>
     > {
-        const lobby = await this.lobbyService.joinLobby(lobbyId, id);
-        if (lobby instanceof NotFoundError) {
+        const lobby = await this.lobbyService.addPlayerToLobby(lobbyId, id);
+        if (lobby instanceof SocketError) {
             return { error: lobby };
         }
         return {
