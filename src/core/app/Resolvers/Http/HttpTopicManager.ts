@@ -4,7 +4,7 @@ import { HttpError } from "../../../errors";
 export class HttpTopicManager<
     Handler extends {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        listener: (...params: any[]) => Promise<void | HttpError>;
+        listener: (...params: any[]) => Promise<any | HttpError>;
     },
 > {
     constructor(
@@ -24,11 +24,17 @@ export class HttpTopicManager<
 
     async post(req: Request, res: Response): Promise<void> {
         const { params, body } = req;
-        res.send(
-            await this.handler.listener({
-                params,
-                body,
-            })
-        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const response: any | HttpError = await this.handler.listener({
+            params,
+            body,
+        });
+        if (response instanceof HttpError) {
+            res.status(response.code).send(
+                response.message ?? "Unexpected Error"
+            );
+        } else {
+            res.send(response);
+        }
     }
 }
