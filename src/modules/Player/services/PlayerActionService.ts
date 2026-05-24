@@ -1,4 +1,7 @@
 import { Logger, Provide } from "../../../core";
+import { Action } from "../../Action/data/Action";
+import { ActionRepository } from "../../Action/data/ActionRepository";
+import { Entity } from "../../Game/data/Entity";
 import { Cell } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 
@@ -6,7 +9,8 @@ export class PlayerActionService {
     constructor(
         @Provide(GameDataManager)
         private readonly gameDataManager: GameDataManager,
-        @Provide("Logger") private readonly logger: Logger
+        @Provide("Logger") private readonly logger: Logger,
+        @Provide("ActionRepository") private readonly actionRepository: ActionRepository
     ) {}
 
     async action(
@@ -17,48 +21,72 @@ export class PlayerActionService {
     ) {
         this.logger.log("PlayerActionService action method called");
 
+        const game = await this.gameDataManager.get(gameId);
+            if (!game) {
+                this.logger.error("Game not found");
+                return null;
+            }
+        const destination = game.plateau[target.x][target.y];
+        if (!this.checkDestination(destination)) {
+            this.logger.error("Destination cell is already occupied");
+            return null;
+        }
+        const player = game.players.find(
+            (player) => player.playerId === playerId
+        )!;
+        const PlayerEntity = game.entities.find(
+            (e) => e.entityId === player!.entityId
+        );
+        if (!PlayerEntity) {
+            this.logger.error("Entity not found");
+            return null;
+        }
+
+        const listActions = await this.actionRepository.list();
+        const action = listActions.find((a) => a.id === actionId);
+        if (!action) {
+            this.logger.error("Action not found");
+            return null;
+        }
+
         switch (actionId) {
             case "walk": {
-                const game = await this.gameDataManager.get(gameId);
-                if (!game) {
-                    this.logger.error("Game not found");
-                    return null;
-                }
-
-                const player = game.players.find(
-                    (player) => player.playerId === playerId
-                )!;
-
-                const destination = game.plateau[target.x][target.y];
-                if (!this.checkDestination(destination)) {
-                    this.logger.error("Destination cell is already occupied");
-                    return null;
-                }
-
-                const foundEntity = game.entities.find(
-                    (e) => e.entityId === player!.entityId
-                );
-                if (!foundEntity) {
-                    this.logger.error("Entity not found");
-                    return null;
-                }
-
                 // Libère l'ancienne case
                 const currentCase =
-                    game.plateau[foundEntity.position.x][
-                        foundEntity.position.y
+                    game.plateau[PlayerEntity.position.x][
+                        PlayerEntity.position.y
                     ];
                 currentCase.entityId = undefined;
                 // Occupe la nouvelle case
                 destination.entityId = player.entityId;
                 // Met à jour la position
-                foundEntity.position = target;
+                PlayerEntity.position = target;
 
                 await this.gameDataManager.set(gameId, game);
 
-                return { entity: foundEntity };
+                return { entity: PlayerEntity };
             }
-            case "shoot":
+            case "shoot": {
+                if(!destination?.entityId) {
+                    this.logger.error("No entity to shoot at");
+                    return null;
+                }
+                const targetEntity = game.entities.find(
+                    (e) => e.entityId === destination.entityId
+                );  
+                if (!targetEntity) {
+                    this.logger.error("Target entity not found");
+                    return null;
+                }
+
+                const damage = this.calculateDamage(PlayerEntity, action);
+                this.logger.log(`Calculated damage: ${damage}`);
+
+                this.applyDamage(targetEntity, damage);
+                
+                //to finalize
+
+            }
                 break;
             case "heal":
                 break;
@@ -69,5 +97,27 @@ export class PlayerActionService {
 
     checkDestination(cell: Cell): boolean {
         return Boolean(!cell.entityId && !cell.isHole && !cell.isWall);
+    }
+
+    calculateDamage(attacker: Entity, action: Action): number {
+        const dammageRandomRange = action.damage!.max - action.damage!.min + 1;
+        const randomDammage = Math.floor(Math.random() * dammageRandomRange) + action.damage!.min;
+        const statBonus = action.actionType === "melee" ? Math.ceil(attacker.stats!.strength / 10) : Math.ceil(attacker.stats!.precision / 10);
+        const totalDamage = randomDammage + statBonus; 
+        return totalDamage;
+
+        //TODO: ajouter les effets de l'attaque, gestion multi-Target, et ajout de chances d'échecs
+    }
+    applyDamage(target: Entity, damage: number) {
+        if (!target.stats) {
+            this.logger.error("Target entity has no stats");
+            return;
+        }
+        target.stats.life -= damage;
+        if (target.stats.life < 0) {
+            target.stats.life = 0;
+        }
+
+        return target.stats.life;
     }
 }

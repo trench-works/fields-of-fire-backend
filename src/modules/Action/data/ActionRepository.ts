@@ -1,5 +1,5 @@
 import { FolderRepository } from "../../../core";
-import { Action } from "./Action";
+import { Action, ActionType } from "./Action";
 
 export class ActionRepository extends FolderRepository<Action> {
   async entityToRessource(entity: Action): Promise<Action> {
@@ -25,6 +25,8 @@ export class ActionRepository extends FolderRepository<Action> {
         iconSpriteKey: "action_image_shoot",
         cost: 2,
         range: 3,
+        damage: { min: 1, max: 3 },
+        actionType: ActionType.RANGED,
       },
       heal: {
         id: "heal",
