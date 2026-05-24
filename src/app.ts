@@ -50,6 +50,6 @@ const server = new App({
     ],
     resolvers: [WsResolver, HttpResolver],
     appConfig: (configService) => configService.getConfig().app,
-    config: ConfigMap,
+    config: ConfigMap(),
 });
 server.start();
