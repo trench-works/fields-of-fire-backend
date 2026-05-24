@@ -39,7 +39,7 @@ export class CharacterClassRepository extends FolderRepository<
         super("class", {
             entente_fantassin: {
                 id: "entente_fantassin",
-                name: "Fantassin",
+                name: "Fantassin de l'Entente",
                 playable: true,
                 stats: {
                     life: 24,
@@ -57,7 +57,7 @@ export class CharacterClassRepository extends FolderRepository<
             },
             entente_medic: {
                 id: "entente_medic",
-                name: "Medic",
+                name: "Médecin de l'Entente",
                 playable: true,
                 stats: {
                     life: 16,
@@ -75,7 +75,7 @@ export class CharacterClassRepository extends FolderRepository<
             },
             entente_caporal: {
                 id: "entente_caporal",
-                name: "Caporal",
+                name: "Caporal de l'Entente",
                 playable: true,
                 stats: {
                     life: 20,
@@ -93,7 +93,7 @@ export class CharacterClassRepository extends FolderRepository<
             },
             alliance_fantassin: {
                 id: "alliance_fantassin",
-                name: "Un Fieffé Coquin",
+                name: "Un Fantassin Coquin",
                 playable: false,
                 stats: {
                     life: 24,
@@ -105,8 +105,41 @@ export class CharacterClassRepository extends FolderRepository<
                     energy: 4,
                     mouvement: 3,
                 },
-                classDescription:
-                    "Un soldat polyvalent, capable de s'adapter à différentes situations sur le champ de bataille. Il est équipé d'une armure légère et d'une épée, ce qui lui permet de se déplacer rapidement et d'attaquer efficacement à courte portée. Le Fantassin est également capable d'utiliser des compétences de soutien pour renforcer ses alliés ou affaiblir ses ennemis.",
+                classDescription: "Un fantassin très vilain",
+                actionList: ["walk", "shoot", "heal"],
+            },
+            alliance_medic: {
+                id: "alliance_medic",
+                name: "Un Médecin Coquin",
+                playable: false,
+                stats: {
+                    life: 24,
+                    precision: 10,
+                    strength: 20,
+                    accuracy: 100,
+                    initiative: 60,
+                    dodging: 0,
+                    energy: 4,
+                    mouvement: 3,
+                },
+                classDescription: "Un médecin très très vilain",
+                actionList: ["walk", "shoot", "heal"],
+            },
+            alliance_caporal: {
+                id: "alliance_caporal",
+                name: "Un Caporal Coquin",
+                playable: false,
+                stats: {
+                    life: 24,
+                    precision: 10,
+                    strength: 20,
+                    accuracy: 100,
+                    initiative: 60,
+                    dodging: 0,
+                    energy: 4,
+                    mouvement: 3,
+                },
+                classDescription: "Un Caporal très très très vilain",
                 actionList: ["walk", "shoot", "heal"],
             },
         });
