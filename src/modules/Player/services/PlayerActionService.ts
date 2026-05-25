@@ -1,4 +1,4 @@
-import { Logger, Provide } from "../../../core";
+import { Logger, Provide, SocketError } from "../../../core";
 import { Action } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Entity } from "../../Game/data/Entity";
@@ -14,8 +14,32 @@ export class PlayerActionService {
         private readonly actionRepository: ActionRepository
     ) {}
 
-    async finishTurn(gameId: string, playerId: string): Promise<Game | null> {
-        return null;
+    async finishTurn(
+        gameId: string,
+        playerId: string
+    ): Promise<Game | SocketError> {
+        const game = await this.gameDataManager.get(gameId);
+        if (!game) {
+            return new SocketError("Game not found");
+        }
+
+        // Determinate if it is player's turn
+        const playingEntityId = game.playerTurns[0];
+        const playerEntityId = game.players.find(
+            (player) => player.playerId === playerId
+        )!.entityId;
+        if (playingEntityId !== playerEntityId) {
+            return new SocketError("It is not the player's turn");
+        }
+
+        // Do turn change mechanic
+        game.playerTurns.shift();
+        game.playerTurns.push(playingEntityId);
+
+        //TODO: if new playing entity is a mob -> launch mob actions system
+        //TODO: if new playing entity is a player, start a Timeout to finish its turn automatically
+
+        return game;
     }
 
     async action(
