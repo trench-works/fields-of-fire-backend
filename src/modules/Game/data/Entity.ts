@@ -17,6 +17,6 @@ export class Entity {
     position!: { x: number; y: number };
     actionList?: string[];
 
-    stats?: Stats;
+    stats!: Stats;
     modifier?: Stats[];
 }

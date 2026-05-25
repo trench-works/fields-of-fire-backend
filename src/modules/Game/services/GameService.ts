@@ -56,9 +56,13 @@ export class GameService {
         const gameId = Id.get();
         const plateau: Cell[][] = Board.getRandomPremade();
         const npcsAndEntities: { npc: Mob; entity: Entity }[] = []; //TODO: do something random here
+        const classes = await this.classRepository.list();
         for (let i = 0; i < 2; i++) {
             const entityId = Id.get();
             plateau[i][5].entityId = entityId;
+            const charClass = classes.find(
+                (charClass) => charClass.id === "alliance_fantassin"
+            )!;
             npcsAndEntities.push({
                 npc: {
                     entityId,
@@ -69,6 +73,7 @@ export class GameService {
                     position: { x: i, y: 5 }, //TODO: add something to randomize this and avoid superposition with empty or already occupied cells
                     classId: "alliance_fantassin",
                     entityType: EntityType.ENEMY,
+                    stats: charClass.stats,
                 },
             });
         }
@@ -77,6 +82,9 @@ export class GameService {
                 (lobbyPlayer, i) => {
                     const entityId = Id.get();
                     plateau[i][0].entityId = entityId;
+                    const charClass = classes.find(
+                        (charClass) => charClass.id === lobbyPlayer.classId
+                    )!;
                     return {
                         player: {
                             playerId: lobbyPlayer.playerId,
@@ -89,6 +97,7 @@ export class GameService {
                             position: { x: i, y: 0 }, //TODO: add something to randomize this and avoid superposition with empty or already occupied cells
                             classId: lobbyPlayer.classId,
                             entityType: EntityType.ALLY,
+                            stats: charClass.stats,
                         },
                     };
                 }
@@ -97,7 +106,6 @@ export class GameService {
             ...entitiesAndPlayers.map(({ entity }) => entity),
             ...npcsAndEntities.map(({ entity }) => entity),
         ];
-        const classes = await this.classRepository.list();
         const game: Game = {
             id: gameId,
             creatorId: userId,
