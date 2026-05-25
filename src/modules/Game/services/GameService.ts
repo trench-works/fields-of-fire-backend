@@ -115,7 +115,19 @@ export class GameService {
                     ? 1
                     : -1;
             }),
-            entityTurn: 0,
+            playerTurns: entities
+                .sort((entityA, entityB) => {
+                    const classA = classes.find(
+                        (charClass) => charClass.id === entityA.classId
+                    )!;
+                    const classB = classes.find(
+                        (charClass) => charClass.id === entityB.classId
+                    )!;
+                    return classA.stats.initiative < classB.stats.initiative
+                        ? 1
+                        : -1;
+                })
+                .map((entity) => entity.entityId),
         };
         await this.lobbyDataManager.delete(lobbyId);
         return this.gameDataManager.set(gameId, game);

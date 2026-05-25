@@ -14,6 +14,10 @@ export class PlayerActionService {
         private readonly actionRepository: ActionRepository
     ) {}
 
+    async finishTurn(gameId: string, playerId: string): Promise<Game | null> {
+        return null;
+    }
+
     async action(
         actionId: string,
         gameId: string,
