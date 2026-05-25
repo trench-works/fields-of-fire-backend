@@ -4,15 +4,15 @@ import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Entity } from "../../Game/data/Entity";
 import { Cell, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
+import { MobService } from "./MobService";
 
 export class PlayerActionService {
-    constructor(
-        @Provide(GameDataManager)
-        private readonly gameDataManager: GameDataManager,
-        @Provide("Logger") private readonly logger: Logger,
-        @Provide("ActionRepository")
-        private readonly actionRepository: ActionRepository
-    ) {}
+    @Provide(GameDataManager)
+    private readonly gameDataManager!: GameDataManager;
+    @Provide("Logger") private readonly logger!: Logger;
+    @Provide(ActionRepository)
+    private readonly actionRepository!: ActionRepository;
+    @Provide(MobService) private readonly mobService!: MobService;
 
     async finishTurn(
         gameId: string,
@@ -36,8 +36,15 @@ export class PlayerActionService {
         game.playerTurns.shift();
         game.playerTurns.push(playingEntityId);
 
-        //TODO: if new playing entity is a mob -> launch mob actions system
-        //TODO: if new playing entity is a player, start a Timeout to finish its turn automatically
+        // If new playing entity is a mob, then launch playing actions for the mob
+        const newPlayingMob = game.npc.find(
+            (mob) => mob.entityId === game.playerTurns[0]
+        );
+        if (newPlayingMob) {
+            this.mobService.play(gameId);
+        } else {
+            //TODO: if new playing entity is a player, start a Timeout to finish its turn automatically
+        }
 
         return game;
     }
