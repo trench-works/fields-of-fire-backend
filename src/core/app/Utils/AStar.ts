@@ -45,6 +45,14 @@ export abstract class AStar<Cell> {
         this.closedList = new Map();
     }
 
+    findPath(start: Position, end: Position, cellBoard: Cell[][]): Position[] {
+        this.withStart(start);
+        this.withEnd(end);
+        this.withBoard(cellBoard);
+        this.search();
+        return this.resolve();
+    }
+
     withStart(start: Position): this {
         this.start = start;
         return this;
