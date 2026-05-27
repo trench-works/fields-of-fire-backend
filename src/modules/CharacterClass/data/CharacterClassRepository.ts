@@ -93,7 +93,7 @@ export class CharacterClassRepository extends FolderRepository<
             },
             alliance_fantassin: {
                 id: "alliance_fantassin",
-                name: "Un Fantassin Coquin",
+                name: "Fantassin Coquin",
                 playable: false,
                 stats: {
                     life: 24,
@@ -110,7 +110,7 @@ export class CharacterClassRepository extends FolderRepository<
             },
             alliance_medic: {
                 id: "alliance_medic",
-                name: "Un Médecin Coquin",
+                name: "Médecin Coquin",
                 playable: false,
                 stats: {
                     life: 24,
@@ -127,7 +127,7 @@ export class CharacterClassRepository extends FolderRepository<
             },
             alliance_caporal: {
                 id: "alliance_caporal",
-                name: "Un Caporal Coquin",
+                name: "Caporal Coquin",
                 playable: false,
                 stats: {
                     life: 24,

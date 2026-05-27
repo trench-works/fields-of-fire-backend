@@ -1,3 +1,4 @@
+import { AStar } from "../../../core/app/Utils";
 import { Player } from "../../Player/data/Player";
 import { Entity } from "./Entity";
 import { Mob } from "./Mob";
@@ -8,6 +9,7 @@ export type Cell = {
     isHole: boolean;
     isPlayerStart: boolean;
     isMobStart: boolean;
+    position: { x: number; y: number };
 };
 
 export type Game = {
@@ -19,3 +21,12 @@ export type Game = {
     entities: Entity[];
     playerTurns: string[];
 };
+
+export class CellAStar extends AStar<Cell> {
+    isWalkable(cell: Cell): boolean {
+        return !cell.isHole && !cell.isWall && !cell.entityId;
+    }
+    getPosition(cell: Cell): { x: number; y: number } {
+        return cell.position;
+    }
+}

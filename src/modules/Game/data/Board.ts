@@ -19,14 +19,18 @@ export class Board {
                 .toString()
         );
         const premadeBoard = premades[Ran.int(premades.length)];
-        return premadeBoard.board.map((line) =>
+        return premadeBoard.board.map((line, x) =>
             line.map(
-                (cell): Cell => ({
+                (cell, y): Cell => ({
                     isWall: cell.isWall ?? false,
                     isHole: cell.isHole ?? false,
                     isPlayerStart: cell.isPlayerStart ?? false,
                     isMobStart: cell.isMobStart ?? false,
                     entityId: undefined,
+                    position: {
+                        x,
+                        y,
+                    },
                 })
             )
         );
