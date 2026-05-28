@@ -82,7 +82,7 @@ export class GameService {
                 entity: {
                     entityId,
                     position: { ...mobCell.position },
-                    classId: "alliance_fantassin",
+                    classId: charClass.id,
                     entityType: EntityType.ENEMY,
                     stats: charClass.stats,
                 },

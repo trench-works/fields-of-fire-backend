@@ -12,7 +12,7 @@ type Position = {
     y: number;
 };
 
-class PositionUtils {
+export class PositionUtils {
     static equal(a: Position, b: Position): boolean {
         return a.x === b.x && a.y === b.y;
     }

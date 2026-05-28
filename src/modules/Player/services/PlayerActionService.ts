@@ -1,4 +1,5 @@
 import { Logger, Provide, SocketError } from "../../../core";
+import { PositionUtils } from "../../../core/app/Utils";
 import { Action } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Entity } from "../../Game/data/Entity";
@@ -70,10 +71,10 @@ export class PlayerActionService {
         const player = game.players.find(
             (player) => player.playerId === playerId
         )!;
-        const PlayerEntity = game.entities.find(
+        const playerEntity = game.entities.find(
             (e) => e.entityId === player!.entityId
         );
-        if (!PlayerEntity) {
+        if (!playerEntity) {
             this.logger.error("Entity not found");
             return null;
         }
@@ -88,15 +89,23 @@ export class PlayerActionService {
         switch (actionId) {
             case "walk": {
                 // Libère l'ancienne case
+                const range = PositionUtils.distance(
+                    playerEntity.position,
+                    target
+                );
+                if (range > playerEntity.stats.mouvement) {
+                    return null;
+                }
                 const currentCase =
-                    game.plateau[PlayerEntity.position.x][
-                        PlayerEntity.position.y
+                    game.plateau[playerEntity.position.x][
+                        playerEntity.position.y
                     ];
                 currentCase.entityId = undefined;
                 // Occupe la nouvelle case
                 destination.entityId = player.entityId;
                 // Met à jour la position
-                PlayerEntity.position = target;
+                playerEntity.position = target;
+                playerEntity.stats.mouvement -= range;
 
                 await this.gameDataManager.set(gameId, game);
 
@@ -116,7 +125,7 @@ export class PlayerActionService {
                         return null;
                     }
 
-                    const damage = this.calculateDamage(PlayerEntity, action);
+                    const damage = this.calculateDamage(playerEntity, action);
                     this.logger.log(`Calculated damage: ${damage}`);
 
                     this.applyDamage(targetEntity, damage);
