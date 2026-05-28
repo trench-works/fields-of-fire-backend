@@ -4,7 +4,7 @@ import { WebSocket } from "ws";
 import { Instantiable } from "../Types/Instantiable";
 import { validateSync, ValidationError } from "class-validator";
 import { IGuard, RessourceAccessLevel } from "../Providers/Guard";
-import { AccessRefused } from "../../errors";
+import { AccessRefused, SocketError } from "../../errors";
 import { UserInfos } from "../Types/UserInfos";
 import { WsManager } from "../Resolvers/WebSocket/WsManager";
 import {
@@ -270,11 +270,17 @@ export class WsController<
                     }
                 }
                 // if user with payload is authorized
-                handler.listener(listenerOptions).then((result) => {
-                    if (result) {
-                        this.socketManager.send(socket, result);
-                    }
-                });
+                try {
+                    handler.listener(listenerOptions).then((result) => {
+                        if (result) {
+                            this.socketManager.send(socket, result);
+                        }
+                    });
+                } catch (err: unknown) {
+                    this.socketManager.send(socket, {
+                        error: err as SocketError,
+                    });
+                }
             }
         } catch (err) {
             this.logger.error(

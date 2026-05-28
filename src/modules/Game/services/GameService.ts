@@ -5,6 +5,7 @@ import {
     SocketError,
     Id,
     LoggerService,
+    Ran,
 } from "../../../core";
 import { Cell, Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
@@ -15,6 +16,7 @@ import { Mob } from "../data/Mob";
 import { Entity, EntityType } from "../data/Entity";
 import { Player } from "../../Player/data/Player";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
+import { GameCreationError } from "./errors/GameCreationError";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -55,14 +57,23 @@ export class GameService {
         }
         const gameId = Id.get();
         const plateau: Cell[][] = Board.getRandomPremade();
-        const npcsAndEntities: { npc: Mob; entity: Entity }[] = []; //TODO: do something random here
+        const npcsAndEntities: { npc: Mob; entity: Entity }[] = [];
         const classes = await this.classRepository.list();
         for (let i = 0; i < 2; i++) {
             const entityId = Id.get();
-            plateau[i][5].entityId = entityId;
-            const charClass = classes.find(
-                (charClass) => charClass.id === "alliance_fantassin"
-            )!;
+            const mobCells = plateau
+                .flat()
+                .filter((cell) => !cell.entityId && cell.isMobStart);
+            const mobCell = mobCells[Ran.int(mobCells.length)];
+            if (!mobCell) {
+                return new GameCreationError();
+            }
+            mobCell.entityId = entityId;
+            // get a random mob class
+            const mobClasses = classes.filter(
+                (charClass) => !charClass.playable
+            );
+            const charClass = mobClasses[Ran.int(mobClasses.length)];
             npcsAndEntities.push({
                 npc: {
                     entityId,
@@ -70,7 +81,7 @@ export class GameService {
                 },
                 entity: {
                     entityId,
-                    position: { x: i, y: 5 }, //TODO: add something to randomize this and avoid superposition with empty or already occupied cells
+                    position: { ...mobCell.position },
                     classId: "alliance_fantassin",
                     entityType: EntityType.ENEMY,
                     stats: charClass.stats,
@@ -79,9 +90,16 @@ export class GameService {
         }
         const entitiesAndPlayers: { player: Player; entity: Entity }[] =
             lobby.players.map<{ player: Player; entity: Entity }>(
-                (lobbyPlayer, i) => {
+                (lobbyPlayer) => {
                     const entityId = Id.get();
-                    plateau[i][0].entityId = entityId;
+                    const playerCells = plateau
+                        .flat()
+                        .filter((cell) => !cell.entityId && cell.isPlayerStart);
+                    const playerCell = playerCells[Ran.int(playerCells.length)];
+                    if (!playerCell) {
+                        throw new GameCreationError();
+                    }
+                    playerCell.entityId = entityId;
                     const charClass = classes.find(
                         (charClass) => charClass.id === lobbyPlayer.classId
                     )!;
@@ -94,7 +112,7 @@ export class GameService {
                         },
                         entity: {
                             entityId,
-                            position: { x: i, y: 0 }, //TODO: add something to randomize this and avoid superposition with empty or already occupied cells
+                            position: { ...playerCell.position },
                             classId: lobbyPlayer.classId,
                             entityType: EntityType.ALLY,
                             stats: charClass.stats,
