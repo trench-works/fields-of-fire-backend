@@ -64,10 +64,6 @@ export class PlayerActionService {
             return null;
         }
         const destination = game.plateau[target.x][target.y];
-        if (!this.checkDestination(destination)) {
-            this.logger.error("Destination cell is already occupied");
-            return null;
-        }
         const player = game.players.find(
             (player) => player.playerId === playerId
         )!;
@@ -88,6 +84,10 @@ export class PlayerActionService {
 
         switch (actionId) {
             case "walk": {
+                if (!this.checkDestination(destination)) {
+                    this.logger.error("Destination cell is already occupied");
+                    return null;
+                }
                 // Libère l'ancienne case
                 const range = PositionUtils.distance(
                     playerEntity.position,
@@ -131,6 +131,11 @@ export class PlayerActionService {
                     this.applyDamage(targetEntity, damage);
 
                     //to finalize
+                    playerEntity.stats.energy -= action.cost;
+
+                    await this.gameDataManager.set(gameId, game);
+
+                return game;
                 }
                 break;
             case "heal":
