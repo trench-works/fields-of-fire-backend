@@ -1,20 +1,28 @@
-import { IsInt, IsNotEmpty, IsString, ValidateNested } from "class-validator";
+import {
+    IsEnum,
+    IsInt,
+    IsNotEmpty,
+    IsString,
+    ValidateNested,
+} from "class-validator";
 import { Type } from "class-transformer";
+import { PlayerActionId } from "../../services/PlayerActionService";
 
 export class PlayerAction {
-  @IsString()
-  @IsNotEmpty()
-  actionId!: string;
-  @ValidateNested()
-  @Type(() => Target)
-  target!: Target;
+    @IsEnum(PlayerActionId)
+    @IsString()
+    @IsNotEmpty()
+    actionId!: PlayerActionId;
+    @ValidateNested()
+    @Type(() => Target)
+    target!: Target;
 }
 
 export class Target {
-  @IsInt()
-  @IsNotEmpty()
-  x!: number;
-  @IsInt()
-  @IsNotEmpty()
-  y!: number;
+    @IsInt()
+    @IsNotEmpty()
+    x!: number;
+    @IsInt()
+    @IsNotEmpty()
+    y!: number;
 }

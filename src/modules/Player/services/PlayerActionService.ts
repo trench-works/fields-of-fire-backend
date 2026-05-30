@@ -1,11 +1,17 @@
 import { Logger, Provide, SocketError } from "../../../core";
 import { PositionUtils } from "../../../core/app/Utils";
-import { Action } from "../../Action/data/Action";
+import { Action, ActionType } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Entity } from "../../Game/data/Entity";
 import { Cell, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { MobService } from "./MobService";
+
+export enum PlayerActionId {
+    WALK = "walk",
+    SHOOT = "shoot",
+    HEAL = "heal",
+}
 
 export class PlayerActionService {
     @Provide(GameDataManager)
@@ -51,7 +57,7 @@ export class PlayerActionService {
     }
 
     async action(
-        actionId: string,
+        actionId: PlayerActionId,
         gameId: string,
         playerId: string,
         target: { x: number; y: number }
@@ -83,62 +89,16 @@ export class PlayerActionService {
         }
 
         switch (actionId) {
-            case "walk": {
-                if (!this.checkDestination(destination)) {
-                    this.logger.error("Destination cell is already occupied");
-                    return null;
-                }
-                // Libère l'ancienne case
-                const range = PositionUtils.distance(
-                    playerEntity.position,
-                    target
+            case PlayerActionId.WALK:
+                return await this.move(game, playerEntity, destination);
+            case PlayerActionId.SHOOT:
+                return await this.shoot(
+                    game,
+                    playerEntity,
+                    action,
+                    destination
                 );
-                if (range > playerEntity.stats.mouvement) {
-                    return null;
-                }
-                const currentCase =
-                    game.plateau[playerEntity.position.x][
-                        playerEntity.position.y
-                    ];
-                currentCase.entityId = undefined;
-                // Occupe la nouvelle case
-                destination.entityId = player.entityId;
-                // Met à jour la position
-                playerEntity.position = target;
-                playerEntity.stats.mouvement -= range;
-
-                await this.gameDataManager.set(gameId, game);
-
-                return game;
-            }
-            case "shoot":
-                {
-                    if (!destination?.entityId) {
-                        this.logger.error("No entity to shoot at");
-                        return null;
-                    }
-                    const targetEntity = game.entities.find(
-                        (e) => e.entityId === destination.entityId
-                    );
-                    if (!targetEntity) {
-                        this.logger.error("Target entity not found");
-                        return null;
-                    }
-
-                    const damage = this.calculateDamage(playerEntity, action);
-                    this.logger.log(`Calculated damage: ${damage}`);
-
-                    this.applyDamage(targetEntity, damage);
-
-                    //to finalize
-                    playerEntity.stats.energy -= action.cost;
-
-                    await this.gameDataManager.set(gameId, game);
-
-                return game;
-                }
-                break;
-            case "heal":
+            case PlayerActionId.HEAL:
                 break;
             default:
                 this.logger.error("Unknown action ID");
@@ -146,7 +106,69 @@ export class PlayerActionService {
         return null;
     }
 
-    checkDestination(cell: Cell): boolean {
+    async move(
+        game: Game,
+        playerEntity: Entity,
+        destination: Cell
+    ): Promise<null | Game> {
+        if (!this.checkMoveDestination(destination)) {
+            this.logger.error("Destination cell is already occupied");
+            return null;
+        }
+        // Libère l'ancienne case
+        const range = PositionUtils.distance(
+            playerEntity.position,
+            destination.position
+        );
+        if (range > playerEntity.stats.mouvement) {
+            return null;
+        }
+        const currentCase =
+            game.plateau[playerEntity.position.x][playerEntity.position.y];
+        currentCase.entityId = undefined;
+        // Occupe la nouvelle case
+        destination.entityId = playerEntity.entityId;
+        // Met à jour la position
+        playerEntity.position = destination.position;
+        playerEntity.stats.mouvement -= range;
+
+        await this.gameDataManager.set(game.id, game);
+
+        return game;
+    }
+
+    async shoot(
+        game: Game,
+        playerEntity: Entity,
+        action: Action,
+        destination: Cell
+    ): Promise<null | Game> {
+        if (!destination?.entityId) {
+            this.logger.error("No entity to shoot at");
+            return null;
+        }
+        const targetEntity = game.entities.find(
+            (e) => e.entityId === destination.entityId
+        );
+        if (!targetEntity) {
+            this.logger.error("Target entity not found");
+            return null;
+        }
+
+        const damage = this.calculateDamage(playerEntity, action);
+        this.logger.log(`Calculated damage: ${damage}`);
+
+        this.applyDamage(targetEntity, damage);
+
+        //to finalize
+        playerEntity.stats.energy -= action.cost;
+
+        await this.gameDataManager.set(game.id, game);
+
+        return game;
+    }
+
+    checkMoveDestination(cell: Cell): boolean {
         return Boolean(!cell.entityId && !cell.isHole && !cell.isWall);
     }
 
@@ -155,7 +177,7 @@ export class PlayerActionService {
         const randomDammage =
             Math.floor(Math.random() * dammageRandomRange) + action.damage!.min;
         const statBonus =
-            action.actionType === "melee"
+            action.actionType === ActionType.MELEE
                 ? Math.ceil(attacker.stats!.strength / 10)
                 : Math.ceil(attacker.stats!.precision / 10);
         const totalDamage = randomDammage + statBonus;
