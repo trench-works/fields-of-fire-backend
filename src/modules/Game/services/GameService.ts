@@ -17,6 +17,7 @@ import { Entity, EntityType } from "../data/Entity";
 import { Player } from "../../Player/data/Player";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { GameCreationError } from "./errors/GameCreationError";
+import { UserRepository } from "../../User/data/UserRepository";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -27,6 +28,8 @@ export class GameService {
     private readonly classRepository!: CharacterClassRepository;
     @Provide("Logger")
     private readonly logger!: LoggerService;
+    @Provide(UserRepository)
+    private readonly userRepository!: UserRepository;
 
     async getPlayerCurrentGame(
         userId: string
@@ -88,38 +91,38 @@ export class GameService {
                 },
             });
         }
-        const entitiesAndPlayers: { player: Player; entity: Entity }[] =
-            lobby.players.map<{ player: Player; entity: Entity }>(
-                (lobbyPlayer) => {
-                    const entityId = Id.get();
-                    const playerCells = plateau
-                        .flat()
-                        .filter((cell) => !cell.entityId && cell.isPlayerStart);
-                    const playerCell = playerCells[Ran.int(playerCells.length)];
-                    if (!playerCell) {
-                        throw new GameCreationError();
-                    }
-                    playerCell.entityId = entityId;
-                    const charClass = classes.find(
-                        (charClass) => charClass.id === lobbyPlayer.classId
-                    )!;
-                    return {
-                        player: {
-                            playerId: lobbyPlayer.playerId,
-                            userId: lobbyPlayer.userId,
-                            entityId,
-                            gameId,
-                        },
-                        entity: {
-                            entityId,
-                            position: { ...playerCell.position },
-                            classId: lobbyPlayer.classId,
-                            entityType: EntityType.ALLY,
-                            stats: charClass.stats,
-                        },
-                    };
-                }
-            );
+        const entitiesAndPlayers: { player: Player; entity: Entity }[] = [];
+        for (const lobbyPlayer of lobby.players) {
+            const entityId = Id.get();
+            const playerCells = plateau
+                .flat()
+                .filter((cell) => !cell.entityId && cell.isPlayerStart);
+            const playerCell = playerCells[Ran.int(playerCells.length)];
+            if (!playerCell) {
+                throw new GameCreationError();
+            }
+            const user = await this.userRepository.get(lobbyPlayer.userId);
+            playerCell.entityId = entityId;
+            const charClass = classes.find(
+                (charClass) => charClass.id === lobbyPlayer.classId
+            )!;
+            entitiesAndPlayers.push({
+                player: {
+                    playerId: lobbyPlayer.playerId,
+                    userId: lobbyPlayer.userId,
+                    entityId,
+                    gameId,
+                    name: user?.username ?? charClass.name,
+                },
+                entity: {
+                    entityId,
+                    position: { ...playerCell.position },
+                    classId: lobbyPlayer.classId,
+                    entityType: EntityType.ALLY,
+                    stats: charClass.stats,
+                },
+            });
+        }
         const entities = [
             ...entitiesAndPlayers.map(({ entity }) => entity),
             ...npcsAndEntities.map(({ entity }) => entity),

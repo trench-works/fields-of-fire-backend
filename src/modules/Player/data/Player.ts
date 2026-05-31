@@ -1,6 +1,7 @@
 export type Player = {
-  playerId: string;
-  userId: string;
-  entityId: string;
-  gameId: string;
+    playerId: string;
+    userId: string;
+    entityId: string;
+    gameId: string;
+    name: string;
 };
