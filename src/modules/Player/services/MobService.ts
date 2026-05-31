@@ -28,10 +28,8 @@ export class MobService {
         }
 
         //await this.mobAction(game);
-
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        this.logger.debug(game.playerTurns);
         const playingEntityId = game.playerTurns.shift();
         if (playingEntityId) {
             game.playerTurns.push(playingEntityId);
@@ -44,7 +42,6 @@ export class MobService {
         );
         playerEntity.stats = { ...playerEntity.stats, ...entityClass?.stats };
 
-        this.logger.debug(game.playerTurns);
         // Emit Update
         this.gameDataManager.set(game.id, game);
         this.socketManager.emitUpdate(game);
