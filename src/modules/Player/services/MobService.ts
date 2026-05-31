@@ -27,14 +27,26 @@ export class MobService {
             return;
         }
 
-        await this.mobAction(game);
+        //await this.mobAction(game);
 
-        const playingEntity = game.playerTurns.shift();
-        if (playingEntity) {
-            game.playerTurns.push(playingEntity);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        this.logger.debug(game.playerTurns);
+        const playingEntityId = game.playerTurns.shift();
+        if (playingEntityId) {
+            game.playerTurns.push(playingEntityId);
         }
+        const playerEntity = game.entities.find(
+            (entity) => entity.entityId === playingEntityId
+        )!;
+        const entityClass = await this.classRepository.get(
+            playerEntity.classId
+        );
+        playerEntity.stats = { ...playerEntity.stats, ...entityClass?.stats };
 
+        this.logger.debug(game.playerTurns);
         // Emit Update
+        this.gameDataManager.set(game.id, game);
         this.socketManager.emitUpdate(game);
 
         // If new playing entity is a mob, then launch playing actions for the mob

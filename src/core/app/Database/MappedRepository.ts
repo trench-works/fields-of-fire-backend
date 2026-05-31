@@ -39,6 +39,7 @@ export class MappedRepository<
     }
 
     public async get(key: string): Promise<Ressource | null> {
-        return this.dataMap.get(key) ?? null;
+        const res = this.dataMap.get(key);
+        return res ? JSON.parse(JSON.stringify(res)) : null;
     }
 }

@@ -55,6 +55,12 @@ export class LobbyService {
         if (!lobby) {
             return new NotFoundError();
         }
+        const currentPlayer = lobby.players.find(
+            (player) => player.userId === userId
+        );
+        if (currentPlayer) {
+            return lobby;
+        }
         if (lobby.players.length === lobby.maxPlayers) {
             return new SocketError("Lobby is already full !");
         }

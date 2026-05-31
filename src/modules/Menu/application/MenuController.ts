@@ -79,7 +79,7 @@ export class MenuController extends WsController<
     > {
         const lobby = await this.lobbyService.addPlayerToLobby(lobbyId, id);
         if (lobby instanceof SocketError) {
-            return { error: lobby };
+            return lobby;
         }
         return {
             actionId: MenuReturnActions.JOIN,

@@ -16,9 +16,7 @@ export type MultipleClientsOutputAction<
     payload: PayloadObject;
 };
 
-export type SingleClientOutputError = {
-    error: SocketError;
-};
+export type SingleClientOutputError = void | SocketError;
 
 export type SingleClientOutputAction<
     PayloadObject extends object = object,

@@ -263,9 +263,7 @@ export class WsController<
                         )
                     ).sort((a, b) => b - a)[0];
                     if (highestAccessLevel < handler.accessLevel) {
-                        this.socketManager.send(socket, {
-                            error: new AccessRefused(),
-                        });
+                        this.socketManager.send(socket, new AccessRefused());
                         return;
                     }
                 }
@@ -277,9 +275,7 @@ export class WsController<
                         }
                     });
                 } catch (err: unknown) {
-                    this.socketManager.send(socket, {
-                        error: err as SocketError,
-                    });
+                    this.socketManager.send(socket, err as SocketError);
                 }
             }
         } catch (err) {

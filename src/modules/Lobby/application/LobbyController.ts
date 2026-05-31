@@ -54,7 +54,7 @@ export class LobbyController extends WsController<
             user.id
         );
         if (game instanceof SocketError) {
-            return { error: game };
+            return game;
         }
         this.emit<Game>({
             actionId: LobbyOutputActions.START,
@@ -69,7 +69,7 @@ export class LobbyController extends WsController<
     }: WsListenerOptions<LobbyKeys>): Promise<void | SingleClientOutputError> {
         const lobby = await this.lobbyService.removePlayer(lobbyId, user.id);
         if (lobby instanceof NotFoundError) {
-            return { error: lobby };
+            return lobby;
         }
         this.emit<Lobby>({
             actionId: LobbyOutputActions.UPDATE,
@@ -92,7 +92,7 @@ export class LobbyController extends WsController<
             classId
         );
         if (lobby instanceof NotFoundError) {
-            return { error: lobby };
+            return lobby;
         }
         this.emit<Lobby>({
             actionId: LobbyOutputActions.UPDATE,

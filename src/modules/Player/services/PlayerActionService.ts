@@ -2,9 +2,11 @@ import { Logger, Provide, SocketError } from "../../../core";
 import { PositionUtils } from "../../../core/app/Utils";
 import { Action, ActionType } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
+import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { Entity } from "../../Game/data/Entity";
 import { Cell, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
+import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { MobService } from "./MobService";
 
 export enum PlayerActionId {
@@ -16,15 +18,21 @@ export enum PlayerActionId {
 export class PlayerActionService {
     @Provide(GameDataManager)
     private readonly gameDataManager!: GameDataManager;
-    @Provide("Logger") private readonly logger!: Logger;
+    @Provide("Logger")
+    private readonly logger!: Logger;
     @Provide(ActionRepository)
     private readonly actionRepository!: ActionRepository;
-    @Provide(MobService) private readonly mobService!: MobService;
+    @Provide(CharacterClassRepository)
+    private readonly classRepository!: CharacterClassRepository;
+    @Provide(MobService)
+    private readonly mobService!: MobService;
+    @Provide(GameWebSocketManager)
+    private readonly socketManager!: GameWebSocketManager;
 
     async finishTurn(
         gameId: string,
         playerId: string
-    ): Promise<Game | SocketError> {
+    ): Promise<void | SocketError> {
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
             return new SocketError("Game not found");
@@ -32,14 +40,21 @@ export class PlayerActionService {
 
         // Determinate if it is player's turn
         const playingEntityId = game.playerTurns[0];
-        const playerEntityId = game.players.find(
+        const player = game.players.find(
             (player) => player.playerId === playerId
-        )!.entityId;
-        if (playingEntityId !== playerEntityId) {
+        );
+        if (playingEntityId !== player?.entityId) {
             return new SocketError("It is not the player's turn");
         }
 
         // Do turn change mechanic
+        const playerEntity = game.entities.find(
+            (entity) => entity.entityId === playingEntityId
+        )!;
+        const entityClass = await this.classRepository.get(
+            playerEntity.classId
+        );
+        playerEntity.stats = { ...playerEntity.stats, ...entityClass?.stats };
         game.playerTurns.shift();
         game.playerTurns.push(playingEntityId);
 
@@ -47,13 +62,18 @@ export class PlayerActionService {
         const newPlayingMob = game.npc.find(
             (mob) => mob.entityId === game.playerTurns[0]
         );
+
+        this.socketManager.emitUpdate(game);
+
         if (newPlayingMob) {
-            this.mobService.play(gameId);
+            try {
+                await this.mobService.play(gameId);
+            } catch (err) {
+                this.logger.debug(err);
+            }
         } else {
             //TODO: if new playing entity is a player, start a Timeout to finish its turn automatically
         }
-
-        return game;
     }
 
     async action(
@@ -61,13 +81,12 @@ export class PlayerActionService {
         gameId: string,
         playerId: string,
         target: { x: number; y: number }
-    ): Promise<Game | null> {
+    ): Promise<void | SocketError> {
         this.logger.log("PlayerActionService action method called");
 
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
-            this.logger.error("Game not found");
-            return null;
+            return new SocketError("Game not found");
         }
         const destination = game.plateau[target.x][target.y];
         const player = game.players.find(
@@ -77,15 +96,13 @@ export class PlayerActionService {
             (e) => e.entityId === player!.entityId
         );
         if (!playerEntity) {
-            this.logger.error("Entity not found");
-            return null;
+            return new SocketError("Entity not found");
         }
 
         const listActions = await this.actionRepository.list();
         const action = listActions.find((a) => a.id === actionId);
         if (!action) {
-            this.logger.error("Action not found");
-            return null;
+            return new SocketError("Action not found");
         }
 
         switch (actionId) {
@@ -103,17 +120,15 @@ export class PlayerActionService {
             default:
                 this.logger.error("Unknown action ID");
         }
-        return null;
     }
 
     async move(
         game: Game,
         playerEntity: Entity,
         destination: Cell
-    ): Promise<null | Game> {
+    ): Promise<void | SocketError> {
         if (!this.checkMoveDestination(destination)) {
-            this.logger.error("Destination cell is already occupied");
-            return null;
+            return new SocketError("Destination cell is already occupied");
         }
         // Libère l'ancienne case
         const range = PositionUtils.distance(
@@ -121,7 +136,9 @@ export class PlayerActionService {
             destination.position
         );
         if (range > playerEntity.stats.mouvement) {
-            return null;
+            return new SocketError(
+                "Not enough movement points to perform this action"
+            );
         }
         const currentCase =
             game.plateau[playerEntity.position.x][playerEntity.position.y];
@@ -134,7 +151,7 @@ export class PlayerActionService {
 
         await this.gameDataManager.set(game.id, game);
 
-        return game;
+        this.socketManager.emitUpdate(game);
     }
 
     async shoot(
@@ -142,17 +159,15 @@ export class PlayerActionService {
         playerEntity: Entity,
         action: Action,
         destination: Cell
-    ): Promise<null | Game> {
+    ): Promise<void | SocketError> {
         if (!destination?.entityId) {
-            this.logger.error("No entity to shoot at");
-            return null;
+            return new SocketError("No entity to shoot at");
         }
         const targetEntity = game.entities.find(
             (e) => e.entityId === destination.entityId
         );
         if (!targetEntity) {
-            this.logger.error("Target entity not found");
-            return null;
+            return new SocketError("Target entity not found");
         }
 
         const damage = this.calculateDamage(playerEntity, action);
@@ -165,7 +180,7 @@ export class PlayerActionService {
 
         await this.gameDataManager.set(game.id, game);
 
-        return game;
+        this.socketManager.emitUpdate(game);
     }
 
     checkMoveDestination(cell: Cell): boolean {

@@ -3,7 +3,6 @@ import {
     WsListenerOptions,
     Provide,
     SocketError,
-    SingleClientOutputAction,
 } from "../../../core";
 import { PlayerKey } from "./interfaces/PlayerKey";
 import { PlayerAction } from "./interfaces/PlayerAction";
@@ -13,7 +12,6 @@ import {
     PlayerOutputActions,
 } from "../web/PlayerSocketActions";
 import { PlayerWebSocketManager } from "../web/PlayerWebSocketManager";
-import { Game } from "../../Game/data/Game";
 import { GameOutputActions } from "../../Game/application/interfaces/GameAction";
 import { SingleClientOutputError } from "../../../core/types/Action";
 
@@ -39,24 +37,13 @@ export class PlayerController extends WsController<
     }: WsListenerOptions<
         PlayerKey,
         PlayerAction
-    >): Promise<SingleClientOutputError | void> {
+    >): Promise<SingleClientOutputError> {
         const game = await this.playerActionService.finishTurn(
             key.gameId,
             key.playerId
         );
-        if (game === null) {
-            return {
-                error: new SocketError("can't do action"),
-            };
-        }
-        this.logger.debug("action result:", game);
-
-        if (game) {
-            this.emit({
-                actionId: GameOutputActions.UPDATE,
-                key: { gameId: key.gameId },
-                payload: game,
-            });
+        if (game instanceof SocketError) {
+            return game;
         }
     }
 
@@ -67,28 +54,16 @@ export class PlayerController extends WsController<
     }: WsListenerOptions<
         PlayerKey,
         PlayerAction
-    >): Promise<SingleClientOutputAction<Game, PlayerOutputActions> | void> {
+    >): Promise<SingleClientOutputError> {
         this.logger.debug("payload received:", key, user, payload);
-        const game = await this.playerActionService.action(
+        const actionResponse = await this.playerActionService.action(
             payload.actionId,
             key.gameId,
             key.playerId,
             payload.target
         );
-        if (game === null) {
-            return {
-                actionId: "error",
-                error: new SocketError("can't do action"),
-            };
-        }
-        this.logger.debug("action result:", game);
-
-        if (game) {
-            this.emit({
-                actionId: GameOutputActions.UPDATE,
-                key: { gameId: key.gameId },
-                payload: game,
-            });
+        if (actionResponse instanceof SocketError) {
+            return actionResponse;
         }
     }
 }
