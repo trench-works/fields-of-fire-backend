@@ -27,9 +27,6 @@ export class CharacterClassRepository extends FolderRepository<
             }
         }
         return {
-            imageKey: entity.id,
-            spriteKey: entity.id + "_spritesheet",
-            iconImageKey: entity.id + "_closeup",
             ...entity,
             actionList,
         };
