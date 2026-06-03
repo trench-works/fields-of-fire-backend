@@ -13,6 +13,11 @@ export enum PlayerActionId {
     WALK = "walk",
     SHOOT = "shoot",
     HEAL = "heal",
+    BAYONET = "bayonet",
+    ARTILLERY_SUPPORT = "artillery_support",
+    AMPUTATE = "amputate",
+    INTIMIDATION = "intimidation",
+    SNEAKY = "sneaky",
 }
 
 export class PlayerActionService {

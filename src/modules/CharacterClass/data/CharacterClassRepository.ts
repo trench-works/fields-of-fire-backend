@@ -50,7 +50,7 @@ export class CharacterClassRepository extends FolderRepository<
                 },
                 classDescription:
                     "Un soldat polyvalent, capable de s'adapter à différentes situations sur le champ de bataille. Il est équipé d'une armure légère et d'une épée, ce qui lui permet de se déplacer rapidement et d'attaquer efficacement à courte portée. Le Fantassin est également capable d'utiliser des compétences de soutien pour renforcer ses alliés ou affaiblir ses ennemis.",
-                actionList: ["walk", "shoot", "heal"],
+                actionList: ["walk", "shoot", "bayonet"],
             },
             entente_medic: {
                 id: "entente_medic",
@@ -85,8 +85,8 @@ export class CharacterClassRepository extends FolderRepository<
                     mouvement: 4,
                 },
                 classDescription:
-                    "Un combattant robuste et discipliné, le Caporal est équipé d'une armure lourde et d'une hache, ce qui lui permet de résister aux attaques ennemies et de causer des dégâts importants à courte portée. Il excelle dans les combats rapprochés et peut utiliser des compétences pour augmenter sa défense ou infliger des dégâts supplémentaires à ses adversaires.",
-                actionList: ["walk", "shoot", "heal"],
+                    "Un combattant intelligent et discipliné, le Caporal est équipé d'un sabre et d'une fusil, ce qui lui permet de mettre à distance les ennemies et de causer des dégâts importants à moyenne et logngue portée. Il excelle dans les combats en groupe, de pars sa capacité à booster ses alliés.",
+                actionList: ["walk", "shoot", "artillery_support"],
             },
             alliance_fantassin: {
                 id: "alliance_fantassin",
@@ -103,7 +103,7 @@ export class CharacterClassRepository extends FolderRepository<
                     mouvement: 3,
                 },
                 classDescription: "Un fantassin très vilain",
-                actionList: ["walk", "shoot", "heal"],
+                actionList: ["walk", "shoot", "bayonet"],
             },
             alliance_medic: {
                 id: "alliance_medic",
@@ -137,7 +137,7 @@ export class CharacterClassRepository extends FolderRepository<
                     mouvement: 3,
                 },
                 classDescription: "Un Caporal très très très vilain",
-                actionList: ["walk", "shoot", "heal"],
+                actionList: ["walk", "shoot"],
             },
         });
     }
