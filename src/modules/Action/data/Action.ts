@@ -18,6 +18,7 @@ export class Action {
   pushValue?: number;
   cost!: number;
   isWalkAction?: boolean;
+  targetRequired?: boolean ;
 }
 
 export enum ActionType {

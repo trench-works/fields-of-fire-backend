@@ -36,6 +36,7 @@ export class ActionRepository extends FolderRepository<Action> {
         cost: 1,
         range: 1,
         damage: { min: -3, max: -1 },
+        targetRequired: true,
       },
       bayonet: {
         id: "bayonet",

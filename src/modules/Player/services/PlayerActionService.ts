@@ -113,15 +113,20 @@ export class PlayerActionService {
         switch (actionId) {
             case PlayerActionId.WALK:
                 return await this.move(game, playerEntity, destination);
+            case PlayerActionId.AMPUTATE:
+            case PlayerActionId.ARTILLERY_SUPPORT:
+            case PlayerActionId.BAYONET:
+            case PlayerActionId.INTIMIDATION:
+            case PlayerActionId.SNEAKY:
             case PlayerActionId.SHOOT:
+            case PlayerActionId.HEAL:
                 return await this.shoot(
                     game,
                     playerEntity,
                     action,
                     destination
                 );
-            case PlayerActionId.HEAL:
-                break;
+            
             default:
                 this.logger.error("Unknown action ID");
         }
@@ -145,8 +150,7 @@ export class PlayerActionService {
                 "Not enough movement points to perform this action"
             );
         }
-        const currentCase =
-            game.plateau[playerEntity.position.x][playerEntity.position.y];
+        const currentCase = game.plateau[playerEntity.position.x][playerEntity.position.y];
         currentCase.entityId = undefined;
         // Occupe la nouvelle case
         destination.entityId = playerEntity.entityId;
@@ -165,20 +169,36 @@ export class PlayerActionService {
         action: Action,
         destination: Cell
     ): Promise<void | SocketError> {
-        if (!destination?.entityId) {
-            return new SocketError("No entity to shoot at");
+        if (action.targetRequired && !destination?.entityId) {
+            return new SocketError("You must target a visible entity to perform this action");
         }
-        const targetEntity = game.entities.find(
-            (e) => e.entityId === destination.entityId
-        );
-        if (!targetEntity) {
+        let targetEntity : Entity[] = [];
+
+        if (action.zoneType && action.zoneSize) {
+            switch (action.zoneType) {
+                case "cross": {
+                    const crossTargets = game.entities.filter((entity) => {
+                        const isInCross =
+                            (entity.position.x === destination.position.x &&
+                                Math.abs(entity.position.y - destination.position.y) <= action.zoneSize!) ||
+                            (entity.position.y === destination.position.y &&
+                                Math.abs(entity.position.x - destination.position.x) <= action.zoneSize!);
+                        return isInCross && entity.entityId !== playerEntity.entityId;
+                    });
+                    targetEntity = crossTargets;
+                    break;
+                }
+            }
+        }
+
+        if ( action.targetRequired && targetEntity.length === 0) {
             return new SocketError("Target entity not found");
         }
 
-        const damage = this.calculateDamage(playerEntity, action);
-        this.logger.log(`Calculated damage: ${damage}`);
-
-        this.applyDamage(targetEntity, damage);
+        for (const target of targetEntity) {
+            const damage = this.calculateDamage(playerEntity, action, target);
+            this.applyDamage(target, damage);
+        }
 
         //to finalize
         playerEntity.stats.energy -= action.cost;
@@ -192,18 +212,20 @@ export class PlayerActionService {
         return Boolean(!cell.entityId && !cell.isHole && !cell.isWall);
     }
 
-    calculateDamage(attacker: Entity, action: Action): number {
-        const dammageRandomRange = action.damage!.max - action.damage!.min + 1;
-        const randomDammage =
-            Math.floor(Math.random() * dammageRandomRange) + action.damage!.min;
-        const statBonus =
-            action.actionType === ActionType.MELEE
-                ? Math.ceil(attacker.stats!.strength / 10)
-                : Math.ceil(attacker.stats!.precision / 10);
-        const totalDamage = randomDammage + statBonus;
-        return totalDamage;
+    calculateDamage(attacker: Entity, action: Action, target: Entity): number {
+        const damageRange = action.damage!.max - action.damage!.min + 1;
+        const randomDamage = Math.floor(Math.random() * damageRange) + action.damage!.min;
 
-        //TODO: ajouter les effets de l'attaque, gestion multi-Target, et ajout de chances d'échecs
+        const statBonus = action.actionType === ActionType.MELEE
+            ? Math.ceil(attacker.stats!.strength / 10)
+            : Math.ceil(attacker.stats!.precision / 10);
+
+        const brutTotal = randomDamage + statBonus;
+        const reduction = brutTotal * (target.stats!.armor / 100);
+
+        return brutTotal - reduction;
+
+        //TODO: ajouter les effets de l'attaque, et ajout de chances d'échecs
     }
     applyDamage(target: Entity, damage: number) {
         if (!target.stats) {
