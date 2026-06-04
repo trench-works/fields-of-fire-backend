@@ -190,6 +190,12 @@ export class PlayerActionService {
                 }
             }
         }
+        else {
+            const target = game.entities.find(
+                (e) => e.entityId === destination.entityId
+            );
+            targetEntity.push(target!);
+        }
 
         if ( action.targetRequired && targetEntity.length === 0) {
             return new SocketError("Target entity not found");
@@ -204,7 +210,7 @@ export class PlayerActionService {
         playerEntity.stats.energy -= action.cost;
 
         await this.gameDataManager.set(game.id, game);
-
+        this.logger.log(`Player ${playerEntity.entityId} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`);
         this.socketManager.emitUpdate(game);
     }
 
@@ -223,6 +229,8 @@ export class PlayerActionService {
         const brutTotal = randomDamage + statBonus;
         const reduction = brutTotal * (target.stats!.armor / 100);
 
+        this.logger.log(`Calculated : ${brutTotal - reduction} dammage`);
+
         return brutTotal - reduction;
 
         //TODO: ajouter les effets de l'attaque, et ajout de chances d'échecs
@@ -233,6 +241,7 @@ export class PlayerActionService {
             return;
         }
         target.stats.life -= damage;
+        this.logger.log(`Applied ${damage} damage to entity ${target.entityId}, remaining life: ${target.stats.life}`);
         if (target.stats.life < 0) {
             target.stats.life = 0;
         }
