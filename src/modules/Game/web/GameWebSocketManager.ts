@@ -1,4 +1,5 @@
 import { WsManager } from "../../../core";
+import { GameAnimation } from "../../Player/data/Animation";
 import {
     GameOutputActions,
     GameReturnActions,
@@ -11,7 +12,7 @@ export class GameWebSocketManager extends WsManager<
     GameOutputActions,
     GameReturnActions
 > {
-    emitUpdate(game: Game, animations: any[]) {
+    emitUpdate(game: Game, animations: GameAnimation[]) {
         this.emit({
             actionId: GameOutputActions.UPDATE,
             key: { gameId: game.id },

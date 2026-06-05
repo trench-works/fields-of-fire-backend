@@ -146,6 +146,7 @@ export class PlayerActionService {
                 "Not enough movement points to perform this action"
             );
         }
+        const originalPosition = playerEntity.position;
         const currentCase =
             game.plateau[playerEntity.position.x][playerEntity.position.y];
         currentCase.entityId = undefined;
@@ -157,7 +158,16 @@ export class PlayerActionService {
 
         await this.gameDataManager.set(game.id, game);
 
-        this.socketManager.emitUpdate(game, []);
+        this.socketManager.emitUpdate(game, [
+            {
+                key: "move",
+                entityId: playerEntity.entityId,
+                data: {
+                    start: originalPosition,
+                    end: playerEntity.position,
+                },
+            },
+        ]);
     }
 
     async shoot(
@@ -189,7 +199,15 @@ export class PlayerActionService {
         this.logger.log(
             `Player ${playerEntity.entityId} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
         );
-        this.socketManager.emitUpdate(game, []);
+        this.socketManager.emitUpdate(game, [
+            {
+                key: "shoot",
+                entityId: playerEntity.entityId,
+                data: {
+                    target: destination.position,
+                },
+            },
+        ]);
     }
 
     checkMoveDestination(cell: Cell): boolean {

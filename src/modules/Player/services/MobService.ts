@@ -8,6 +8,7 @@ import { CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { Stats } from "../../Stat/data/Stats";
+import { GameAnimation } from "../data/Animation";
 
 export class MobService {
     @Provide(GameDataManager)
@@ -43,7 +44,6 @@ export class MobService {
 
         // Emit Update
         this.gameDataManager.set(game.id, game);
-        this.socketManager.emitUpdate(game, []);
 
         // If new playing entity is a mob, then launch playing actions for the mob
         const newPlayingMob = game.npc.find(
@@ -51,6 +51,8 @@ export class MobService {
         );
         if (newPlayingMob) {
             this.play(gameId);
+        } else {
+            this.socketManager.emitUpdate(game, []);
         }
     }
 
@@ -70,6 +72,7 @@ export class MobService {
         let PM = stats.mouvement;
         let firstTry = true;
         while (firstTry || (PM !== lastPM && PA !== lastPA)) {
+            const animations: GameAnimation[] = [];
             firstTry = false;
             lastPA = PA;
             lastPM = PM;
@@ -88,6 +91,14 @@ export class MobService {
                     nearestPlayer.stats.life -= damage; //TODO: apply defense and dodge
                     // remove energy points
                     PA -= action.cost;
+                    animations.push({
+                        key: "action",
+                        entityId: entity.entityId,
+                        data: {
+                            actionId: action.id,
+                            target: nearestPlayer.position,
+                        },
+                    });
                 }
             }
             if (PM) {
@@ -102,6 +113,7 @@ export class MobService {
                         nearestPlayer.position,
                         game.plateau
                     );
+                    const originalPosition = { ...entity.position };
                     while (PM > 0 && moves.length > 1) {
                         game.plateau[entity.position.x][
                             entity.position.y
@@ -116,12 +128,24 @@ export class MobService {
                         PM--;
                         moves.shift();
                     }
+                    if (
+                        !PositionUtils.equal(originalPosition, entity.position)
+                    ) {
+                        animations.push({
+                            key: "move",
+                            entityId: entity.entityId,
+                            data: {
+                                start: originalPosition,
+                                end: entity.position,
+                            },
+                        });
+                    }
                 }
             }
 
             // Update users display
             this.gameDataManager.set(game.id, game);
-            this.socketManager.emitUpdate(game, []);
+            this.socketManager.emitUpdate(game, animations);
         }
     }
 
