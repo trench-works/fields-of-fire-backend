@@ -4,7 +4,7 @@ import { Action } from "../../Action/data/Action";
 import { CharacterClass } from "../../CharacterClass/data/CharacterClass";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { Entity } from "../../Game/data/Entity";
-import { Game } from "../../Game/data/Game";
+import { CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { Stats } from "../../Stat/data/Stats";
@@ -69,10 +69,11 @@ export class MobService {
         let PM = stats.mouvement;
         let firstTry = true;
         while (firstTry || (PM !== lastPM && PA !== lastPA)) {
-            console.log(PA, PM, lastPA, lastPM);
             firstTry = false;
             lastPA = PA;
             lastPM = PM;
+            console.log(PA, PM, lastPA, lastPM);
+
             const nearestPlayer = this.getNearestPlayer(game, entity);
             let playerRange = this.getDistance(entity, nearestPlayer);
 
@@ -80,10 +81,11 @@ export class MobService {
             if (PA) {
                 if (action) {
                     // do damages
-                    nearestPlayer.stats.life -= action.damage
+                    const damage = action.damage
                         ? action.damage.min +
                           Ran.int(action.damage.max - action.damage.min)
                         : 0;
+                    nearestPlayer.stats.life -= damage; //TODO: apply defense and dodge
                     // remove energy points
                     PA -= action.cost;
                 }
@@ -92,17 +94,27 @@ export class MobService {
                 if (action) {
                     break;
                 }
-                while (playerRange > 1 && PM > 0) {
+                while (playerRange > 0 && PM > 0) {
                     playerRange = this.getDistance(entity, nearestPlayer);
 
-                    //TODO: move toward player
-                    //await this.entityService.moveEntity(game, ...);
-
-                    PM--;
+                    const moves = new CellAStar().findPath(
+                        entity.position,
+                        nearestPlayer.position,
+                        game.plateau
+                    );
+                    while (PM > 0 && moves.length > 1) {
+                        entity.position = PositionUtils.add(
+                            entity.position,
+                            moves[0]
+                        );
+                        PM--;
+                        moves.shift();
+                    }
                 }
             }
 
             // Update users display
+            this.gameDataManager.set(game.id, game);
             this.socketManager.emitUpdate(game);
         }
     }
