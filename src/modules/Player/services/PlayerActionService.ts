@@ -201,9 +201,10 @@ export class PlayerActionService {
         );
         this.socketManager.emitUpdate(game, [
             {
-                key: "shoot",
+                key: "action",
                 entityId: playerEntity.entityId,
                 data: {
+                    actionId: action.id,
                     target: destination.position,
                 },
             },

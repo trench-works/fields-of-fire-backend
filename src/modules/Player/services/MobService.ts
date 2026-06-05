@@ -132,9 +132,10 @@ export class MobService {
                         !PositionUtils.equal(originalPosition, entity.position)
                     ) {
                         animations.push({
-                            key: "move",
+                            key: "action",
                             entityId: entity.entityId,
                             data: {
+                                actionId: "move",
                                 start: originalPosition,
                                 end: entity.position,
                             },
