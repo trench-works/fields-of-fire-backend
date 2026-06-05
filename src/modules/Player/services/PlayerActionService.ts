@@ -241,7 +241,7 @@ export class PlayerActionService {
                 : Math.ceil(attacker.stats!.precision / 10);
 
         const brutTotal = randomDamage + statBonus;
-        const reduction = brutTotal * (target.stats!.armor / 100);
+        const reduction = Math.ceil(brutTotal * (target.stats!.armor / 100));
 
         this.logger.log(`Calculated : ${brutTotal - reduction} dammage`);
 
