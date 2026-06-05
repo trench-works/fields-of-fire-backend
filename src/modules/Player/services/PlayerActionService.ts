@@ -1,6 +1,6 @@
 import { Logger, Provide, SocketError } from "../../../core";
 import { PositionUtils } from "../../../game-lib/Utils";
-import { Action, ActionType } from "../../Action/data/Action";
+import { Action, ActionType, ActionUtils } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { Entity } from "../../Game/data/Entity";
@@ -176,51 +176,21 @@ export class PlayerActionService {
                 "You must target a visible entity to perform this action"
             );
         }
-        let targetEntity: Entity[] = [];
+        const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
+            action,
+            game,
+            destination.position
+        );
 
-        if (action.zoneType && action.zoneSize) {
-            switch (action.zoneType) {
-                case "cross": {
-                    const crossTargets = game.entities.filter((entity) => {
-                        const isInCross =
-                            (entity.position.x === destination.position.x &&
-                                Math.abs(
-                                    entity.position.y - destination.position.y
-                                ) <= action.zoneSize!) ||
-                            (entity.position.y === destination.position.y &&
-                                Math.abs(
-                                    entity.position.x - destination.position.x
-                                ) <= action.zoneSize!);
-                        return (
-                            isInCross &&
-                            entity.entityId !== playerEntity.entityId
-                        );
-                    });
-                    targetEntity = crossTargets;
-                    break;
-                }
-            }
-        } else {
-            const target = game.entities.find(
-                (e) => e.entityId === destination.entityId
-            );
-            targetEntity.push(target!);
+        for (const target of targetEntity) {
+            const damage = this.calculateDamage(playerEntity, action, target);
+            this.applyDamage(target, damage);
         }
 
-        if (action.targetRequired && targetEntity.length === 0) {
-            return new SocketError("Target entity not found");
-        }
-
-        if (targetEntity.length !== 0) {
-            for (const target of targetEntity) {
-                const damage = this.calculateDamage(playerEntity, action, target);
-                this.applyDamage(target, damage);
-            }
-        }
         //to finalize
         playerEntity.stats.energy -= action.cost;
-
         await this.gameDataManager.set(game.id, game);
+
         this.logger.log(
             `Player ${playerEntity.entityId} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
         );
