@@ -69,15 +69,10 @@ export class PlayerActionService {
             (mob) => mob.entityId === game.playerTurns[0]
         );
 
-        this.socketManager.emitUpdate(game);
-
         if (newPlayingMob) {
-            try {
-                await this.mobService.play(gameId);
-            } catch (err) {
-                this.logger.error(err);
-            }
+            this.mobService.play(gameId);
         } else {
+            this.socketManager.emitUpdate(game);
             //TODO: if new playing entity is a player, start a Timeout to finish its turn automatically
         }
     }
