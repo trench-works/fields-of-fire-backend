@@ -103,10 +103,16 @@ export class MobService {
                         game.plateau
                     );
                     while (PM > 0 && moves.length > 1) {
+                        game.plateau[entity.position.x][
+                            entity.position.y
+                        ].entityId = undefined;
                         entity.position = PositionUtils.add(
                             entity.position,
                             moves[0]
                         );
+                        game.plateau[entity.position.x][
+                            entity.position.y
+                        ].entityId = entity.entityId;
                         PM--;
                         moves.shift();
                     }
