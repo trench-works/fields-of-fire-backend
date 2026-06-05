@@ -43,7 +43,7 @@ export class ActionUtils {
     ): Entity[] {
         const inBoundsConditions: ((position: Position) => boolean)[] = [
             (position) =>
-                PositionUtils.distance(target, position) <= action.range,
+                PositionUtils.distance(target, position) <= action.zoneSize,
         ];
         for (const zoneType of action.zoneType) {
             switch (zoneType) {
