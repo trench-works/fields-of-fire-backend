@@ -1,4 +1,5 @@
 import { Logger, Provide, Ran } from "../../../core";
+import { PositionUtils } from "../../../game-lib";
 import { Action } from "../../Action/data/Action";
 import { CharacterClass } from "../../CharacterClass/data/CharacterClass";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
@@ -7,7 +8,6 @@ import { Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { Stats } from "../../Stat/data/Stats";
-import { EntityService } from "./EntityService";
 
 export class MobService {
     @Provide(GameDataManager)
@@ -18,8 +18,6 @@ export class MobService {
     private readonly socketManager!: GameWebSocketManager;
     @Provide(CharacterClassRepository)
     private readonly classRepository!: CharacterClassRepository;
-    @Provide(EntityService)
-    private readonly entityService!: EntityService;
 
     async play(gameId: string) {
         const game = await this.gameDataManager.get(gameId);
@@ -27,8 +25,8 @@ export class MobService {
             return;
         }
 
-        //await this.mobAction(game);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await this.mobAction(game);
+        //await new Promise((resolve) => setTimeout(resolve, 1000));
 
         const playingEntityId = game.playerTurns.shift();
         if (playingEntityId) {
@@ -64,24 +62,22 @@ export class MobService {
         if (!charClass) {
             return;
         }
-        let lastStats: Stats = { ...entity.stats };
-        while (
-            (entity.stats.mouvement === charClass.stats.mouvement &&
-                entity.stats.energy === charClass.stats.energy) ||
-            (entity.stats.mouvement !== lastStats.mouvement &&
-                entity.stats.energy !== lastStats.energy)
-        ) {
-            lastStats = { ...entity.stats };
-            const nearestPlayer = await this.getNearestPlayer(game, entity);
-            let distance = this.getDistance(entity, nearestPlayer);
-            let playerRange = Math.abs(distance.x) + Math.abs(distance.y);
+        const stats = Stats.fromEntity(entity);
+        let lastPA = stats.energy;
+        let lastPM = stats.mouvement;
+        let PA = stats.energy;
+        let PM = stats.mouvement;
+        let firstTry = true;
+        while (firstTry || (PM !== lastPM && PA !== lastPA)) {
+            console.log(PA, PM, lastPA, lastPM);
+            firstTry = false;
+            lastPA = PA;
+            lastPM = PM;
+            const nearestPlayer = this.getNearestPlayer(game, entity);
+            let playerRange = this.getDistance(entity, nearestPlayer);
 
-            const action = this.getAttack(
-                charClass,
-                playerRange,
-                entity.stats.energy
-            );
-            if (entity.stats.energy) {
+            const action = this.getAttack(charClass, playerRange, PA);
+            if (PA) {
                 if (action) {
                     // do damages
                     nearestPlayer.stats.life -= action.damage
@@ -89,21 +85,20 @@ export class MobService {
                           Ran.int(action.damage.max - action.damage.min)
                         : 0;
                     // remove energy points
-                    entity.stats.energy -= action.cost;
+                    PA -= action.cost;
                 }
             }
-            if (entity.stats.mouvement) {
+            if (PM) {
                 if (action) {
                     break;
                 }
-                while (playerRange > 1 && entity.stats.mouvement > 0) {
-                    distance = this.getDistance(entity, nearestPlayer);
-                    playerRange = Math.abs(distance.x) + Math.abs(distance.y);
+                while (playerRange > 1 && PM > 0) {
+                    playerRange = this.getDistance(entity, nearestPlayer);
 
                     //TODO: move toward player
                     //await this.entityService.moveEntity(game, ...);
 
-                    entity.stats.mouvement--;
+                    PM--;
                 }
             }
 
@@ -112,14 +107,8 @@ export class MobService {
         }
     }
 
-    private getDistance(
-        entityA: Entity,
-        entityB: Entity
-    ): { x: number; y: number } {
-        return {
-            x: entityA.position.x - entityB.position.x,
-            y: entityA.position.y - entityB.position.y,
-        };
+    private getDistance(entityA: Entity, entityB: Entity): number {
+        return PositionUtils.distance(entityA.position, entityB.position);
     }
 
     private getAttack(
@@ -143,18 +132,25 @@ export class MobService {
                       actionB.damage.min
                     : 0;
                 return midDamageA > midDamageB ? 1 : -1;
-            })[0];
+            })?.[0];
         return mostPowerfulInRangeAction;
     }
 
-    private async getNearestPlayer(
-        game: Game,
-        entity: Entity
-    ): Promise<Entity> {
-        const player = game.players[0];
-        const playerEntity = game.entities.find(
-            (entity) => entity.entityId === player.entityId
+    private getNearestPlayer(game: Game, mob: Entity): Entity {
+        const entitiesRange: Record<string, number> = {};
+        for (const player of game.players) {
+            const entity = game.entities.find(
+                (entity) => entity.entityId === player.entityId
+            )!;
+            entitiesRange[entity.entityId] = this.getDistance(mob, entity);
+        }
+
+        const targetEntityId = Object.entries(entitiesRange).sort(
+            ([, aRange], [, bRange]) => (aRange > bRange ? -1 : 1)
+        )?.[0]?.[0];
+
+        return game.entities.find(
+            (entity) => entity.entityId === targetEntityId
         )!;
-        return playerEntity;
     }
 }
