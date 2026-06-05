@@ -211,11 +211,12 @@ export class PlayerActionService {
             return new SocketError("Target entity not found");
         }
 
-        for (const target of targetEntity) {
-            const damage = this.calculateDamage(playerEntity, action, target);
-            this.applyDamage(target, damage);
+        if (targetEntity.length !== 0) {
+            for (const target of targetEntity) {
+                const damage = this.calculateDamage(playerEntity, action, target);
+                this.applyDamage(target, damage);
+            }
         }
-
         //to finalize
         playerEntity.stats.energy -= action.cost;
 
