@@ -11,11 +11,11 @@ export class GameWebSocketManager extends WsManager<
     GameOutputActions,
     GameReturnActions
 > {
-    emitUpdate(game: Game) {
+    emitUpdate(game: Game, animations: any[]) {
         this.emit({
             actionId: GameOutputActions.UPDATE,
             key: { gameId: game.id },
-            payload: game,
+            payload: { game, animations },
         });
     }
 }

@@ -43,7 +43,7 @@ export class MobService {
 
         // Emit Update
         this.gameDataManager.set(game.id, game);
-        this.socketManager.emitUpdate(game);
+        this.socketManager.emitUpdate(game, []);
 
         // If new playing entity is a mob, then launch playing actions for the mob
         const newPlayingMob = game.npc.find(
@@ -121,7 +121,7 @@ export class MobService {
 
             // Update users display
             this.gameDataManager.set(game.id, game);
-            this.socketManager.emitUpdate(game);
+            this.socketManager.emitUpdate(game, []);
         }
     }
 

@@ -72,7 +72,7 @@ export class PlayerActionService {
         if (newPlayingMob) {
             this.mobService.play(gameId);
         } else {
-            this.socketManager.emitUpdate(game);
+            this.socketManager.emitUpdate(game, []);
             //TODO: if new playing entity is a player, start a Timeout to finish its turn automatically
         }
     }
@@ -157,7 +157,7 @@ export class PlayerActionService {
 
         await this.gameDataManager.set(game.id, game);
 
-        this.socketManager.emitUpdate(game);
+        this.socketManager.emitUpdate(game, []);
     }
 
     async shoot(
@@ -189,7 +189,7 @@ export class PlayerActionService {
         this.logger.log(
             `Player ${playerEntity.entityId} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
         );
-        this.socketManager.emitUpdate(game);
+        this.socketManager.emitUpdate(game, []);
     }
 
     checkMoveDestination(cell: Cell): boolean {
