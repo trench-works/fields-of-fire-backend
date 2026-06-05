@@ -44,6 +44,7 @@ export class LobbyService {
         }
         lobby.players.find((player) => player.userId === userId)!.classId =
             classId;
+        await this.lobbyDataManager.set(lobbyId, lobby);
         return lobby;
     }
 
