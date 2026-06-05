@@ -29,7 +29,7 @@
                 {},
                 {},
                 {},
-                {},
+                { "isWall": true },
                 { "isHole": true },
                 {},
                 {},
@@ -38,10 +38,10 @@
                 { "isPlayerStart": true }
             ],
             [
-                {},
-                {},
-                {},
-                {},
+                { "isWall": true },
+                { "isWall": true },
+                { "isWall": true },
+                { "isWall": true },
                 { "isHole": true },
                 {},
                 {},
