@@ -31,8 +31,6 @@ export enum ActionType {
 
 export enum ActionZoneType {
     CIRCLE = "circle",
-    SQUARE = "square",
-    LINE = "line",
     CROSS = "cross",
     X = "x",
 }
@@ -49,10 +47,21 @@ export class ActionUtils {
         ];
         for (const zoneType of action.zoneType) {
             switch (zoneType) {
+                case ActionZoneType.CIRCLE:
+                    break;
                 case ActionZoneType.CROSS:
                     inBoundsConditions.push(
                         (position) =>
                             target.x === position.x || target.y === target.y
+                    );
+                    break;
+                case ActionZoneType.X:
+                    inBoundsConditions.push(
+                        (position) =>
+                            Math.abs(
+                                Math.abs(target.x) - Math.abs(position.x)
+                            ) ===
+                            Math.abs(Math.abs(target.y) - Math.abs(target.y))
                     );
                     break;
             }

@@ -18,7 +18,7 @@ export class ActionRepository extends FolderRepository<Action> {
                 cost: 0,
                 range: 0,
                 isWalkAction: true,
-                zoneType: [ActionZoneType.SQUARE],
+                zoneType: [ActionZoneType.CIRCLE],
                 zoneSize: 1,
             },
             shoot: {
@@ -42,7 +42,7 @@ export class ActionRepository extends FolderRepository<Action> {
                 range: 1,
                 damage: { min: -3, max: -1 },
                 targetRequired: true,
-                zoneType: [ActionZoneType.SQUARE],
+                zoneType: [ActionZoneType.CIRCLE],
                 zoneSize: 1,
             },
             bayonet: {
@@ -54,7 +54,7 @@ export class ActionRepository extends FolderRepository<Action> {
                 range: 1,
                 damage: { min: 2, max: 4 },
                 actionType: ActionType.MELEE,
-                zoneType: [ActionZoneType.SQUARE],
+                zoneType: [ActionZoneType.CIRCLE],
                 zoneSize: 1,
             },
             artillery_support: {
@@ -66,7 +66,7 @@ export class ActionRepository extends FolderRepository<Action> {
                 range: 5,
                 damage: { min: 2, max: 5 },
                 actionType: ActionType.RANGED,
-                zoneType: [ActionZoneType.SQUARE],
+                zoneType: [ActionZoneType.CIRCLE],
                 zoneSize: 1,
             },
         });
