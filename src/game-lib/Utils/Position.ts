@@ -8,6 +8,13 @@ export class PositionUtils {
         return a.x === b.x && a.y === b.y;
     }
 
+    static mathDist(a: Position, b: Position): number {
+        return Math.sqrt(
+            Math.abs(a.x - b.x) * Math.abs(a.x - b.x) +
+                Math.abs(a.y - b.y) * Math.abs(a.y - b.y)
+        );
+    }
+
     static distance(a: Position, b: Position): number {
         return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
     }

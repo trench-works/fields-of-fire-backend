@@ -30,7 +30,7 @@ export class ActionRepository extends FolderRepository<Action> {
                 range: 3,
                 damage: { min: 1, max: 3 },
                 actionType: ActionType.RANGED,
-                zoneType: [ActionZoneType.CIRCLE],
+                zoneType: [ActionZoneType.DIAMOND],
                 zoneSize: 1,
             },
             heal: {
@@ -42,7 +42,7 @@ export class ActionRepository extends FolderRepository<Action> {
                 range: 1,
                 damage: { min: -3, max: -1 },
                 targetRequired: true,
-                zoneType: [ActionZoneType.CIRCLE],
+                zoneType: [ActionZoneType.DIAMOND],
                 zoneSize: 1,
             },
             bayonet: {
@@ -54,7 +54,7 @@ export class ActionRepository extends FolderRepository<Action> {
                 range: 1,
                 damage: { min: 2, max: 4 },
                 actionType: ActionType.MELEE,
-                zoneType: [ActionZoneType.CIRCLE],
+                zoneType: [ActionZoneType.DIAMOND],
                 zoneSize: 1,
             },
             artillery_support: {

@@ -30,9 +30,10 @@ export enum ActionType {
 }
 
 export enum ActionZoneType {
+    DIAMOND = "diamond",
     CIRCLE = "circle",
-    CROSS = "cross",
-    X = "x",
+    PLUS = "plus",
+    XCROSS = "xcross",
 }
 
 export class ActionUtils {
@@ -44,26 +45,33 @@ export class ActionUtils {
         const inBoundsConditions: ((position: Position) => boolean)[] = [];
         for (const zoneType of action.zoneType) {
             switch (zoneType) {
-                case ActionZoneType.CIRCLE:
+                case ActionZoneType.DIAMOND:
                     inBoundsConditions.push(
                         (position) =>
                             PositionUtils.distance(target, position) <
                             action.zoneSize
                     );
                     break;
-                case ActionZoneType.CROSS:
+                case ActionZoneType.PLUS:
                     inBoundsConditions.push(
                         (position) =>
                             target.x === position.x || target.y === target.y
                     );
                     break;
-                case ActionZoneType.X:
+                case ActionZoneType.XCROSS:
                     inBoundsConditions.push(
                         (position) =>
                             Math.abs(
                                 Math.abs(target.x) - Math.abs(position.x)
                             ) ===
                             Math.abs(Math.abs(target.y) - Math.abs(target.y))
+                    );
+                    break;
+                case ActionZoneType.CIRCLE:
+                    inBoundsConditions.push(
+                        (position) =>
+                            PositionUtils.mathDist(target, position) <
+                            action.zoneSize
                     );
                     break;
             }
