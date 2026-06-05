@@ -1,4 +1,4 @@
-import { AStar } from "../../../core/app/Utils";
+import { AStar } from "../../../game-lib";
 import { Player } from "../../Player/data/Player";
 import { Entity } from "./Entity";
 import { Mob } from "./Mob";

@@ -2,7 +2,6 @@ import { Position, PositionUtils } from "./Position";
 
 type Node<Cell> = {
     cell: Cell;
-    position: Position;
     cost: number;
     heuristic: number;
     sum: number;
@@ -46,6 +45,18 @@ export abstract class AStar<Cell> {
         this.plateauMap = new Map();
         this.openList = new Map();
         this.closedList = new Map();
+        this.plateauMap.set(
+            PositionUtils.getId(this.start),
+            cellArray.find((cell) =>
+                PositionUtils.equal(this.getPosition(cell), this.start)
+            )!
+        );
+        this.plateauMap.set(
+            PositionUtils.getId(this.end),
+            cellArray.find((cell) =>
+                PositionUtils.equal(this.getPosition(cell), this.end)
+            )!
+        );
         for (const cell of cellArray.filter((cell) => this.isWalkable(cell))) {
             const position = this.getPosition(cell);
             this.plateauMap.set(PositionUtils.getId(position), cell);
@@ -60,7 +71,10 @@ export abstract class AStar<Cell> {
         const successorsPositions: Node<Cell>[] = [];
         for (let x = position.x - 1; x <= position.x + 1; x++) {
             for (let y = position.y - 1; y <= position.y + 1; y++) {
-                if (x !== position.x && y !== position.y) {
+                if (
+                    !(x === position.x && y === position.y) &&
+                    (x === position.x || y === position.y)
+                ) {
                     const cellPosition = { x, y };
                     const cell = this.plateauMap.get(
                         PositionUtils.getId(cellPosition)
@@ -68,7 +82,6 @@ export abstract class AStar<Cell> {
                     if (cell) {
                         successorsPositions.push({
                             cell,
-                            position,
                             cost: 0,
                             heuristic: 0,
                             sum: 0,
@@ -96,8 +109,8 @@ export abstract class AStar<Cell> {
         for (let i = 0; i < orderedNodes.length - 1; i++) {
             movements.push(
                 PositionUtils.subtract(
-                    orderedNodes[i + 1].position,
-                    orderedNodes[i].position
+                    this.getPosition(orderedNodes[i + 1].cell),
+                    this.getPosition(orderedNodes[i].cell)
                 )
             );
         }
@@ -114,32 +127,41 @@ export abstract class AStar<Cell> {
         }
         this.openList.set(startId, {
             cell: firstCell,
-            position: this.getPosition(firstCell),
             cost: 0,
             heuristic: 0,
             sum: 0,
         });
         while (this.openList.size > 0) {
             const node = this.findLowestSumNode();
-            this.openList.delete(PositionUtils.getId(node.position));
+            const nodePosition = this.getPosition(node.cell);
+            const nodeId = PositionUtils.getId(nodePosition);
+            this.openList.delete(nodeId);
 
-            const nodes = this.getSuccessors(node.position);
+            const nodes = this.getSuccessors(nodePosition);
+            if (!nodes) {
+                return this;
+            }
             for (const childNode of nodes) {
                 childNode.parent = node;
-                if (PositionUtils.equal(childNode.position, this.end)) {
+                const childNodePosition = this.getPosition(childNode.cell);
+                if (PositionUtils.equal(childNodePosition, this.end)) {
+                    this.openList.set(
+                        PositionUtils.getId(childNodePosition),
+                        childNode
+                    );
                     return this;
                 }
                 childNode.cost =
                     node.cost +
-                    PositionUtils.distance(node.position, childNode.position);
+                    PositionUtils.distance(nodePosition, childNodePosition);
                 childNode.heuristic = PositionUtils.distance(
-                    childNode.position,
+                    childNodePosition,
                     this.end
                 );
                 childNode.sum = childNode.cost + childNode.heuristic;
 
                 // add to open list
-                const childNodeId = PositionUtils.getId(childNode.position);
+                const childNodeId = PositionUtils.getId(childNodePosition);
                 const currentOpenListNode = this.openList.get(childNodeId);
                 if (
                     currentOpenListNode &&
@@ -156,6 +178,7 @@ export abstract class AStar<Cell> {
                 }
                 this.openList.set(childNodeId, childNode);
             }
+            this.closedList.set(nodeId, node);
         }
         return this;
     }

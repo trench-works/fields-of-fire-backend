@@ -16,6 +16,10 @@ export class PositionUtils {
         return `${pos.x},${pos.y}`;
     }
 
+    static add(a: Position, b: Position): Position {
+        return { x: a.x + b.x, y: a.y + b.y };
+    }
+
     static subtract(a: Position, b: Position): Position {
         return { x: a.x - b.x, y: a.y - b.y };
     }
