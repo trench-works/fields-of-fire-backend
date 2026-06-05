@@ -1,5 +1,5 @@
 import { Logger, Provide, SocketError } from "../../../core";
-import { PositionUtils } from "../../../core/app/Utils";
+import { PositionUtils } from "../../../game-lib/Utils";
 import { Action, ActionType } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
@@ -75,7 +75,7 @@ export class PlayerActionService {
             try {
                 await this.mobService.play(gameId);
             } catch (err) {
-                this.logger.debug(err);
+                this.logger.error(err);
             }
         } else {
             //TODO: if new playing entity is a player, start a Timeout to finish its turn automatically
