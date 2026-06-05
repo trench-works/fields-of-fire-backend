@@ -47,7 +47,7 @@ export class ActionUtils {
                 case ActionZoneType.CIRCLE:
                     inBoundsConditions.push(
                         (position) =>
-                            PositionUtils.distance(target, position) <=
+                            PositionUtils.distance(target, position) <
                             action.zoneSize
                     );
                     break;

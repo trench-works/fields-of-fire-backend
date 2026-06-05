@@ -18,8 +18,8 @@ export class ActionRepository extends FolderRepository<Action> {
                 cost: 0,
                 range: 0,
                 isWalkAction: true,
-                zoneType: [ActionZoneType.CIRCLE],
-                zoneSize: 1,
+                zoneType: [],
+                zoneSize: 0,
             },
             shoot: {
                 id: "shoot",
@@ -30,7 +30,7 @@ export class ActionRepository extends FolderRepository<Action> {
                 range: 3,
                 damage: { min: 1, max: 3 },
                 actionType: ActionType.RANGED,
-                zoneType: [ActionZoneType.CIRCLE, ActionZoneType.CROSS],
+                zoneType: [ActionZoneType.CIRCLE],
                 zoneSize: 1,
             },
             heal: {
@@ -67,7 +67,7 @@ export class ActionRepository extends FolderRepository<Action> {
                 damage: { min: 2, max: 5 },
                 actionType: ActionType.RANGED,
                 zoneType: [ActionZoneType.CIRCLE],
-                zoneSize: 1,
+                zoneSize: 3,
             },
         });
     }
