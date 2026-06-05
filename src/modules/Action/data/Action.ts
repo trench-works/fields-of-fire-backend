@@ -5,9 +5,6 @@ import { Game } from "../../Game/data/Game";
 
 export class Action {
     id!: string;
-    iconSpriteKey!: string;
-    animationSpriteKey?: string;
-    animationSpriteConfig?: { frameWidth: number; frameHeight: number };
     key?: string;
     name!: string;
     description?: string;
