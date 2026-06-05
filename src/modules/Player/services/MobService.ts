@@ -32,13 +32,14 @@ export class MobService {
         if (playingEntityId) {
             game.playerTurns.push(playingEntityId);
         }
-        const playerEntity = game.entities.find(
+        const playingEntity = game.entities.find(
             (entity) => entity.entityId === playingEntityId
         )!;
-        const entityClass = await this.classRepository.get(
-            playerEntity.classId
-        );
-        playerEntity.stats = { ...playerEntity.stats, ...entityClass?.stats };
+        const entityClass = (await this.classRepository.get(
+            playingEntity.classId
+        ))!;
+        playingEntity.stats.energy = entityClass.stats.energy;
+        playingEntity.stats.mouvement = entityClass.stats.mouvement;
 
         // Emit Update
         this.gameDataManager.set(game.id, game);
@@ -72,7 +73,6 @@ export class MobService {
             firstTry = false;
             lastPA = PA;
             lastPM = PM;
-            console.log(PA, PM, lastPA, lastPM);
 
             const nearestPlayer = this.getNearestPlayer(game, entity);
             let playerRange = this.getDistance(entity, nearestPlayer);
@@ -132,7 +132,9 @@ export class MobService {
         const mostPowerfulInRangeAction = charClass.actionList
             .filter(
                 (action) =>
-                    (action.range ?? 0) > minRange && action.cost <= energy
+                    (action.range ?? 0) >= minRange &&
+                    action.cost <= energy &&
+                    (action.damage?.max ?? 0) > 0
             )
             .sort((actionA, actionB) => {
                 const midDamageA = actionA.damage
