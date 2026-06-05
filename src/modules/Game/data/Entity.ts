@@ -1,3 +1,4 @@
+import { Effect } from "../../Effect/data/Effect";
 import { Stats } from "../../Stat/data/Stats";
 
 export enum EntityType {
@@ -18,5 +19,5 @@ export class Entity {
     actionList?: string[];
 
     stats!: Stats;
-    modifier?: Stats[];
+    effects!: Effect[];
 }

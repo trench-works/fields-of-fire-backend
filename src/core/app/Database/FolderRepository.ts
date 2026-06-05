@@ -29,10 +29,10 @@ export abstract class FolderRepository<
 
     abstract entityToRessource(entity: Entity): Promise<Ressource>;
 
-    async get(key: string): Promise<Ressource | null> {
+    async get(key: string): Promise<Ressource | undefined> {
         const entity = this.dataMap.get(key);
         if (!entity) {
-            return null;
+            return undefined;
         }
         return JSON.parse(JSON.stringify(await this.entityToRessource(entity)));
     }

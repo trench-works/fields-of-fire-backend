@@ -56,10 +56,11 @@ export class PlayerActionService {
         const playerEntity = game.entities.find(
             (entity) => entity.entityId === playingEntityId
         )!;
-        const entityClass = await this.classRepository.get(
+        const entityClass = (await this.classRepository.get(
             playerEntity.classId
-        );
-        playerEntity.stats = { ...playerEntity.stats, ...entityClass?.stats };
+        ))!;
+        playerEntity.stats.energy = entityClass.stats.energy;
+        playerEntity.stats.mouvement = entityClass.stats.mouvement;
         game.playerTurns.shift();
         game.playerTurns.push(playingEntityId);
 
@@ -126,7 +127,7 @@ export class PlayerActionService {
                     action,
                     destination
                 );
-            
+
             default:
                 this.logger.error("Unknown action ID");
         }
@@ -150,7 +151,8 @@ export class PlayerActionService {
                 "Not enough movement points to perform this action"
             );
         }
-        const currentCase = game.plateau[playerEntity.position.x][playerEntity.position.y];
+        const currentCase =
+            game.plateau[playerEntity.position.x][playerEntity.position.y];
         currentCase.entityId = undefined;
         // Occupe la nouvelle case
         destination.entityId = playerEntity.entityId;
@@ -170,9 +172,11 @@ export class PlayerActionService {
         destination: Cell
     ): Promise<void | SocketError> {
         if (action.targetRequired && !destination?.entityId) {
-            return new SocketError("You must target a visible entity to perform this action");
+            return new SocketError(
+                "You must target a visible entity to perform this action"
+            );
         }
-        let targetEntity : Entity[] = [];
+        let targetEntity: Entity[] = [];
 
         if (action.zoneType && action.zoneSize) {
             switch (action.zoneType) {
@@ -180,24 +184,30 @@ export class PlayerActionService {
                     const crossTargets = game.entities.filter((entity) => {
                         const isInCross =
                             (entity.position.x === destination.position.x &&
-                                Math.abs(entity.position.y - destination.position.y) <= action.zoneSize!) ||
+                                Math.abs(
+                                    entity.position.y - destination.position.y
+                                ) <= action.zoneSize!) ||
                             (entity.position.y === destination.position.y &&
-                                Math.abs(entity.position.x - destination.position.x) <= action.zoneSize!);
-                        return isInCross && entity.entityId !== playerEntity.entityId;
+                                Math.abs(
+                                    entity.position.x - destination.position.x
+                                ) <= action.zoneSize!);
+                        return (
+                            isInCross &&
+                            entity.entityId !== playerEntity.entityId
+                        );
                     });
                     targetEntity = crossTargets;
                     break;
                 }
             }
-        }
-        else {
+        } else {
             const target = game.entities.find(
                 (e) => e.entityId === destination.entityId
             );
             targetEntity.push(target!);
         }
 
-        if ( action.targetRequired && targetEntity.length === 0) {
+        if (action.targetRequired && targetEntity.length === 0) {
             return new SocketError("Target entity not found");
         }
 
@@ -210,7 +220,9 @@ export class PlayerActionService {
         playerEntity.stats.energy -= action.cost;
 
         await this.gameDataManager.set(game.id, game);
-        this.logger.log(`Player ${playerEntity.entityId} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`);
+        this.logger.log(
+            `Player ${playerEntity.entityId} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
+        );
         this.socketManager.emitUpdate(game);
     }
 
@@ -220,11 +232,13 @@ export class PlayerActionService {
 
     calculateDamage(attacker: Entity, action: Action, target: Entity): number {
         const damageRange = action.damage!.max - action.damage!.min + 1;
-        const randomDamage = Math.floor(Math.random() * damageRange) + action.damage!.min;
+        const randomDamage =
+            Math.floor(Math.random() * damageRange) + action.damage!.min;
 
-        const statBonus = action.actionType === ActionType.MELEE
-            ? Math.ceil(attacker.stats!.strength / 10)
-            : Math.ceil(attacker.stats!.precision / 10);
+        const statBonus =
+            action.actionType === ActionType.MELEE
+                ? Math.ceil(attacker.stats!.strength / 10)
+                : Math.ceil(attacker.stats!.precision / 10);
 
         const brutTotal = randomDamage + statBonus;
         const reduction = brutTotal * (target.stats!.armor / 100);
@@ -241,7 +255,9 @@ export class PlayerActionService {
             return;
         }
         target.stats.life -= damage;
-        this.logger.log(`Applied ${damage} damage to entity ${target.entityId}, remaining life: ${target.stats.life}`);
+        this.logger.log(
+            `Applied ${damage} damage to entity ${target.entityId}, remaining life: ${target.stats.life}`
+        );
         if (target.stats.life < 0) {
             target.stats.life = 0;
         }

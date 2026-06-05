@@ -88,6 +88,7 @@ export class GameService {
                     classId: charClass.id,
                     entityType: EntityType.ENEMY,
                     stats: charClass.stats,
+                    effects: [],
                 },
             });
         }
@@ -120,6 +121,7 @@ export class GameService {
                     classId: lobbyPlayer.classId,
                     entityType: EntityType.ALLY,
                     stats: charClass.stats,
+                    effects: [],
                 },
             });
         }
