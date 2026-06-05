@@ -30,7 +30,7 @@ export class ActionRepository extends FolderRepository<Action> {
                 range: 3,
                 damage: { min: 1, max: 3 },
                 actionType: ActionType.RANGED,
-                zoneType: [ActionZoneType.CROSS],
+                zoneType: [ActionZoneType.CIRCLE, ActionZoneType.CROSS],
                 zoneSize: 1,
             },
             heal: {

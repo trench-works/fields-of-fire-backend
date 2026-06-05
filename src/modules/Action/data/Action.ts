@@ -41,13 +41,15 @@ export class ActionUtils {
         game: Game,
         target: Position
     ): Entity[] {
-        const inBoundsConditions: ((position: Position) => boolean)[] = [
-            (position) =>
-                PositionUtils.distance(target, position) <= action.zoneSize,
-        ];
+        const inBoundsConditions: ((position: Position) => boolean)[] = [];
         for (const zoneType of action.zoneType) {
             switch (zoneType) {
                 case ActionZoneType.CIRCLE:
+                    inBoundsConditions.push(
+                        (position) =>
+                            PositionUtils.distance(target, position) <=
+                            action.zoneSize
+                    );
                     break;
                 case ActionZoneType.CROSS:
                     inBoundsConditions.push(
