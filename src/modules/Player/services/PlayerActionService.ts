@@ -206,17 +206,27 @@ export class PlayerActionService implements AsyncResolver {
         const randomDamage =
             Math.floor(Math.random() * damageRange) + action.damage!.min;
 
+
+
         const statBonus =
             action.actionType === ActionType.MELEE
                 ? Math.ceil(attacker.stats!.strength / 10)
                 : Math.ceil(attacker.stats!.precision / 10);
 
-        const brutTotal = randomDamage + statBonus;
-        const reduction = Math.ceil(brutTotal * (target.stats!.armor / 100));
+        let brutTotal;
+        let reduction;
+        if (action.damage!.min < 0) {
+            brutTotal = randomDamage - statBonus; 
+        } else {
+            brutTotal = randomDamage + statBonus;
+            reduction = Math.ceil(brutTotal * (target.stats!.armor / 100));
+        }
 
-        this.logger.log(`Calculated : ${brutTotal - reduction} dammage`);
+        this.logger.log(`Calculated : ${brutTotal - (reduction ? reduction : 0)} dammage`);
 
-        return brutTotal - reduction;
+        const finalDamage = brutTotal - (reduction ? reduction : 0);
+
+        return brutTotal - finalDamage;
 
         //TODO: ajouter les effets de l'attaque, et ajout de chances d'échecs
     }
