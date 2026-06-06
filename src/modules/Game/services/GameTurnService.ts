@@ -4,6 +4,7 @@ import {
     AsyncResolver,
 } from "../../../core/app/Controller/DependencyResolver";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
+import { LobbyService } from "../../Lobby/services/LobbyService";
 import { TurnTimeoutRepository } from "../../Player/data/TurnTimeoutRepository";
 import { MobService } from "../../Player/services/MobService";
 import { Stats } from "../../Stat/data/Stats";
@@ -20,6 +21,8 @@ export class GameTurnService implements AsyncResolver {
     private readonly socketManager!: GameWebSocketManager;
     @Provide(TurnTimeoutRepository)
     private readonly turnTimeoutRepository!: TurnTimeoutRepository;
+    @Provide(LobbyService)
+    private readonly lobbyService!: LobbyService;
 
     private mobService!: MobService;
 
@@ -38,12 +41,21 @@ export class GameTurnService implements AsyncResolver {
         }
     }
 
-    private detectGameEnd(game: Game): boolean {
+    private async detectGameEnd(game: Game): Promise<boolean> {
         const alivePlayersCount = game.entities.filter(
             (entity) => entity.side === "player" && !entity.dead
         ).length;
-        if (alivePlayersCount === 0) {
-            //TODO: create new lobby, send game end event and destroy game
+        const aliveMobsCount = game.entities.filter(
+            (entity) => entity.side === "mob" && !entity.dead
+        ).length;
+        if (alivePlayersCount === 0 || aliveMobsCount === 0) {
+            const lobby = await this.lobbyService.createLobby(game.creatorId);
+            this.socketManager.emitGameEnd(
+                game.id,
+                lobby,
+                aliveMobsCount === 0
+            );
+            await this.gameDataManager.delete(game.id);
             return true;
         }
         return false;
@@ -54,7 +66,7 @@ export class GameTurnService implements AsyncResolver {
         const game = (await this.gameDataManager.get(gameId))!;
 
         this.detectEntityDeath(game);
-        if (this.detectGameEnd(game)) {
+        if (await this.detectGameEnd(game)) {
             return;
         }
         // Do turn change mechanic
@@ -76,7 +88,7 @@ export class GameTurnService implements AsyncResolver {
             (mob) => mob.entityId === game.playerTurns[0]
         );
 
-        this.socketManager.emitUpdate(game, []);
+        await this.socketManager.emitUpdate(game, []);
         if (newPlayingMob) {
             this.mobService.play(gameId);
         } else {

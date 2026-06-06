@@ -38,7 +38,7 @@
                 { "isPlayerStart": true }
             ],
             [
-                { "isWall": true },
+                {},
                 { "isWall": true },
                 { "isWall": true },
                 { "isWall": true },

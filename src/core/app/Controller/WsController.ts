@@ -317,5 +317,6 @@ export class WsController<
             this.socketManager.unset(user.id);
         });
         this.socketManager.clients.set(user.id, { socket, key });
+        this.send(socket, { actionId: "subscribed" });
     }
 }
