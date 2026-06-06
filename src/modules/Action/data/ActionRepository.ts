@@ -58,12 +58,22 @@ export class ActionRepository extends FolderRepository<Action> {
                 name: "Appui d'artillerie",
                 description: "Attaque à distance sur une zone",
                 cost: 4,
-                range: 5,
+                range: 6,
                 damage: { min: 2, max: 5 },
                 actionType: ActionType.RANGED,
                 zoneType: [ActionZoneType.CIRCLE],
-                zoneSize: 3,
+                zoneSize: 2,
             },
+            intimidation: {
+                id: "intimidation",
+                name: "Intimidation",
+                description: "Debuff sur un cible",
+                cost : 2,
+                range : 5,
+                actionType: ActionType.OTHER,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize:1
+            }
         });
     }
 }

@@ -206,12 +206,22 @@ export class PlayerActionService implements AsyncResolver {
         const randomDamage =
             Math.floor(Math.random() * damageRange) + action.damage!.min;
 
+        let statBonus;
 
-
-        const statBonus =
-            action.actionType === ActionType.MELEE
-                ? Math.ceil(attacker.stats!.strength / 10)
-                : Math.ceil(attacker.stats!.precision / 10);
+        switch(action.actionType) {
+            case ActionType.MELEE : {
+                statBonus = Math.ceil(attacker.stats!.strength / 10)
+                
+            }
+            break;
+            case ActionType.RANGED : {
+                statBonus = Math.ceil(attacker.stats!.precision / 10);
+            }
+            break;
+            default : {
+                statBonus = 0;
+            }
+        }
 
         let brutTotal;
         let reduction;
