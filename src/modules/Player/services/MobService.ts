@@ -3,12 +3,12 @@ import { PositionUtils } from "../../../game-lib";
 import { Action } from "../../Action/data/Action";
 import { CharacterClass } from "../../CharacterClass/data/CharacterClass";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
+import { GameEventAnimation } from "../../Game/application/interfaces/GameUpdateEvent";
 import { Entity } from "../../Game/data/Entity";
 import { CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { Stats } from "../../Stat/data/Stats";
-import { GameAnimation } from "../data/Animation";
 
 export class MobService {
     @Provide(GameDataManager)
@@ -72,7 +72,7 @@ export class MobService {
         let PM = stats.mouvement;
         let firstTry = true;
         while (firstTry || (PM !== lastPM && PA !== lastPA)) {
-            const animations: GameAnimation[] = [];
+            const animations: GameEventAnimation[] = [];
             firstTry = false;
             lastPA = PA;
             lastPM = PM;
@@ -92,9 +92,9 @@ export class MobService {
                     // remove energy points
                     PA -= action.cost;
                     animations.push({
-                        key: "action",
-                        entityId: entity.entityId,
+                        key: "attack",
                         data: {
+                            entityId: entity.entityId,
                             actionId: action.id,
                             target: nearestPlayer.position,
                         },
@@ -132,10 +132,9 @@ export class MobService {
                         !PositionUtils.equal(originalPosition, entity.position)
                     ) {
                         animations.push({
-                            key: "action",
-                            entityId: entity.entityId,
+                            key: "move",
                             data: {
-                                actionId: "move",
+                                entityId: entity.entityId,
                                 start: originalPosition,
                                 end: entity.position,
                             },

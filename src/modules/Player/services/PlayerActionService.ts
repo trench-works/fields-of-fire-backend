@@ -161,8 +161,8 @@ export class PlayerActionService {
         this.socketManager.emitUpdate(game, [
             {
                 key: "move",
-                entityId: playerEntity.entityId,
                 data: {
+                    entityId: playerEntity.entityId,
                     start: originalPosition,
                     end: playerEntity.position,
                 },
@@ -201,9 +201,9 @@ export class PlayerActionService {
         );
         this.socketManager.emitUpdate(game, [
             {
-                key: "action",
-                entityId: playerEntity.entityId,
+                key: "attack",
                 data: {
+                    entityId: playerEntity.entityId,
                     actionId: action.id,
                     target: destination.position,
                 },

@@ -61,8 +61,13 @@ export class WsManager<
         }
     }
 
-    emit(
-        action: MultipleClientsOutputAction<RessourceKeyObject, OutputActions>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    emit<PayloadObject extends object = any>(
+        action: MultipleClientsOutputAction<
+            RessourceKeyObject,
+            OutputActions,
+            PayloadObject
+        >
     ) {
         for (const client of this.clients.values()) {
             if (RessourceKeyUtils.compareKeys(client.key, action.key)) {
