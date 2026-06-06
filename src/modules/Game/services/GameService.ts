@@ -18,6 +18,8 @@ import { Player } from "../../Player/data/Player";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { GameCreationError } from "./errors/GameCreationError";
 import { UserRepository } from "../../User/data/UserRepository";
+import { TurnTimeoutRepository } from "../../Player/data/TurnTimeoutRepository";
+import { PlayerActionService } from "../../Player/services/PlayerActionService";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -30,6 +32,10 @@ export class GameService {
     private readonly logger!: LoggerService;
     @Provide(UserRepository)
     private readonly userRepository!: UserRepository;
+    @Provide(TurnTimeoutRepository)
+    private readonly turnTimeoutRepository!: TurnTimeoutRepository;
+    @Provide(PlayerActionService)
+    private readonly playerActionService!: PlayerActionService;
 
     async getPlayerCurrentGame(
         userId: string
@@ -161,6 +167,18 @@ export class GameService {
                 .map((entity) => entity.entityId),
         };
         await this.lobbyDataManager.delete(lobbyId);
-        return this.gameDataManager.set(gameId, game);
+        await this.gameDataManager.set(gameId, game);
+
+        const newPlayingPlayer = game.players.find(
+            (player) => player.entityId === game.playerTurns[0]
+        )!;
+        this.turnTimeoutRepository.newTimeout(newPlayingPlayer.playerId, () =>
+            this.playerActionService.finishTurn(
+                game.id,
+                newPlayingPlayer.playerId
+            )
+        );
+
+        return game;
     }
 }

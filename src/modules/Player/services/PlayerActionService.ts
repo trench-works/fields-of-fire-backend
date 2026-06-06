@@ -7,6 +7,7 @@ import { Entity } from "../../Game/data/Entity";
 import { Cell, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
+import { TurnTimeoutRepository } from "../data/TurnTimeoutRepository";
 import { MobService } from "./MobService";
 
 export enum PlayerActionId {
@@ -33,11 +34,14 @@ export class PlayerActionService {
     private readonly mobService!: MobService;
     @Provide(GameWebSocketManager)
     private readonly socketManager!: GameWebSocketManager;
+    @Provide(TurnTimeoutRepository)
+    private readonly turnTimeoutRepository!: TurnTimeoutRepository;
 
     async finishTurn(
         gameId: string,
         playerId: string
     ): Promise<void | SocketError> {
+        this.turnTimeoutRepository.clearTimeout(playerId);
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
             return new SocketError("Game not found");
@@ -72,8 +76,14 @@ export class PlayerActionService {
         if (newPlayingMob) {
             this.mobService.play(gameId);
         } else {
+            const newPlayingPlayer = game.players.find(
+                (player) => player.entityId === game.playerTurns[0]
+            )!;
             this.socketManager.emitUpdate(game, []);
-            //TODO: if new playing entity is a player, start a Timeout to finish its turn automatically
+            this.turnTimeoutRepository.newTimeout(
+                newPlayingPlayer?.playerId,
+                () => this.finishTurn(game.id, newPlayingPlayer.playerId)
+            );
         }
     }
 

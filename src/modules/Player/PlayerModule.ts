@@ -1,5 +1,6 @@
 import { Module } from "../../core";
 import { PlayerController } from "./application/PlayerController";
+import { TurnTimeoutRepository } from "./data/TurnTimeoutRepository";
 import { EntityService } from "./services/EntityService";
 import { MobService } from "./services/MobService";
 import { PlayerActionService } from "./services/PlayerActionService";
@@ -10,8 +11,9 @@ export class PlayerModule extends Module {
         super({
             controllers: [PlayerController],
             providers: [
-                PlayerActionService,
+                TurnTimeoutRepository,
                 PlayerWebSocketManager,
+                PlayerActionService,
                 MobService,
                 EntityService,
             ],

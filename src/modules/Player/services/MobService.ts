@@ -19,6 +19,10 @@ export class MobService {
     private readonly socketManager!: GameWebSocketManager;
     @Provide(CharacterClassRepository)
     private readonly classRepository!: CharacterClassRepository;
+    // @Provide(TurnTimeoutRepository)
+    // private readonly turnTimeoutRepository!: TurnTimeoutRepository;
+    // @Provide(PlayerActionService)
+    // private readonly playerActionService!: PlayerActionService;
 
     async play(gameId: string) {
         const game = await this.gameDataManager.get(gameId);
@@ -53,6 +57,18 @@ export class MobService {
             this.play(gameId);
         } else {
             this.socketManager.emitUpdate(game, []);
+
+            // const newPlayingPlayer = game.players.find(
+            //     (player) => player.entityId === game.playerTurns[0]
+            // )!;
+            // this.turnTimeoutRepository.newTimeout(
+            //     newPlayingPlayer.playerId,
+            //     () =>
+            //         this.playerActionService.finishTurn(
+            //             game.id,
+            //             newPlayingPlayer.playerId
+            //         )
+            // );
         }
     }
 
