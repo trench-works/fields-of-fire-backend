@@ -1,4 +1,8 @@
 import { Logger, Provide, SocketError } from "../../../core";
+import {
+    AsyncDependencyResolver,
+    AsyncResolver,
+} from "../../../core/app/Controller/DependencyResolver";
 import { PositionUtils } from "../../../game-lib/Utils";
 import { Action, ActionType, ActionUtils } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
@@ -21,7 +25,7 @@ export enum PlayerActionId {
     SNEAKY = "sneaky",
 }
 
-export class PlayerActionService {
+export class PlayerActionService implements AsyncResolver {
     @Provide(GameDataManager)
     private readonly gameDataManager!: GameDataManager;
     @Provide("Logger")
@@ -30,12 +34,16 @@ export class PlayerActionService {
     private readonly actionRepository!: ActionRepository;
     @Provide(CharacterClassRepository)
     private readonly classRepository!: CharacterClassRepository;
-    @Provide(MobService)
-    private readonly mobService!: MobService;
     @Provide(GameWebSocketManager)
     private readonly socketManager!: GameWebSocketManager;
     @Provide(TurnTimeoutRepository)
     private readonly turnTimeoutRepository!: TurnTimeoutRepository;
+
+    private mobService!: MobService;
+
+    asyncResolve(resolver: AsyncDependencyResolver): void {
+        this.mobService = resolver.getProvider(MobService);
+    }
 
     async finishTurn(
         gameId: string,

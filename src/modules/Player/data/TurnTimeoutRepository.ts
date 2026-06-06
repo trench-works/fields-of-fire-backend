@@ -1,23 +1,24 @@
-import { MappedRepository } from "../../../core";
-
 const PLAYER_TIMEOUT = 30;
 
-export class TurnTimeoutRepository extends MappedRepository<NodeJS.Timeout> {
+export class TurnTimeoutRepository {
+    private readonly timersMap: Map<string, NodeJS.Timeout>;
+
     constructor() {
-        super("turn-timeout");
+        this.timersMap = new Map();
     }
 
     async newTimeout(playerId: string, callback: () => void) {
-        await this.set(
+        this.timersMap.set(
             playerId,
             setTimeout(() => {
-                this.delete(playerId).then(callback);
+                this.timersMap.delete(playerId);
+                callback();
             }, PLAYER_TIMEOUT * 1000)
         );
     }
 
     async clearTimeout(playerId: string) {
-        const timeout = await this.get(playerId);
+        const timeout = this.timersMap.get(playerId);
         if (timeout) {
             clearTimeout(timeout);
         }

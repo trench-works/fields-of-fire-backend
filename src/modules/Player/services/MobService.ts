@@ -1,4 +1,8 @@
 import { Logger, Provide, Ran } from "../../../core";
+import {
+    AsyncDependencyResolver,
+    AsyncResolver,
+} from "../../../core/app/Controller/DependencyResolver";
 import { PositionUtils } from "../../../game-lib";
 import { Action } from "../../Action/data/Action";
 import { CharacterClass } from "../../CharacterClass/data/CharacterClass";
@@ -9,8 +13,10 @@ import { CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { Stats } from "../../Stat/data/Stats";
+import { TurnTimeoutRepository } from "../data/TurnTimeoutRepository";
+import { PlayerActionService } from "./PlayerActionService";
 
-export class MobService {
+export class MobService implements AsyncResolver {
     @Provide(GameDataManager)
     private readonly gameDataManager!: GameDataManager;
     @Provide("Logger")
@@ -19,10 +25,14 @@ export class MobService {
     private readonly socketManager!: GameWebSocketManager;
     @Provide(CharacterClassRepository)
     private readonly classRepository!: CharacterClassRepository;
-    // @Provide(TurnTimeoutRepository)
-    // private readonly turnTimeoutRepository!: TurnTimeoutRepository;
-    // @Provide(PlayerActionService)
-    // private readonly playerActionService!: PlayerActionService;
+    @Provide(TurnTimeoutRepository)
+    private readonly turnTimeoutRepository!: TurnTimeoutRepository;
+
+    private playerActionService!: PlayerActionService;
+
+    asyncResolve(resolver: AsyncDependencyResolver): void {
+        this.playerActionService = resolver.getProvider(PlayerActionService);
+    }
 
     async play(gameId: string) {
         const game = await this.gameDataManager.get(gameId);
@@ -58,17 +68,17 @@ export class MobService {
         } else {
             this.socketManager.emitUpdate(game, []);
 
-            // const newPlayingPlayer = game.players.find(
-            //     (player) => player.entityId === game.playerTurns[0]
-            // )!;
-            // this.turnTimeoutRepository.newTimeout(
-            //     newPlayingPlayer.playerId,
-            //     () =>
-            //         this.playerActionService.finishTurn(
-            //             game.id,
-            //             newPlayingPlayer.playerId
-            //         )
-            // );
+            const newPlayingPlayer = game.players.find(
+                (player) => player.entityId === game.playerTurns[0]
+            )!;
+            this.turnTimeoutRepository.newTimeout(
+                newPlayingPlayer.playerId,
+                () =>
+                    this.playerActionService.finishTurn(
+                        game.id,
+                        newPlayingPlayer.playerId
+                    )
+            );
         }
     }
 
