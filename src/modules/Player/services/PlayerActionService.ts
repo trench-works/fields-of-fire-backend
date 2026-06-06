@@ -146,7 +146,6 @@ export class PlayerActionService {
                 "Not enough movement points to perform this action"
             );
         }
-        const originalPosition = playerEntity.position;
         const currentCase =
             game.plateau[playerEntity.position.x][playerEntity.position.y];
         currentCase.entityId = undefined;
@@ -163,8 +162,6 @@ export class PlayerActionService {
                 key: "move",
                 data: {
                     entityId: playerEntity.entityId,
-                    start: originalPosition,
-                    end: playerEntity.position,
                 },
             },
         ]);

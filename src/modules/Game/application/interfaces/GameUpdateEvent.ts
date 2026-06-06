@@ -6,8 +6,6 @@ export type GameEventAnimation =
           "move",
           {
               entityId: string;
-              start: { x: number; y: number };
-              end: { x: number; y: number };
           }
       >
     | GameAnimation<

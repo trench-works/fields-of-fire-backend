@@ -135,8 +135,6 @@ export class MobService {
                             key: "move",
                             data: {
                                 entityId: entity.entityId,
-                                start: originalPosition,
-                                end: entity.position,
                             },
                         });
                     }
