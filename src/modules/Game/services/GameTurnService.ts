@@ -37,10 +37,13 @@ export class GameTurnService implements AsyncResolver {
                 game.playerTurns = game.playerTurns.filter(
                     (entityId) => entityId !== entity.entityId
                 );
+                game.plateau[entity.position.x][entity.position.y].entityId =
+                    undefined;
             }
         }
     }
 
+    //TODO: DETECT GAME END ON PLAYER ACTION AS WELL
     private async detectGameEnd(game: Game): Promise<boolean> {
         const alivePlayersCount = game.entities.filter(
             (entity) => entity.side === "player" && !entity.dead
