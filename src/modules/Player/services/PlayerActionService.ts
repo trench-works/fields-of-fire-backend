@@ -10,8 +10,8 @@ import { CharacterClassRepository } from "../../CharacterClass/data/CharacterCla
 import { Entity } from "../../Game/data/Entity";
 import { Cell, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
+import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
-import { TurnTimeoutRepository } from "../data/TurnTimeoutRepository";
 import { MobService } from "./MobService";
 
 export enum PlayerActionId {
@@ -36,8 +36,8 @@ export class PlayerActionService implements AsyncResolver {
     private readonly classRepository!: CharacterClassRepository;
     @Provide(GameWebSocketManager)
     private readonly socketManager!: GameWebSocketManager;
-    @Provide(TurnTimeoutRepository)
-    private readonly turnTimeoutRepository!: TurnTimeoutRepository;
+    @Provide(GameTurnService)
+    private readonly gameTurnService!: GameTurnService;
 
     private mobService!: MobService;
 
@@ -49,7 +49,6 @@ export class PlayerActionService implements AsyncResolver {
         gameId: string,
         playerId: string
     ): Promise<void | SocketError> {
-        this.turnTimeoutRepository.clearTimeout(playerId);
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
             return new SocketError("Game not found");
@@ -64,35 +63,7 @@ export class PlayerActionService implements AsyncResolver {
             return new SocketError("It is not the player's turn");
         }
 
-        // Do turn change mechanic
-        const playerEntity = game.entities.find(
-            (entity) => entity.entityId === playingEntityId
-        )!;
-        const entityClass = (await this.classRepository.get(
-            playerEntity.classId
-        ))!;
-        playerEntity.stats.energy = entityClass.stats.energy;
-        playerEntity.stats.mouvement = entityClass.stats.mouvement;
-        game.playerTurns.shift();
-        game.playerTurns.push(playingEntityId);
-
-        // If new playing entity is a mob, then launch playing actions for the mob
-        const newPlayingMob = game.npc.find(
-            (mob) => mob.entityId === game.playerTurns[0]
-        );
-
-        if (newPlayingMob) {
-            this.mobService.play(gameId);
-        } else {
-            const newPlayingPlayer = game.players.find(
-                (player) => player.entityId === game.playerTurns[0]
-            )!;
-            this.socketManager.emitUpdate(game, []);
-            this.turnTimeoutRepository.newTimeout(
-                newPlayingPlayer?.playerId,
-                () => this.finishTurn(game.id, newPlayingPlayer.playerId)
-            );
-        }
+        this.gameTurnService.finishTurn(game.id);
     }
 
     async action(

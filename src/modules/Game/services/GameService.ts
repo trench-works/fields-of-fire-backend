@@ -95,6 +95,8 @@ export class GameService {
                     entityType: EntityType.ENEMY,
                     stats: charClass.stats,
                     effects: [],
+                    side: "mob",
+                    dead: false,
                 },
             });
         }
@@ -128,6 +130,8 @@ export class GameService {
                     entityType: EntityType.ALLY,
                     stats: charClass.stats,
                     effects: [],
+                    side: "player",
+                    dead: false,
                 },
             });
         }

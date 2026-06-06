@@ -20,4 +20,7 @@ export class Entity {
 
     stats!: Stats;
     effects!: Effect[];
+
+    side!: "player" | "mob";
+    dead!: boolean;
 }
