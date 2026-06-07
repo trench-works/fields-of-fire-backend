@@ -4,6 +4,7 @@ export enum GameInputActions {
 
 export enum GameOutputActions {
     UPDATE = "update",
+    GAME_END = "game-end",
 }
 
 export enum GameReturnActions {

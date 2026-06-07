@@ -41,38 +41,43 @@ export class WsManager<
         this.clients.delete(userId);
     }
 
-    send<PayloadObject extends object = object>(
+    async send<PayloadObject extends object = object>(
         socket: WebSocket,
         action: SingleClientOutputAction<
             PayloadObject,
             OutputActions | ReturnActions
         >
-    ) {
-        try {
-            let message = "";
-            if (action instanceof SocketError) {
-                message = JSON.stringify({ error: action });
-            } else {
-                message = JSON.stringify(action);
+    ): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            try {
+                let message = "";
+                if (action instanceof SocketError) {
+                    message = JSON.stringify({ error: action });
+                } else {
+                    message = JSON.stringify(action);
+                }
+                socket.send(message, () => resolve());
+            } catch {
+                this.logger.error("CANT SEND PAYLOAD", JSON.stringify(action));
+                reject();
             }
-            socket.send(message);
-        } catch {
-            this.logger.error("CANT SEND PAYLOAD", JSON.stringify(action));
-        }
+        });
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    emit<PayloadObject extends object = any>(
+    async emit<PayloadObject extends object = any>(
         action: MultipleClientsOutputAction<
             RessourceKeyObject,
             OutputActions,
             PayloadObject
         >
-    ) {
+    ): Promise<void> {
+        const promises: Promise<void>[] = [];
         for (const client of this.clients.values()) {
             if (RessourceKeyUtils.compareKeys(client.key, action.key)) {
-                this.send(client.socket, action);
+                promises.push(this.send(client.socket, action));
             }
         }
+        await Promise.all(promises);
     }
 }

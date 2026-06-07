@@ -7,7 +7,7 @@ export class TurnTimeoutRepository {
         this.timersMap = new Map();
     }
 
-    async newTimeout(playerId: string, callback: () => void) {
+    newTimeout(playerId: string, callback: () => void) {
         this.timersMap.set(
             playerId,
             setTimeout(() => {
@@ -17,7 +17,7 @@ export class TurnTimeoutRepository {
         );
     }
 
-    async clearTimeout(playerId: string) {
+    clearTimeout(playerId: string) {
         const timeout = this.timersMap.get(playerId);
         if (timeout) {
             clearTimeout(timeout);

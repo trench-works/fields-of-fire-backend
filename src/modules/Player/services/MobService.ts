@@ -89,48 +89,49 @@ export class MobService implements AsyncResolver {
                 }
             }
             if (PM) {
-                if (action) {
-                    break;
-                }
-                while (playerRange > 0 && PM > 0) {
-                    playerRange = this.getDistance(entity, nearestPlayer);
+                if (!action) {
+                    while (playerRange > 0 && PM > 0) {
+                        playerRange = this.getDistance(entity, nearestPlayer);
 
-                    const moves = new CellAStar().findPath(
-                        entity.position,
-                        nearestPlayer.position,
-                        game.plateau
-                    );
-                    const originalPosition = { ...entity.position };
-                    while (PM > 0 && moves.length > 1) {
-                        game.plateau[entity.position.x][
-                            entity.position.y
-                        ].entityId = undefined;
-                        entity.position = PositionUtils.add(
+                        const moves = new CellAStar().findPath(
                             entity.position,
-                            moves[0]
+                            nearestPlayer.position,
+                            game.plateau
                         );
-                        game.plateau[entity.position.x][
-                            entity.position.y
-                        ].entityId = entity.entityId;
-                        PM--;
-                        moves.shift();
-                    }
-                    if (
-                        !PositionUtils.equal(originalPosition, entity.position)
-                    ) {
-                        animations.push({
-                            key: "move",
-                            data: {
-                                entityId: entity.entityId,
-                            },
-                        });
+                        const originalPosition = { ...entity.position };
+                        while (PM > 0 && moves.length > 1) {
+                            game.plateau[entity.position.x][
+                                entity.position.y
+                            ].entityId = undefined;
+                            entity.position = PositionUtils.add(
+                                entity.position,
+                                moves[0]
+                            );
+                            game.plateau[entity.position.x][
+                                entity.position.y
+                            ].entityId = entity.entityId;
+                            PM--;
+                            moves.shift();
+                        }
+                        if (
+                            !PositionUtils.equal(
+                                originalPosition,
+                                entity.position
+                            )
+                        ) {
+                            animations.push({
+                                key: "move",
+                                data: {
+                                    entityId: entity.entityId,
+                                },
+                            });
+                        }
                     }
                 }
             }
-
             // Update users display
-            this.gameDataManager.set(game.id, game);
-            this.socketManager.emitUpdate(game, animations);
+            await this.gameDataManager.set(game.id, game);
+            await this.socketManager.emitUpdate(game, animations);
         }
     }
 
@@ -147,7 +148,7 @@ export class MobService implements AsyncResolver {
         const mostPowerfulInRangeAction = charClass.actionList
             .filter(
                 (action) =>
-                    (action.range ?? 0) >= minRange &&
+                    action.range >= minRange &&
                     action.cost <= energy &&
                     (action.damage?.max ?? 0) > 0
             )
@@ -167,10 +168,9 @@ export class MobService implements AsyncResolver {
 
     private getNearestPlayer(game: Game, mob: Entity): Entity {
         const entitiesRange: Record<string, number> = {};
-        for (const player of game.players) {
-            const entity = game.entities.find(
-                (entity) => entity.entityId === player.entityId
-            )!;
+        for (const entity of game.entities.filter(
+            (entity) => entity.side === "player" && !entity.dead
+        )) {
             entitiesRange[entity.entityId] = this.getDistance(mob, entity);
         }
 
