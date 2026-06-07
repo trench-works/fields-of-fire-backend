@@ -1,9 +1,6 @@
-
 export enum PlayerInputActions {
-    MOVE = "move",
     ACTION = "action",
+    FINISH_TURN = "finish-turn",
 }
 
-export enum PlayerOutputActions {
-    MOVE = "move",
-}
+export enum PlayerOutputActions {}

@@ -1,4 +1,4 @@
 export class LobbyInfo {
-    lobbyId!: string;
-    playersCount!: number;
+  lobbyId!: string;
+  playersCount!: number;
 }

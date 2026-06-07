@@ -2,38 +2,46 @@ import { Provide } from "../../decorators";
 import { DBError } from "./errors/DBError";
 import { NoClientError } from "./errors/NoClientError";
 
-export const HotConnectorProvider = "HotConnector"
+export const HotConnectorProvider = "HotConnector";
 
 export interface HotClient {
     close(): Promise<void>;
-    set<Ressource extends object = object>(key: string, value : Ressource): Promise<Ressource>;
-    get<Ressource extends object = object>(key: string): Promise<Ressource | null>;
+    set<Ressource extends object = object>(
+        key: string,
+        value: Ressource
+    ): Promise<Ressource>;
+    get<Ressource extends object = object>(
+        key: string
+    ): Promise<Ressource | null>;
     list(): Promise<string[]>;
 }
 
 export interface HotConnector {
-    getClient(ressourceName: string): Promise<HotClient>
+    getClient(ressourceName: string): Promise<HotClient>;
 }
 
 export interface HotRessource<Ressource extends object = object> {
     list(): Promise<string[] | DBError>;
+    getAll(): Promise<Ressource[] | DBError>;
     set(key: string, value: Ressource): Promise<Ressource | DBError>;
-    get(key: string): Promise<Ressource | DBError | null>
+    get(key: string): Promise<Ressource | DBError | null>;
 }
 
-export class HotRepository<Ressource extends object = object> implements HotRessource<Ressource> {
+export class HotRepository<
+    Ressource extends object = object,
+> implements HotRessource<Ressource> {
     private client: HotClient | undefined = undefined;
 
     constructor(private readonly ressourceName: string) {
         this.init = this.init.bind(this);
     }
-    
+
     public init(@Provide(HotConnectorProvider) connector: HotConnector) {
         connector.getClient(this.ressourceName).then((client) => {
             this.client = client;
         });
     }
-    
+
     public async list(): Promise<string[] | NoClientError> {
         if (!this.client) {
             return new NoClientError();
@@ -41,7 +49,17 @@ export class HotRepository<Ressource extends object = object> implements HotRess
         return (await this.client.list()).map((key) => key.split(":")[1]);
     }
 
-    public async set(key: string, value: Ressource): Promise<Ressource | NoClientError> {
+    public async getAll(): Promise<Ressource[] | NoClientError> {
+        if (!this.client) {
+            return new NoClientError();
+        }
+        return [];
+    }
+
+    public async set(
+        key: string,
+        value: Ressource
+    ): Promise<Ressource | NoClientError> {
         if (!this.client) {
             return new NoClientError();
         }
@@ -49,9 +67,9 @@ export class HotRepository<Ressource extends object = object> implements HotRess
     }
 
     public async get(key: string): Promise<Ressource | NoClientError | null> {
-                if (!this.client) {
+        if (!this.client) {
             return new NoClientError();
         }
-        return this.client.get<Ressource>(key)
+        return this.client.get<Ressource>(key);
     }
 }

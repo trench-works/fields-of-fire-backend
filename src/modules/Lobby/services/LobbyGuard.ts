@@ -14,15 +14,18 @@ export class LobbyGuard implements IGuard {
         private readonly lobbyDataManager: LobbyDataManager
     ) {}
 
-    validate({ user, key }: WsListenerOptions<LobbyKeys>): RessourceAccessLevel {
-        const lobby = this.lobbyDataManager.getLobby(key.lobbyId);
+    async validate({
+        user,
+        key,
+    }: WsListenerOptions<LobbyKeys>): Promise<RessourceAccessLevel> {
+        const lobby = await this.lobbyDataManager.getLobby(key.lobbyId);
         if (lobby instanceof NotFoundError) {
             return RessourceAccessLevel.NONE;
         }
         if (lobby.creatorId === user.id) {
             return RessourceAccessLevel.DELETE;
         }
-        if (lobby.playersId.includes(user.id)) {
+        if (lobby.players.some((player) => player.userId === user.id)) {
             return RessourceAccessLevel.READ;
         }
         return RessourceAccessLevel.NONE;

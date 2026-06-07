@@ -1,32 +1,93 @@
-import { WsController, Provide } from "../../../core";
-import { GameKey } from "../../Game/application/interfaces/GameKey";
-import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
-import { CreateLobbyInterface } from "./interfaces/CreateLobbyInterface";
+import {
+    WsController,
+    Provide,
+    WsListenerOptions,
+    SingleClientOutputAction,
+    WsBaseListenerOptions,
+    SocketError,
+} from "../../../core";
+import { JoinGameResponse } from "../../Game/application/interfaces/JoinGameResponse";
+import { GameService } from "../../Game/services/GameService";
+import { LobbyService } from "../../Lobby/services/LobbyService";
+import { MenuWebSocketManager } from "../web/MenuWebSocketManager";
+import { JoinLobby } from "./interfaces/JoinLobby";
+import { JoinLobbyResponse } from "./interfaces/JoinLobbyResponse";
+import {
+    MenuInputActions,
+    MenuOutputActions,
+    MenuReturnActions,
+} from "./interfaces/MenuActions";
+import { MenuKey } from "./interfaces/MenuKey";
 
-export class MenuController extends WsController {
+export class MenuController extends WsController<
+    MenuKey,
+    MenuInputActions,
+    MenuOutputActions,
+    MenuReturnActions
+> {
+    @Provide(LobbyService)
+    private readonly lobbyService!: LobbyService;
+    @Provide(GameService)
+    private readonly gameService!: GameService;
+
     constructor(
-        @Provide(GameWebSocketManager) socketManager: GameWebSocketManager
+        @Provide(MenuWebSocketManager) socketManager: MenuWebSocketManager
     ) {
-        super({ topic: "menu", key: GameKey, socketManager });
-        this.on("create", this.createLobby.bind(this), {
-            payloadType: CreateLobbyInterface,
+        super({ topic: "menu", key: MenuKey, socketManager });
+        this.on(MenuInputActions.CREATE, this.createLobby.bind(this));
+        this.on(MenuInputActions.JOIN, this.joinLobby.bind(this), {
+            payloadType: JoinLobby,
+            responsePayloadType: JoinLobbyResponse,
         });
-        this.on("join", this.joinLobby.bind(this));
+        this.onSubscribe(this.onConnect.bind(this));
+        //TODO: add something to handle on connection event and answer potentially with "reconnect" callback
     }
 
-    async createLobby() {
-        /**
-         * Do some logic to create a lobby
-         * and then send event to client to move to lobby room
-         * then kill client socket connection
-         */
+    async onConnect({
+        user: { id },
+    }: WsBaseListenerOptions<MenuKey>): Promise<void | SingleClientOutputAction<
+        JoinGameResponse,
+        MenuReturnActions
+    >> {
+        const game = await this.gameService.getPlayerCurrentGame(id);
+        if (game) {
+            return { actionId: MenuReturnActions.RECONNECT, payload: game };
+        }
     }
 
-    async joinLobby() {
-        /**
-         * Do some logic to join a lobby
-         * and then send event to client to move to lobby room
-         * then kill client socket connection
-         */
+    async createLobby({
+        user: { id },
+    }: WsListenerOptions<MenuKey>): Promise<
+        SingleClientOutputAction<JoinLobbyResponse, MenuReturnActions>
+    > {
+        const lobby = await this.lobbyService.createLobby(id);
+        return {
+            actionId: MenuReturnActions.JOIN,
+            payload: {
+                lobbyId: lobby.id,
+                playerId: lobby.players.find((player) => player.userId === id)!
+                    .playerId,
+            },
+        };
+    }
+
+    async joinLobby({
+        user: { id },
+        payload: { lobbyId },
+    }: WsListenerOptions<MenuKey, JoinLobby>): Promise<
+        SingleClientOutputAction<JoinLobbyResponse, MenuReturnActions>
+    > {
+        const lobby = await this.lobbyService.addPlayerToLobby(lobbyId, id);
+        if (lobby instanceof SocketError) {
+            return lobby;
+        }
+        return {
+            actionId: MenuReturnActions.JOIN,
+            payload: {
+                lobbyId: lobby.id,
+                playerId: lobby.players.find((player) => player.userId === id)!
+                    .playerId,
+            },
+        };
     }
 }

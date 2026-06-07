@@ -1,0 +1,104 @@
+[
+    {
+        "board": [
+            [
+                {},
+                {},
+                { "isPlayerStart": true },
+                {},
+                {},
+                {},
+                {},
+                { "isMobStart": true },
+                { "isMobStart": true },
+                {}
+            ],
+            [
+                {},
+                {},
+                { "isPlayerStart": true },
+                {},
+                { "isHole": true },
+                {},
+                {},
+                { "isMobStart": true },
+                {},
+                {}
+            ],
+            [
+                {},
+                {},
+                {},
+                { "isWall": true },
+                { "isHole": true },
+                {},
+                {},
+                {},
+                { "isPlayerStart": true },
+                { "isPlayerStart": true }
+            ],
+            [
+                {},
+                { "isWall": true },
+                { "isWall": true },
+                { "isWall": true },
+                { "isHole": true },
+                {},
+                {},
+                {},
+                { "isPlayerStart": true },
+                { "isPlayerStart": true }
+            ],
+            [{}, { "isPlayerStart": true }, {}, {}, {}, {}, {}, {}, {}, {}],
+            [
+                {},
+                { "isPlayerStart": true },
+                {},
+                {},
+                {},
+                {},
+                { "isMobStart": true },
+                { "isMobStart": true },
+                { "isMobStart": true },
+                {}
+            ],
+            [{}, { "isPlayerStart": true }, {}, {}, {}, {}, {}, {}, {}, {}],
+            [
+                { "isHole": true },
+                { "isPlayerStart": true },
+                {},
+                {},
+                {},
+                {},
+                {},
+                { "isPlayerStart": true },
+                {},
+                {}
+            ],
+            [
+                { "isHole": true },
+                {},
+                {},
+                { "isMobStart": true },
+                { "isMobStart": true },
+                {},
+                { "isPlayerStart": true },
+                { "isPlayerStart": true },
+                { "isPlayerStart": true },
+                {}
+            ],
+            [
+                { "isHole": true },
+                { "isHole": true },
+                {},
+                { "isMobStart": true },
+                { "isMobStart": true },
+                {},
+                {},
+                { "isPlayerStart": true },
+                {},
+                {}
+            ]
+        ]
+    }
+]

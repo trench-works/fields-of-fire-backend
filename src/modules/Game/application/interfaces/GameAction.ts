@@ -3,7 +3,8 @@ export enum GameInputActions {
 }
 
 export enum GameOutputActions {
-    JOINED = "joined",
+    UPDATE = "update",
+    GAME_END = "game-end",
 }
 
 export enum GameReturnActions {

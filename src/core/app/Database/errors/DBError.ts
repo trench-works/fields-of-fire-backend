@@ -1,5 +1,1 @@
-
-
-
-export class DBError extends Error {
-}
+export class DBError extends Error {}

@@ -16,7 +16,9 @@ export class WsResolver implements Resolver, ResolverApplier {
                         .get(controller.topic)
                         ?.push(controller);
                 } else {
-                    this.topicMappedControllers.set(controller.topic, [controller]);
+                    this.topicMappedControllers.set(controller.topic, [
+                        controller,
+                    ]);
                 }
             }
         }
@@ -27,8 +29,15 @@ export class WsResolver implements Resolver, ResolverApplier {
         if (!this.logger) {
             throw new Error("Call prepare function before calling apply");
         }
-        for (const [topic, controllers] of this.topicMappedControllers) {
-            const topicManager = new WsTopicManager(controllers, this.logger)
+        for (const [
+            topic,
+            controllers,
+        ] of this.topicMappedControllers.entries()) {
+            const topicManager = new WsTopicManager(
+                controllers,
+                this.logger,
+                topic
+            );
             app.socket.app.ws(
                 `/${topic}`,
                 topicManager.open.bind(topicManager)

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import dayjs from "dayjs";
 
 enum Colors {
@@ -51,29 +52,32 @@ export class LoggerService {
     }
 
     private format(chunk: string, color: Colors, caller: string) {
+        let stringChunk = chunk?.toString();
+        if (stringChunk?.startsWith("[object Object]")) {
+            stringChunk = JSON.stringify(chunk, null, 2);
+        }
         return `${color}[${caller}] ${dayjs().format(
             "HH:mm:ss"
-        )} ~ ${chunk}${Colors.NONE}`;
+        )} ~ ${stringChunk}${Colors.NONE}`;
     }
 
-    private print(
-        chunks: string[],
-        color: Colors,
-        logLevel: PrioritizedLogLevel
-    ) {
+    private print(chunks: any[], color: Colors, logLevel: PrioritizedLogLevel) {
         let caller: string = this.appName;
-        const callerInfos = (new Error()).stack?.split("\n")?.[3]?.trim()?.split(" ");
-        if(callerInfos) {
-            if(callerInfos[1] === "new") {
+        const callerInfos = new Error().stack
+            ?.split("\n")?.[3]
+            ?.trim()
+            ?.split(" ");
+        if (callerInfos) {
+            if (callerInfos[1] === "new") {
                 caller = callerInfos[2];
             } else {
                 caller = callerInfos[1].split(".")[0];
             }
-            if(["Server", "App"].includes(caller)) {
+            if (["Server", "App"].includes(caller)) {
                 caller = this.appName;
             }
         }
-        
+
         if (this.logLevel >= logLevel) {
             for (const chunk of chunks.map((chunk) =>
                 this.format(chunk, color, caller)
@@ -83,26 +87,26 @@ export class LoggerService {
         }
     }
 
-    public debug(...chunks: string[]) {
+    public debug(...chunks: any[]) {
         this.print(chunks, Colors.BLUE, PrioritizedLogLevel.DEBUG);
     }
 
-    public log(...chunks: string[]) {
+    public log(...chunks: any[]) {
         this.print(chunks, Colors.GREEN, PrioritizedLogLevel.LOG);
     }
 
-    public warn(...chunks: string[]) {
+    public warn(...chunks: any[]) {
         this.print(chunks, Colors.YELLOW, PrioritizedLogLevel.WARN);
     }
 
-    public error(...chunks: string[]) {
+    public error(...chunks: any[]) {
         this.print(chunks, Colors.RED, PrioritizedLogLevel.ERROR);
     }
 }
 
 export interface Logger {
-    debug(...chunks: string[]): void;
-    log(...chunks: string[]): void;
-    warn(...chunks: string[]): void;
-    error(...chunks: string[]): void;
+    debug(...chunks: any[]): void;
+    log(...chunks: any[]): void;
+    warn(...chunks: any[]): void;
+    error(...chunks: any[]): void;
 }

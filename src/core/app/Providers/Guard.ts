@@ -8,7 +8,10 @@ export enum RessourceAccessLevel {
     NONE = 0,
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface IGuard<RessourceKeyObject extends Record<string, unknown> = {}> {
-    validate(options: WsListenerOptions<RessourceKeyObject>): RessourceAccessLevel;
+export interface IGuard<
+    RessourceKeyObject extends Record<string, unknown> = any,
+> {
+    validate(
+        options: WsListenerOptions<RessourceKeyObject>
+    ): Promise<RessourceAccessLevel>;
 }

@@ -9,17 +9,27 @@ type SubcribePayload<RessourceKeyObject> = {
     user: UserInfos;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export class WsTopicManager<RessourceKeyObject extends Record<string, unknown> = {}> {
+export class WsTopicManager<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RessourceKeyObject extends Record<string, unknown> = any,
+> {
     constructor(
         private readonly controllers: WsController<RessourceKeyObject>[],
-        private readonly logger: Logger
+        private readonly logger: Logger,
+        private readonly topic: string
     ) {}
 
     open(socket: WebSocket) {
         socket.on("message", (rawData: string) => {
-            const { actionId, payload }: InputAction<SubcribePayload<RessourceKeyObject>> =
+            const {
+                actionId,
+                payload,
+            }: InputAction<SubcribePayload<RessourceKeyObject>> =
                 JSON.parse(rawData);
+            this.logger.debug(
+                `Incoming Request on ${this.topic} with payload`,
+                rawData
+            );
             if (actionId === "subscribe") {
                 this.subscribe(socket, payload);
             }
@@ -45,7 +55,9 @@ export class WsTopicManager<RessourceKeyObject extends Record<string, unknown> =
             .flat();
 
         if (validation.length === this.controllers.length) {
-            this.logger.error("ERROR ON IN EVENT, NO MATCHING ENTRYPOINT FOR KEY");
+            this.logger.error(
+                "ERROR ON IN EVENT, NO MATCHING ENTRYPOINT FOR KEY"
+            );
             socket.close(1008, "WRONG DATA"); //TODO: custom error message when no key matching
         }
     }

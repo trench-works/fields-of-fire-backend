@@ -1,5 +1,7 @@
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export function compareKeys<RessourceKeyObject extends Record<string, unknown> = {}>(clientKey: RessourceKeyObject, actionKey: RessourceKeyObject): boolean {
+export function compareKeys<
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    RessourceKeyObject extends Record<string, unknown> = {},
+>(clientKey: RessourceKeyObject, actionKey: RessourceKeyObject): boolean {
     if (clientKey === undefined || actionKey === undefined) {
         return false;
     }

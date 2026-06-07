@@ -7,13 +7,31 @@ import {
     DefaultConfig,
 } from "../Providers/Defaults/ConfigService";
 import { EnvObject } from "../Types/Env";
-import {
-    Logger,
-} from "../Providers/Defaults/LoggerService";
+import { Logger } from "../Providers/Defaults/LoggerService";
 
-function isInstantiable<Config extends EnvObject = DefaultConfig, T = unknown>(
-    obj: Configurable<Config, T> | Instantiable<T>
-): obj is Instantiable<T> {
+export interface AsyncDependencyResolver {
+    getProvider<Provider extends object>(
+        providable: Instantiable | string
+    ): Provider;
+}
+
+type ResolvedProvider = object & Partial<AsyncDependencyResolver>;
+
+export interface AsyncResolver {
+    asyncResolve(resolver: AsyncDependencyResolver): void;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isInstantiable = <T = any>(
+    obj: string | Instantiable<T>
+): obj is Instantiable<T> => {
+    return typeof obj !== "string";
+};
+
+function isInstantiableOrConfigurable<
+    Config extends EnvObject = DefaultConfig,
+    T = unknown,
+>(obj: Configurable<Config, T> | Instantiable<T>): obj is Instantiable<T> {
     const isCtorClass =
         obj.constructor &&
         obj.constructor.toString().substring(0, 5) === "class";
@@ -27,21 +45,33 @@ function isInstantiable<Config extends EnvObject = DefaultConfig, T = unknown>(
     return isCtorClass || isPrototypeCtorClass;
 }
 
-type BaseProvider<Config extends EnvObject> = (Instantiable | Configurable<Config>);
-type ComplexProvider<Config extends EnvObject> = { name: (string | BaseProvider<Config>), provider: BaseProvider<Config> };
-export type Provider<Config extends EnvObject> = BaseProvider<Config> | ComplexProvider<Config>;
-function isBaseProvider<Config extends EnvObject>(provider: Provider<Config>): provider is BaseProvider<Config> {
+type BaseProvider<Config extends EnvObject> =
+    | Instantiable
+    | Configurable<Config>;
+type ComplexProvider<Config extends EnvObject> = {
+    name: string | BaseProvider<Config>;
+    provider: BaseProvider<Config>;
+};
+
+export type Provider<Config extends EnvObject> =
+    | BaseProvider<Config>
+    | ComplexProvider<Config>;
+
+function isBaseProvider<Config extends EnvObject>(
+    provider: Provider<Config>
+): provider is BaseProvider<Config> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (provider as any)["prototype"];
 }
-
 
 type DependencyResolverOptions<Config extends EnvObject> = {
     controllers: Controllable[];
     providers: Provider<Config>[];
 };
 
-export class DependencyResolver<Config extends EnvObject> {
+export class DependencyResolver<
+    Config extends EnvObject,
+> implements AsyncDependencyResolver {
     private readonly providerClassesMap = new Map<
         string,
         BaseProvider<Config>
@@ -50,7 +80,16 @@ export class DependencyResolver<Config extends EnvObject> {
 
     private readonly controllerClasses: Controllable[];
 
-    private readonly resolvedProviders = new Map<string, object>();
+    private readonly resolvedProviders = new Map<string, ResolvedProvider>();
+
+    public getProvider<Provider extends object>(
+        providable: Instantiable | string
+    ): Provider {
+        const providerName = isInstantiable(providable)
+            ? providable.name
+            : providable;
+        return this.resolvedProviders.get(providerName) as Provider;
+    }
 
     constructor(
         { controllers, providers }: DependencyResolverOptions<Config>,
@@ -67,18 +106,20 @@ export class DependencyResolver<Config extends EnvObject> {
             let baseProvider: BaseProvider<Config>;
             if (isBaseProvider(provider)) {
                 name = provider.name;
-                baseProvider =  provider
+                baseProvider = provider;
             } else if (typeof provider.name === "string") {
                 name = provider.name;
-                baseProvider =  provider.provider
+                baseProvider = provider.provider;
             } else {
                 name = provider.name.name;
-                baseProvider =  provider.provider
+                baseProvider = provider.provider;
             }
             // prepare maps for resolution
             this.providerClassesMap.set(name, baseProvider);
             const dependencies: string[] = [];
-            for (const mdKey of Reflect.getMetadataKeys(baseProvider).sort((kA, kB) => kA < kB ? -1 : 1)) {
+            for (const mdKey of Reflect.getMetadataKeys(baseProvider).sort(
+                (kA, kB) => (kA < kB ? -1 : 1)
+            )) {
                 dependencies.push(Reflect.getMetadata(mdKey, baseProvider));
             }
             this.providersDependenciesMap.set(name, dependencies);
@@ -94,12 +135,12 @@ export class DependencyResolver<Config extends EnvObject> {
     ): ToInstantiate {
         const dependencies: object[] = [];
         for (const dependencyName of dependenciesNames) {
-            const dep = this.resolvedProviders.get(dependencyName);
+            const dep = this.getProvider(dependencyName);
             if (dep) {
                 dependencies.push(dep);
             }
         }
-        if (isInstantiable(instantiator)) {
+        if (isInstantiableOrConfigurable(instantiator)) {
             return new instantiator(...dependencies);
         } else {
             return instantiator(this.configService);
@@ -112,29 +153,45 @@ export class DependencyResolver<Config extends EnvObject> {
             const keys = Reflect.getMetadataKeys(provider, property);
             if (typeof provider[property] === "function") {
                 const providers = [];
-                for (const key of keys.sort((kA, kB) => kA < kB ? -1 : 1)) {
+                for (const key of keys.sort((kA, kB) => (kA < kB ? -1 : 1))) {
                     const [type, propName, index] = key.split("-");
-                    if (index !== undefined && type === "provider" && property === propName) {
-                        const providerName: string = Reflect.getMetadata(key, provider, property);
+                    if (
+                        index !== undefined &&
+                        type === "provider" &&
+                        property === propName
+                    ) {
+                        const providerName: string = Reflect.getMetadata(
+                            key,
+                            provider,
+                            property
+                        );
                         if (this.resolvedProviders.has(providerName)) {
-                            providers.push(this.resolvedProviders.get(providerName));
+                            providers.push(this.getProvider(providerName));
                         } else {
-                            this.logger.error(`Provider ${providerName} doesn't exist for property ${property} of element ${JSON.stringify(provider)}`)
+                            this.logger.error(
+                                `Provider ${providerName} doesn't exist for property ${property} of element ${JSON.stringify(provider)}`
+                            );
                         }
                     }
                 }
                 provider[property](...providers);
                 return;
             }
-            for(const key of keys) {
+            for (const key of keys) {
                 const [type, propName, index] = key.split("-");
                 if (!index) {
                     if (type === "provider" && property === propName) {
-                        const providerName: string = Reflect.getMetadata(key, provider, property);
+                        const providerName: string = Reflect.getMetadata(
+                            key,
+                            provider,
+                            property
+                        );
                         if (this.resolvedProviders.has(providerName)) {
-                            provider[property] = this.resolvedProviders.get(providerName);
+                            provider[property] = this.getProvider(providerName);
                         } else {
-                            this.logger.error(`Provider ${providerName} doesn't exist for property ${property} of element ${JSON.stringify(provider)}`)
+                            this.logger.error(
+                                `Provider ${providerName} doesn't exist for property ${property} of element ${JSON.stringify(provider)}`
+                            );
                         }
                     }
                 }
@@ -183,14 +240,16 @@ export class DependencyResolver<Config extends EnvObject> {
         //Providers Async Resolving
         for (const provider of this.resolvedProviders.values()) {
             this.resolvePropertyDependencies(provider);
+            (provider as AsyncResolver).asyncResolve?.(this);
         }
-
 
         // Controllers Synchrone Resolving
         const resolvedControllers: object[] = this.controllerClasses.map(
             (controllerClass) => {
                 const dependencies = Reflect.getMetadataKeys(controllerClass)
-                    .filter((key) => String(key).startsWith("provider-constructor"))
+                    .filter((key) =>
+                        String(key).startsWith("provider-constructor")
+                    )
                     .map((key) => Number(String(key).split("-")[2]))
                     .sort((a, b) => a - b)
                     .map((mdKeyId) =>
@@ -199,10 +258,7 @@ export class DependencyResolver<Config extends EnvObject> {
                             controllerClass
                         )
                     );
-                return this.instantiate(
-                    controllerClass,
-                    dependencies
-                )
+                return this.instantiate(controllerClass, dependencies);
             }
         );
         for (const controller of resolvedControllers) {

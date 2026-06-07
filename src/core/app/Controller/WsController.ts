@@ -4,7 +4,7 @@ import { WebSocket } from "ws";
 import { Instantiable } from "../Types/Instantiable";
 import { validateSync, ValidationError } from "class-validator";
 import { IGuard, RessourceAccessLevel } from "../Providers/Guard";
-import { AccessRefused } from "../../errors";
+import { AccessRefused, SocketError } from "../../errors";
 import { UserInfos } from "../Types/UserInfos";
 import { WsManager } from "../Resolvers/WebSocket/WsManager";
 import {
@@ -25,48 +25,88 @@ type WsControllerConfig<RessourceKeyObject extends Record<string, unknown>> = {
 type WsControllerOptions<
     RessourceKeyObject extends Record<string, unknown>,
     OutputActions,
-    ReturnActions
+    ReturnActions,
 > = {
     topic: string;
     key: Instantiable<RessourceKeyObject>;
     guards?: IGuard[];
-    socketManager: WsManager<
-        RessourceKeyObject,
-        OutputActions,
-        ReturnActions
-    >;
+    socketManager: WsManager<RessourceKeyObject, OutputActions, ReturnActions>;
 };
+
+type WsBaseListener<
+    RessourceKeyObject extends Record<string, unknown>,
+    PayloadResponseObject extends object = object,
+    ReturnActions = string,
+> = (
+    options: WsBaseListenerOptions<RessourceKeyObject>
+) => Promise<SingleClientOutputAction<
+    PayloadResponseObject,
+    ReturnActions
+> | void>;
 
 type WsListener<
     RessourceKeyObject extends Record<string, unknown>,
     PayloadObject extends object = object,
-    ReturnActions = string
+    PayloadResponseObject extends object = object,
+    ReturnActions = string,
 > = (
     options: WsListenerOptions<RessourceKeyObject, PayloadObject>
-) => Promise<SingleClientOutputAction<PayloadObject, ReturnActions> | void>;
+) => Promise<SingleClientOutputAction<
+    PayloadResponseObject,
+    ReturnActions
+> | void>;
+
+type WsBaseHandler<
+    RessourceKeyObject extends Record<string, unknown>,
+    PayloadResponseObject extends object = object,
+    ReturnActions = string,
+> = {
+    listener: WsBaseListener<
+        RessourceKeyObject,
+        PayloadResponseObject,
+        ReturnActions
+    >;
+    responsePayloadType?: Instantiable<PayloadResponseObject>;
+};
 
 type WsHandler<
     RessourceKeyObject extends Record<string, unknown>,
     PayloadObject extends object = object,
-    ReturnActions = string
+    PayloadResponseObject extends object = object,
+    ReturnActions = string,
 > = {
-    listener: WsListener<RessourceKeyObject, PayloadObject, ReturnActions>;
+    listener: WsListener<
+        RessourceKeyObject,
+        PayloadObject,
+        PayloadResponseObject,
+        ReturnActions
+    >;
     payloadType?: Instantiable<PayloadObject>;
+    responsePayloadType?: Instantiable<PayloadResponseObject>;
     accessLevel?: RessourceAccessLevel;
 };
 
-export type WsListenerOptions<
+export type WsBaseListenerOptions<
     RessourceKeyObject extends Record<string, any> = {},
-    PayloadObject extends object = object
 > = {
-    payload: PayloadObject;
     key: RessourceKeyObject;
     socket: WebSocket;
     user: UserInfos;
 };
 
-type OnOptions<PayloadObject extends object = object> = {
+export type WsListenerOptions<
+    RessourceKeyObject extends Record<string, any> = {},
+    PayloadObject extends object = object,
+> = WsBaseListenerOptions<RessourceKeyObject> & {
+    payload: PayloadObject;
+};
+
+type OnOptions<
+    PayloadObject extends object = object,
+    PayloadResponseObject extends object = object,
+> = {
     payloadType?: Instantiable<PayloadObject>;
+    responsePayloadType?: Instantiable<PayloadResponseObject>;
     accessLevel?: RessourceAccessLevel;
 };
 
@@ -74,17 +114,23 @@ export class WsController<
     RessourceKeyObject extends Record<string, any> = any,
     InputActions = any,
     OutputActions = any,
-    ReturnActions = any
+    ReturnActions = any,
 > {
     private readonly _isWsController = true;
 
     static isWsController(obj: any): obj is WsController {
         return (obj as WsController)._isWsController === true;
     }
-    
+
+    public onSubscribeWsHandlers: WsBaseHandler<
+        RessourceKeyObject,
+        any,
+        ReturnActions
+    >[];
+
     public wsHandlers: Map<
         string,
-        WsHandler<RessourceKeyObject, any, ReturnActions>
+        WsHandler<RessourceKeyObject, any, any, ReturnActions>
     >;
 
     private config: WsControllerConfig<RessourceKeyObject>;
@@ -104,6 +150,7 @@ export class WsController<
     }: WsControllerOptions<RessourceKeyObject, OutputActions, ReturnActions>) {
         this.socketManager = socketManager;
         this.wsHandlers = new Map();
+        this.onSubscribeWsHandlers = [];
         this.config = {
             topic,
             key,
@@ -115,48 +162,74 @@ export class WsController<
         return this.config.topic;
     }
 
-    send<PayloadObject extends object = object>(
+    send<PayloadResponseObject extends object = object>(
         socket: WebSocket,
-        action: SingleClientOutputAction<PayloadObject, OutputActions>
+        action: SingleClientOutputAction<PayloadResponseObject, OutputActions>
     ) {
         this.socketManager.send(socket, action);
     }
 
-    emit(
-        action: MultipleClientsOutputAction<RessourceKeyObject, OutputActions>
+    emit<T extends object>(
+        action: MultipleClientsOutputAction<
+            RessourceKeyObject,
+            OutputActions,
+            T
+        >
     ) {
         this.socketManager.emit(action);
     }
 
-    on<PayloadObject extends object = object>(
+    on<
+        PayloadObject extends object = object,
+        PayloadResponseObject extends object = object,
+    >(
         action: InputActions,
-        listener: WsListener<RessourceKeyObject, PayloadObject, ReturnActions>,
-        options?: OnOptions<PayloadObject>
+        listener: WsListener<
+            RessourceKeyObject,
+            PayloadObject,
+            PayloadResponseObject,
+            ReturnActions
+        >,
+        options?: OnOptions<PayloadObject, PayloadResponseObject>
     ): this {
         this.wsHandlers.set(action as string, {
             listener,
-            ...options
+            ...options,
         });
         return this;
     }
 
-    private handleMessage(
+    onSubscribe<PayloadResponseObject extends object = object>(
+        listener: WsBaseListener<
+            RessourceKeyObject,
+            PayloadResponseObject,
+            ReturnActions
+        >
+    ): this {
+        this.onSubscribeWsHandlers.push({
+            listener,
+        });
+        return this;
+    }
+
+    private async handleMessage(
         socket: WebSocket,
         key: RessourceKeyObject,
         user: UserInfos,
         message: string
-    ): void {
+    ): Promise<void> {
         try {
-            const decodedMessage = JSON.parse(
-                message
-            ) as InputAction;
-            let {payload} = decodedMessage;
-            const {actionId} = decodedMessage;
+            const decodedMessage = JSON.parse(message) as InputAction;
+            let { payload } = decodedMessage;
+            const { actionId } = decodedMessage;
             const handler = this.wsHandlers.get(actionId);
             if (handler) {
                 // payload validation
                 if (handler.payloadType) {
-                    const dtoPayload = plainToInstance(handler.payloadType, payload);
+                    const dtoPayload = plainToInstance(
+                        handler.payloadType,
+                        payload
+                    );
                     const validationErrors = validateSync(dtoPayload);
                     if (validationErrors.length > 0) {
                         this.logger.error(
@@ -182,22 +255,28 @@ export class WsController<
                     handler.accessLevel !== undefined &&
                     this.config.guards?.length
                 ) {
-                    const highestAccessLevel = this.config.guards
-                        .map((guard) => guard.validate(listenerOptions))
-                        .sort((a, b) => b - a)[0];
+                    const highestAccessLevel = (
+                        await Promise.all(
+                            this.config.guards.map((guard) =>
+                                guard.validate(listenerOptions)
+                            )
+                        )
+                    ).sort((a, b) => b - a)[0];
                     if (highestAccessLevel < handler.accessLevel) {
-                        this.socketManager.send(socket, {
-                            actionId: "error",
-                            payload: new AccessRefused(),
-                        });
+                        this.socketManager.send(socket, new AccessRefused());
                         return;
                     }
                 }
                 // if user with payload is authorized
-                handler.listener(listenerOptions).then((result) => {
-                    if (result) {
-                    this.socketManager.send(socket, result)
-                }})
+                try {
+                    handler.listener(listenerOptions).then((result) => {
+                        if (result) {
+                            this.socketManager.send(socket, result);
+                        }
+                    });
+                } catch (err: unknown) {
+                    this.socketManager.send(socket, err as SocketError);
+                }
             }
         } catch (err) {
             this.logger.error(
@@ -219,12 +298,25 @@ export class WsController<
             }
             key = keyDto;
         }
-        socket.on("message", (data) => 
+        const listenerOptions: WsBaseListenerOptions<RessourceKeyObject> = {
+            key,
+            socket,
+            user,
+        };
+        this.onSubscribeWsHandlers.forEach((handler) =>
+            handler.listener(listenerOptions).then((result) => {
+                if (result) {
+                    this.socketManager.send(socket, result);
+                }
+            })
+        );
+        socket.on("message", (data) =>
             this.handleMessage(socket, key, user, data.toString())
         );
         socket.on("close", (): void => {
             this.socketManager.unset(user.id);
         });
         this.socketManager.clients.set(user.id, { socket, key });
+        this.send(socket, { actionId: "subscribed" });
     }
 }

@@ -5,5 +5,5 @@ export * from "./Module/Module";
 export * from "./Types/UserInfos";
 export * from "./Providers";
 export * from "./Resolvers";
-export * from "./Database"
+export * from "./Database";
 export * from "./Controller";
