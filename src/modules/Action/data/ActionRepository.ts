@@ -1,12 +1,30 @@
-import { FolderRepository } from "../../../core";
-import { Action, ActionType, ActionZoneType } from "./Action";
+import { ColdRessource, DBError, FolderRepository, Provide } from "../../../core";
+import { Effect } from "../../Effect/data/Effect";
+import { EffectRepository } from "../../Effect/data/EffectRepository";
+import { Action, ActionEntity, ActionType, ActionZoneType } from "./Action";
 
-export class ActionRepository extends FolderRepository<Action> {
-    async entityToRessource(entity: Action): Promise<Action> {
-        return {
-            ...entity,
-        };
-    }
+export class ActionRepository extends FolderRepository<Action, ActionEntity> {
+
+    @Provide(EffectRepository)
+        private readonly effectRepository!: ColdRessource<Effect>;
+
+    async entityToRessource(
+            entity: ActionEntity
+        ): Promise<Action> {
+            const effectList: Effect[] = [];
+            if(entity.effectList) {
+                for (const key of entity.effectList) {
+                const effect = await this.effectRepository.get(key);
+                    if (effect && !(effect instanceof DBError)) {
+                        effectList.push(effect);
+                    }
+                }
+            }
+            return {
+                ...entity,
+                effectList,
+            };
+        }
 
     constructor() {
         super("action", {
@@ -67,12 +85,13 @@ export class ActionRepository extends FolderRepository<Action> {
             intimidation: {
                 id: "intimidation",
                 name: "Intimidation",
-                description: "Debuff sur un cible",
+                description: "Debuff sur une cible",
                 cost : 2,
                 range : 5,
                 actionType: ActionType.OTHER,
                 zoneType: [ActionZoneType.DIAMOND],
-                zoneSize:1
+                zoneSize:1,
+                effectList :["intimidated"]
             }
         });
     }

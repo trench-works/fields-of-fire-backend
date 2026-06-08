@@ -21,6 +21,24 @@ export class Action {
     targetRequired?: boolean;
 }
 
+export class ActionEntity {
+    id!: string;
+    key?: string;
+    name!: string;
+    description?: string;
+    damage?: { min: number; max: number };
+    effectList?: string[];
+    range!: number;
+    zoneType!: ActionZoneType[];
+    zoneSize!: number;
+    actionType?: ActionType;
+    mooveToTarget?: { x: number; y: number };
+    pushValue?: number;
+    cost!: number;
+    isWalkAction?: boolean;
+    targetRequired?: boolean;
+}
+
 export enum ActionType {
     RANGED = "ranged",
     MELEE = "melee",

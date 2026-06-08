@@ -6,8 +6,10 @@ export enum EffectType {
 }
 
 export class Effect {
+    id!: string;
     name!: string;
     type!: EffectType;
     duration!: number;
     modifier!: Stats;
+    author?: string;
 }
