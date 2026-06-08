@@ -86,7 +86,7 @@ export class CharacterClassRepository extends FolderRepository<
                 },
                 classDescription:
                     "Un combattant intelligent et discipliné, le Caporal est équipé d'un sabre et d'une fusil, ce qui lui permet de mettre à distance les ennemies et de causer des dégâts importants à moyenne et logngue portée. Il excelle dans les combats en groupe, de pars sa capacité à booster ses alliés.",
-                actionList: ["walk", "shoot", "artillery_support"],
+                actionList: ["walk", "shoot", "artillery_support", "intimidation"],
             },
             alliance_fantassin: {
                 id: "alliance_fantassin",

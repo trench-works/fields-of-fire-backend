@@ -10,6 +10,7 @@ export class EffectRepository extends FolderRepository<Effect> {
   constructor() {
     super("effects", {
       amputed : {
+        id : "amputated",
         name : "amputé",
         duration : 2,
         type : EffectType.APPLY,
@@ -24,7 +25,23 @@ export class EffectRepository extends FolderRepository<Effect> {
             energy : -2,
             mouvement : 0
           },
-        
+      },
+      intimidated : {
+        id : "intimidated",
+        name : "intimidé",
+        duration : 3,
+        type : EffectType.APPLY,
+        modifier : 
+          {
+            life : 0,
+            strength : -15,
+            precision : -15,
+            armor : 0,
+            dodging : 0,
+            initiative : 0,
+            energy : 0,
+            mouvement : 0
+          },
       }
     });
   }

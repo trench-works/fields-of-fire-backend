@@ -7,11 +7,13 @@ import { PositionUtils } from "../../../game-lib/Utils";
 import { Action, ActionType, ActionUtils } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
+import { Effect } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
 import { Cell, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
+import { Player } from "../data/Player";
 import { MobService } from "./MobService";
 
 export enum PlayerActionId {
@@ -107,6 +109,7 @@ export class PlayerActionService implements AsyncResolver {
             case PlayerActionId.HEAL:
                 return await this.shoot(
                     game,
+                    player,
                     playerEntity,
                     action,
                     destination
@@ -158,6 +161,7 @@ export class PlayerActionService implements AsyncResolver {
 
     async shoot(
         game: Game,
+        player: Player,
         playerEntity: Entity,
         action: Action,
         destination: Cell
@@ -172,10 +176,20 @@ export class PlayerActionService implements AsyncResolver {
             game,
             destination.position
         );
-
+        this.logger.log(`player ${playerEntity}`)
         for (const target of targetEntity) {
-            const damage = this.calculateDamage(playerEntity, action, target);
-            this.applyDamage(target, damage);
+            if(action.damage)   {
+                const damage = this.calculateDamage(playerEntity, action, target);
+                this.applyDamage(target, damage);
+            }
+            if(action.effectList) {
+                this.logger.debug(`action.effectList : ${action.effectList}`)
+                for (const effect of action.effectList) {
+                    
+                    this.applyEffect(player.name, target, effect);
+                    
+                }
+            }
         }
 
         //to finalize
@@ -255,5 +269,16 @@ export class PlayerActionService implements AsyncResolver {
         }
 
         return target.stats.life;
+    }
+
+    applyEffect(caster: string | undefined, target: Entity, effect : Effect){
+        if (!target.stats) {
+            this.logger.error("Target entity has no stats");
+            return;
+        }
+        if (caster){
+            effect.author = caster;
+        }
+        target.effects.push(effect);
     }
 }
