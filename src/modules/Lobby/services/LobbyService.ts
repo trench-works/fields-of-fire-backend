@@ -1,10 +1,17 @@
 import { Id, NotFoundError, Provide, SocketError } from "../../../core";
 import { LobbyDataManager } from "../data/LobbyDataManager";
 import { Lobby } from "../data/Lobby";
+import { LobbyResponse } from "../../Menu/application/interfaces/UpdateLobbyListResponse";
+import { MenuWebSocketManager } from "../../Menu/web/MenuWebSocketManager";
+import { UserRepository } from "../../User/data/UserRepository";
 
 export class LobbyService {
     @Provide(LobbyDataManager)
     private readonly lobbyDataManager!: LobbyDataManager;
+    @Provide(MenuWebSocketManager)
+    private readonly menuWebSocketManager!: MenuWebSocketManager;
+    @Provide(UserRepository)
+    private readonly userRepository!: UserRepository;
 
     async createLobby(userId: string) {
         const lobby = await this.lobbyDataManager.addLobby({
@@ -16,7 +23,12 @@ export class LobbyService {
             playerId: Id.get(),
             classId: "entente_fantassin",
         });
+        this.onLobbiesUpdate();
         return lobby;
+    }
+
+    async onLobbiesUpdate() {
+        this.menuWebSocketManager.emitLobbiesUpdate(await this.getLobbies());
     }
 
     async removePlayer(
@@ -30,6 +42,7 @@ export class LobbyService {
         lobby.players = lobby.players.filter(
             (player) => player.userId !== userId
         );
+        this.onLobbiesUpdate();
         return lobby;
     }
 
@@ -70,6 +83,24 @@ export class LobbyService {
             playerId: Id.get(),
             classId: "entente_fantassin",
         });
+        this.onLobbiesUpdate();
         return lobby;
+    }
+
+    async getLobbies(): Promise<LobbyResponse[]> {
+        const lobbies = await this.lobbyDataManager.getAll();
+        return await Promise.all(
+            lobbies.map(async (lobby) => {
+                return {
+                    id: lobby.id,
+                    creator:
+                        (await this.userRepository.get(lobby.creatorId))
+                            ?.username ?? "NO_NAME",
+                    maxPlayers: lobby.maxPlayers,
+                    creatorId: lobby.creatorId,
+                    players: lobby.players,
+                };
+            })
+        );
     }
 }

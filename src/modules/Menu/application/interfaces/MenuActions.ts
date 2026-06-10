@@ -3,9 +3,12 @@ export enum MenuInputActions {
     JOIN = "join",
 }
 
-export enum MenuOutputActions {}
+export enum MenuOutputActions {
+    UPDATE = "update",
+}
 
 export enum MenuReturnActions {
     RECONNECT = "reconnect",
     JOIN = "join",
+    UPDATE = "update",
 }
