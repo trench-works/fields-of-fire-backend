@@ -79,7 +79,7 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
                 range: 6,
                 damage: { min: 2, max: 5 },
                 actionType: ActionType.RANGED,
-                zoneType: [ActionZoneType.CIRCLE],
+                zoneType: [ActionZoneType.DIAMOND],
                 zoneSize: 2,
             },
             intimidation: {
