@@ -42,6 +42,23 @@ export class EffectRepository extends FolderRepository<Effect> {
             energy : 0,
             mouvement : 0
           },
+      },
+      doped : {
+        id : "doped",
+        name : "Dopé",
+        duration : 3,
+        type : EffectType.APPLY,
+        modifier : 
+          {
+            life : 0,
+            strength : 10,
+            precision : 10,
+            armor : 10,
+            dodging : 0,
+            initiative : 0,
+            energy : 0,
+            mouvement : 0
+          },
       }
     });
   }

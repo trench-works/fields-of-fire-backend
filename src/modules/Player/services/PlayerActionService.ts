@@ -25,6 +25,7 @@ export enum PlayerActionId {
     AMPUTATE = "amputate",
     INTIMIDATION = "intimidation",
     SNEAKY = "sneaky",
+    DOPAGE = "dopage",
 }
 
 export class PlayerActionService implements AsyncResolver {
@@ -105,6 +106,7 @@ export class PlayerActionService implements AsyncResolver {
             case PlayerActionId.BAYONET:
             case PlayerActionId.INTIMIDATION:
             case PlayerActionId.SNEAKY:
+            case PlayerActionId.DOPAGE:
             case PlayerActionId.SHOOT:
             case PlayerActionId.HEAL:
                 return await this.shoot(

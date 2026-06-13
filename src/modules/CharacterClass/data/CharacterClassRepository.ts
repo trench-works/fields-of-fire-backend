@@ -50,7 +50,7 @@ export class CharacterClassRepository extends FolderRepository<
                 },
                 classDescription:
                     "Un soldat polyvalent, capable de s'adapter à différentes situations sur le champ de bataille. Il est équipé d'une armure légère et d'une épée, ce qui lui permet de se déplacer rapidement et d'attaquer efficacement à courte portée. Le Fantassin est également capable d'utiliser des compétences de soutien pour renforcer ses alliés ou affaiblir ses ennemis.",
-                actionList: ["walk", "shoot", "bayonet"],
+                actionList: ["walk", "shoot", "bayonet", "dopage"],
             },
             entente_medic: {
                 id: "entente_medic",

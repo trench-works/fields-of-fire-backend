@@ -92,6 +92,17 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
                 zoneType: [ActionZoneType.DIAMOND],
                 zoneSize:1,
                 effectList :["intimidated"]
+            },
+            dopage: {
+                id: "dopage",
+                name: "Dopage",
+                description: "Buff sur soi",
+                cost : 1,
+                range : 0,
+                actionType: ActionType.OTHER,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize:1,
+                effectList :["doped"]
             }
         });
     }
