@@ -8,6 +8,7 @@ import { LobbyService } from "../../Lobby/services/LobbyService";
 import { TurnTimeoutRepository } from "../../Player/data/TurnTimeoutRepository";
 import { MobService } from "../../Player/services/MobService";
 import { Stats } from "../../Stat/data/Stats";
+import { GameEventAnimation } from "../application/interfaces/GameUpdateEvent";
 import { Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
@@ -30,21 +31,28 @@ export class GameTurnService implements AsyncResolver {
         this.mobService = resolver.getProvider(MobService);
     }
 
-    private detectEntityDeath(game: Game) {
+    public detectEntityDeath(game: Game): GameEventAnimation[] {
+        const animations: GameEventAnimation[] = [];
         for (const entity of game.entities) {
-            if (Stats.fromEntity(entity).life <= 0) {
+            if (Stats.fromEntity(entity).life <= 0 && !entity.dead) {
                 entity.dead = true;
                 game.playerTurns = game.playerTurns.filter(
                     (entityId) => entityId !== entity.entityId
                 );
                 game.plateau[entity.position.x][entity.position.y].entityId =
                     undefined;
+                animations.push({
+                    key: "death",
+                    data: {
+                        entityId: entity.entityId,
+                    },
+                });
             }
         }
+        return animations;
     }
 
-    //TODO: DETECT GAME END ON PLAYER ACTION AS WELL
-    private async detectGameEnd(game: Game): Promise<boolean> {
+    public async detectGameEnd(game: Game): Promise<boolean> {
         const alivePlayersCount = game.entities.filter(
             (entity) => entity.side === "player" && !entity.dead
         ).length;
@@ -83,7 +91,9 @@ export class GameTurnService implements AsyncResolver {
         ))!;
         playerEntity.stats.energy = entityClass.stats.energy;
         playerEntity.stats.mouvement = entityClass.stats.mouvement;
-        playerEntity.effects = playerEntity.effects.map(effect => ({...effect, duration: effect.duration - 1})).filter(effect => effect.duration > 0);
+        playerEntity.effects = playerEntity.effects
+            .map((effect) => ({ ...effect, duration: effect.duration - 1 }))
+            .filter((effect) => effect.duration > 0);
 
         this.gameDataManager.set(game.id, game);
 
@@ -96,9 +106,9 @@ export class GameTurnService implements AsyncResolver {
         if (newPlayingMob) {
             this.mobService.play(gameId);
         } else {
-            this.turnTimeoutRepository.newTimeout(gameId, () =>
-                this.finishTurn(game.id)
-            );
+            // this.turnTimeoutRepository.newTimeout(gameId, () => //FIXME: player turn timeout system is shitty and creating issues
+            //     this.finishTurn(game.id)
+            // );
         }
     }
 }

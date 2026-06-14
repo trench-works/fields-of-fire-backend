@@ -1,20 +1,16 @@
 import { Logger, Provide, SocketError } from "../../../core";
-import {
-    AsyncDependencyResolver,
-    AsyncResolver,
-} from "../../../core/app/Controller/DependencyResolver";
+
 import { PositionUtils } from "../../../game-lib/Utils";
 import { Action, ActionType, ActionUtils } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
-import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { Effect } from "../../Effect/data/Effect";
+import { GameEventAnimation } from "../../Game/application/interfaces/GameUpdateEvent";
 import { Entity } from "../../Game/data/Entity";
 import { Cell, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { Player } from "../data/Player";
-import { MobService } from "./MobService";
 
 export enum PlayerActionId {
     WALK = "walk",
@@ -28,25 +24,17 @@ export enum PlayerActionId {
     DOPAGE = "dopage",
 }
 
-export class PlayerActionService implements AsyncResolver {
+export class PlayerActionService {
     @Provide(GameDataManager)
     private readonly gameDataManager!: GameDataManager;
     @Provide("Logger")
     private readonly logger!: Logger;
     @Provide(ActionRepository)
     private readonly actionRepository!: ActionRepository;
-    @Provide(CharacterClassRepository)
-    private readonly classRepository!: CharacterClassRepository;
     @Provide(GameWebSocketManager)
     private readonly socketManager!: GameWebSocketManager;
     @Provide(GameTurnService)
     private readonly gameTurnService!: GameTurnService;
-
-    private mobService!: MobService;
-
-    asyncResolve(resolver: AsyncDependencyResolver): void {
-        this.mobService = resolver.getProvider(MobService);
-    }
 
     async finishTurn(
         gameId: string,
@@ -109,7 +97,7 @@ export class PlayerActionService implements AsyncResolver {
             case PlayerActionId.DOPAGE:
             case PlayerActionId.SHOOT:
             case PlayerActionId.HEAL:
-                return await this.shoot(
+                return await this.attack(
                     game,
                     player,
                     playerEntity,
@@ -161,13 +149,23 @@ export class PlayerActionService implements AsyncResolver {
         ]);
     }
 
-    async shoot(
+    async attack(
         game: Game,
         player: Player,
         playerEntity: Entity,
         action: Action,
         destination: Cell
     ): Promise<void | SocketError> {
+        const animations: GameEventAnimation[] = [
+            {
+                key: "attack",
+                data: {
+                    entityId: playerEntity.entityId,
+                    actionId: action.id,
+                    target: destination.position,
+                },
+            },
+        ];
         if (action.targetRequired && !destination?.entityId) {
             return new SocketError(
                 "You must target a visible entity to perform this action"
@@ -178,39 +176,36 @@ export class PlayerActionService implements AsyncResolver {
             game,
             destination.position
         );
-        this.logger.log(`player ${playerEntity}`)
+        this.logger.log(`player ${playerEntity}`);
         for (const target of targetEntity) {
-            if(action.damage)   {
-                const damage = this.calculateDamage(playerEntity, action, target);
+            if (action.damage) {
+                const damage = this.calculateDamage(
+                    playerEntity,
+                    action,
+                    target
+                );
                 this.applyDamage(target, damage);
             }
-            if(action.effectList) {
-                this.logger.debug(`action.effectList : ${action.effectList}`)
+            if (action.effectList) {
+                this.logger.debug(`action.effectList : ${action.effectList}`);
                 for (const effect of action.effectList) {
-                    
                     this.applyEffect(player.name, target, effect);
-                    
                 }
             }
         }
 
         //to finalize
         playerEntity.stats.energy -= action.cost;
+        animations.push(...this.gameTurnService.detectEntityDeath(game));
+        if (await this.gameTurnService.detectGameEnd(game)) {
+            return;
+        }
         await this.gameDataManager.set(game.id, game);
 
         this.logger.log(
             `Player ${playerEntity.entityId} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
         );
-        this.socketManager.emitUpdate(game, [
-            {
-                key: "attack",
-                data: {
-                    entityId: playerEntity.entityId,
-                    actionId: action.id,
-                    target: destination.position,
-                },
-            },
-        ]);
+        await this.socketManager.emitUpdate(game, animations);
     }
 
     checkMoveDestination(cell: Cell): boolean {
@@ -273,12 +268,12 @@ export class PlayerActionService implements AsyncResolver {
         return target.stats.life;
     }
 
-    applyEffect(caster: string | undefined, target: Entity, effect : Effect){
+    applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
         if (!target.stats) {
             this.logger.error("Target entity has no stats");
             return;
         }
-        if (caster){
+        if (caster) {
             effect.author = caster;
         }
         target.effects.push(effect);

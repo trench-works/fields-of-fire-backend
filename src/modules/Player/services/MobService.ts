@@ -86,6 +86,9 @@ export class MobService implements AsyncResolver {
                             target: nearestPlayer.position,
                         },
                     });
+                    animations.push(
+                        ...this.gameTurnService.detectEntityDeath(game)
+                    );
                 }
             }
             if (PM) {
@@ -131,6 +134,9 @@ export class MobService implements AsyncResolver {
             }
             // Update users display
             await this.gameDataManager.set(game.id, game);
+            if (await this.gameTurnService.detectGameEnd(game)) {
+                return;
+            }
             await this.socketManager.emitUpdate(game, animations);
         }
     }

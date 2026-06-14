@@ -15,6 +15,12 @@ export type GameEventAnimation =
               actionId: string;
               target: { x: number; y: number };
           }
+      >
+    | GameAnimation<
+          "death",
+          {
+              entityId: string;
+          }
       >;
 
 export type GameUpdateEvent = AnimatedPayload<Game, GameEventAnimation>;
