@@ -22,6 +22,10 @@ export class UserRepository extends FolderRepository<User> {
                 id: "44cfc750-4b58-4a8b-9317-1e9378c8f2b0",
                 username: "Loumbada",
             },
+            "1a575e5d-6e61-4042-93c2-d1011225e7a1": {
+                id: "1a575e5d-6e61-4042-93c2-d1011225e7a1",
+                username: "Moodle",
+            },
         });
     }
 }

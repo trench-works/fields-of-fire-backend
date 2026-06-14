@@ -18,6 +18,7 @@ import {
     MenuReturnActions,
 } from "./interfaces/MenuActions";
 import { MenuKey } from "./interfaces/MenuKey";
+import { UpdateLobbyListResponse } from "./interfaces/UpdateLobbyListResponse";
 
 export class MenuController extends WsController<
     MenuKey,
@@ -40,18 +41,25 @@ export class MenuController extends WsController<
             responsePayloadType: JoinLobbyResponse,
         });
         this.onSubscribe(this.onConnect.bind(this));
-        //TODO: add something to handle on connection event and answer potentially with "reconnect" callback
     }
 
     async onConnect({
         user: { id },
     }: WsBaseListenerOptions<MenuKey>): Promise<void | SingleClientOutputAction<
-        JoinGameResponse,
-        MenuReturnActions
+        JoinGameResponse | UpdateLobbyListResponse,
+        MenuReturnActions.RECONNECT | MenuReturnActions.UPDATE
     >> {
         const game = await this.gameService.getPlayerCurrentGame(id);
         if (game) {
             return { actionId: MenuReturnActions.RECONNECT, payload: game };
+        } else {
+            const lobbies = await this.lobbyService.getLobbies();
+            return {
+                actionId: MenuReturnActions.UPDATE,
+                payload: {
+                    lobbies,
+                },
+            };
         }
     }
 
