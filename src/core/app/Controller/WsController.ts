@@ -235,10 +235,7 @@ export class WsController<
                         this.logger.error(
                             `ERROR ON PAYLOAD VALIDATION action -> "${actionId}", payload -> "${JSON.stringify(dtoPayload, null, 2)}", errors -> ${JSON.stringify(validationErrors, null, 2)}`
                         );
-                        this.socketManager.send(socket, {
-                            actionId: "error",
-                            payload: validationErrors,
-                        });
+                        this.socketManager.send(socket, validationErrors);
                     }
                     payload = dtoPayload;
                 }
@@ -269,11 +266,10 @@ export class WsController<
                 }
                 // if user with payload is authorized
                 try {
-                    handler.listener(listenerOptions).then((result) => {
-                        if (result) {
-                            this.socketManager.send(socket, result);
-                        }
-                    });
+                    const result = await handler.listener(listenerOptions);
+                    if (result) {
+                        this.socketManager.send(socket, result);
+                    }
                 } catch (err: unknown) {
                     this.socketManager.send(socket, err as SocketError);
                 }

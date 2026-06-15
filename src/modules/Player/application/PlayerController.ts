@@ -14,6 +14,7 @@ import {
 import { PlayerWebSocketManager } from "../web/PlayerWebSocketManager";
 import { GameOutputActions } from "../../Game/application/interfaces/GameAction";
 import { SingleClientOutputError } from "../../../core/types/Action";
+import { PlayerCancelAction } from "./interfaces/PlayerCancelAction";
 
 export class PlayerController extends WsController<
     PlayerKey,
@@ -51,19 +52,15 @@ export class PlayerController extends WsController<
         key,
         user,
         payload,
-    }: WsListenerOptions<
-        PlayerKey,
-        PlayerAction
-    >): Promise<SingleClientOutputError> {
+    }: WsListenerOptions<PlayerKey, PlayerAction>): Promise<
+        PlayerCancelAction | SingleClientOutputError
+    > {
         this.logger.debug("payload received:", key, user, payload);
-        const actionResponse = await this.playerActionService.action(
+        return await this.playerActionService.action(
             payload.actionId,
             key.gameId,
             key.playerId,
             payload.target
         );
-        if (actionResponse instanceof SocketError) {
-            return actionResponse;
-        }
     }
 }

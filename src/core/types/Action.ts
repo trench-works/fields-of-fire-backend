@@ -23,7 +23,7 @@ export type SingleClientOutputAction<
     OutputActions = string,
 > =
     | {
-          actionId: OutputActions | "error";
+          actionId: OutputActions;
           payload: PayloadObject;
       }
     | { actionId: "subscribed" }

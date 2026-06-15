@@ -10,7 +10,10 @@ import { Cell, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
+import { Stats } from "../../Stat/data/Stats";
+import { PlayerCancelAction } from "../application/interfaces/PlayerCancelAction";
 import { Player } from "../data/Player";
+import { PlayerOutputActions } from "../web/PlayerSocketActions";
 
 export enum PlayerActionId {
     WALK = "walk",
@@ -62,7 +65,7 @@ export class PlayerActionService {
         gameId: string,
         playerId: string,
         target: { x: number; y: number }
-    ): Promise<void | SocketError> {
+    ): Promise<void | SocketError | PlayerCancelAction> {
         this.logger.log("PlayerActionService action method called");
 
         const game = await this.gameDataManager.get(gameId);
@@ -114,9 +117,14 @@ export class PlayerActionService {
         game: Game,
         playerEntity: Entity,
         destination: Cell
-    ): Promise<void | SocketError> {
+    ): Promise<void | SocketError | PlayerCancelAction> {
         if (!this.checkMoveDestination(destination)) {
-            return new SocketError("Destination cell is already occupied");
+            return {
+                actionId: PlayerOutputActions.CANCEL_ACTION,
+                payload: {
+                    reason: "occupied",
+                },
+            };
         }
         // Libère l'ancienne case
         const range = PositionUtils.distance(
@@ -124,9 +132,12 @@ export class PlayerActionService {
             destination.position
         );
         if (range > playerEntity.stats.mouvement) {
-            return new SocketError(
-                "Not enough movement points to perform this action"
-            );
+            return {
+                actionId: PlayerOutputActions.CANCEL_ACTION,
+                payload: {
+                    reason: "mouvement",
+                },
+            };
         }
         const currentCase =
             game.plateau[playerEntity.position.x][playerEntity.position.y];
@@ -155,7 +166,15 @@ export class PlayerActionService {
         playerEntity: Entity,
         action: Action,
         destination: Cell
-    ): Promise<void | SocketError> {
+    ): Promise<void | SocketError | PlayerCancelAction> {
+        if (Stats.fromEntity(playerEntity).energy < action.cost) {
+            return {
+                actionId: PlayerOutputActions.CANCEL_ACTION,
+                payload: {
+                    reason: "energy",
+                },
+            };
+        }
         const animations: GameEventAnimation[] = [
             {
                 key: "attack",
@@ -167,9 +186,12 @@ export class PlayerActionService {
             },
         ];
         if (action.targetRequired && !destination?.entityId) {
-            return new SocketError(
-                "You must target a visible entity to perform this action"
-            );
+            return {
+                actionId: PlayerOutputActions.CANCEL_ACTION,
+                payload: {
+                    reason: "target-visible",
+                },
+            };
         }
         const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
             action,

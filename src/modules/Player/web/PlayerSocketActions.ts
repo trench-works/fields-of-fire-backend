@@ -3,4 +3,6 @@ export enum PlayerInputActions {
     FINISH_TURN = "finish-turn",
 }
 
-export enum PlayerOutputActions {}
+export enum PlayerOutputActions {
+    CANCEL_ACTION = "cancel-action",
+}
