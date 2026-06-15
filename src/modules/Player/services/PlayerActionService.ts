@@ -139,7 +139,7 @@ export class PlayerActionService {
 
         await this.gameDataManager.set(game.id, game);
 
-        this.socketManager.emitUpdate(game, [
+        await this.socketManager.emitUpdate(game, [
             {
                 key: "move",
                 data: {
@@ -197,15 +197,13 @@ export class PlayerActionService {
         //to finalize
         playerEntity.stats.energy -= action.cost;
         animations.push(...this.gameTurnService.detectEntityDeath(game));
-        if (await this.gameTurnService.detectGameEnd(game)) {
-            return;
-        }
         await this.gameDataManager.set(game.id, game);
 
         this.logger.log(
             `Player ${playerEntity.entityId} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
         );
         await this.socketManager.emitUpdate(game, animations);
+        await this.gameTurnService.detectGameEnd(game);
     }
 
     checkMoveDestination(cell: Cell): boolean {
