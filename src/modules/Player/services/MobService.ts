@@ -96,7 +96,9 @@ export class MobService implements AsyncResolver {
             }
             if (PM) {
                 if (!action) {
-                    while (playerRange > 0 && PM > 0) {
+                    let hasMoved = true;
+                    while (playerRange > 0 && PM > 0 && hasMoved) {
+                        hasMoved = false;
                         playerRange = this.getDistance(entity, nearestPlayer);
 
                         const moves = new CellAStar().findPath(
@@ -127,6 +129,7 @@ export class MobService implements AsyncResolver {
                                 entity.position
                             )
                         ) {
+                            hasMoved = true;
                             animations.push({
                                 key: "move",
                                 data: {
