@@ -76,6 +76,7 @@ export class MobService implements AsyncResolver {
                           Ran.int(action.damage.max - action.damage.min)
                         : 0;
                     nearestPlayer.stats.life -= damage; //TODO: apply defense and dodge
+                    //TODO: do zone damages
                     // remove energy points
                     PA -= action.cost;
                     animations.push({
@@ -83,7 +84,9 @@ export class MobService implements AsyncResolver {
                         data: {
                             entityId: entity.entityId,
                             actionId: action.id,
+                            origin: entity.position,
                             target: nearestPlayer.position,
+                            hits: [nearestPlayer.position],
                         },
                     });
                     animations.push(

@@ -175,13 +175,20 @@ export class PlayerActionService {
                 },
             };
         }
+        const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
+            action,
+            game,
+            destination.position
+        );
         const animations: GameEventAnimation[] = [
             {
                 key: "attack",
                 data: {
                     entityId: playerEntity.entityId,
                     actionId: action.id,
+                    origin: playerEntity.position,
                     target: destination.position,
+                    hits: targetEntity.map((target) => target.position),
                 },
             },
         ];
@@ -193,11 +200,6 @@ export class PlayerActionService {
                 },
             };
         }
-        const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
-            action,
-            game,
-            destination.position
-        );
         this.logger.log(`player ${playerEntity}`);
         for (const target of targetEntity) {
             if (action.damage) {
