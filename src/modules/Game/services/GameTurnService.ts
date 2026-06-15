@@ -33,20 +33,23 @@ export class GameTurnService implements AsyncResolver {
 
     public detectEntityDeath(game: Game): GameEventAnimation[] {
         const animations: GameEventAnimation[] = [];
-        for (const entity of game.entities) {
-            if (Stats.fromEntity(entity).life <= 0 && !entity.dead) {
-                entity.dead = true;
-                game.playerTurns = game.playerTurns.filter(
-                    (entityId) => entityId !== entity.entityId
-                );
-                game.plateau[entity.position.x][entity.position.y].entityId =
-                    undefined;
-                animations.push({
-                    key: "death",
-                    data: {
-                        entityId: entity.entityId,
-                    },
-                });
+        if (game.entities) {
+            for (const entity of game.entities) {
+                if (Stats.fromEntity(entity).life <= 0 && !entity.dead) {
+                    entity.dead = true;
+                    game.playerTurns = game.playerTurns.filter(
+                        (entityId) => entityId !== entity.entityId
+                    );
+                    game.plateau[entity.position.x][
+                        entity.position.y
+                    ].entityId = undefined;
+                    animations.push({
+                        key: "death",
+                        data: {
+                            entityId: entity.entityId,
+                        },
+                    });
+                }
             }
         }
         return animations;
