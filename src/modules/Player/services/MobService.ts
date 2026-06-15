@@ -58,10 +58,7 @@ export class MobService implements AsyncResolver {
         let PA = stats.energy;
         let PM = stats.mouvement;
         let firstTry = true;
-        let i = 0;
         while (firstTry || PM !== lastPM || PA !== lastPA) {
-            i++;
-            console.log("Iteration " + i);
             const animations: GameEventAnimation[] = [];
             firstTry = false;
             lastPA = PA;
@@ -73,7 +70,6 @@ export class MobService implements AsyncResolver {
             const action = this.getAttack(charClass, playerRange, PA);
             if (PA) {
                 if (action) {
-                    console.log("Did attack");
                     // do damages
                     const damage = action.damage
                         ? action.damage.min +
@@ -100,7 +96,6 @@ export class MobService implements AsyncResolver {
             }
             if (PM) {
                 if (!action) {
-                    console.log("Did mouvement");
                     while (playerRange > 0 && PM > 0) {
                         playerRange = this.getDistance(entity, nearestPlayer);
 
@@ -149,7 +144,6 @@ export class MobService implements AsyncResolver {
             if (await this.gameTurnService.detectGameEnd(game)) {
                 return;
             }
-            console.log(PM, lastPM, PA, lastPA);
         }
     }
 
