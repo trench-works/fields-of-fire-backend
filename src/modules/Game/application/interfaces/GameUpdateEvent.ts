@@ -6,6 +6,7 @@ export type GameEventAnimation =
           "move",
           {
               entityId: string;
+              path: Position[];
           }
       >
     | GameAnimation<

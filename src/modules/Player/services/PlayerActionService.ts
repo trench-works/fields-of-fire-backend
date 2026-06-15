@@ -1,6 +1,6 @@
 import { Logger, Provide, SocketError } from "../../../core";
 
-import { PositionUtils } from "../../../game-lib/Utils";
+import { Position, PositionUtils } from "../../../game-lib/Utils";
 import { Action, ActionType, ActionUtils } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Effect } from "../../Effect/data/Effect";
@@ -144,6 +144,10 @@ export class PlayerActionService {
         currentCase.entityId = undefined;
         // Occupe la nouvelle case
         destination.entityId = playerEntity.entityId;
+        const movePath: Position[] = [
+            { ...playerEntity.position },
+            { ...destination.position },
+        ];
         // Met à jour la position
         playerEntity.position = destination.position;
         playerEntity.stats.mouvement -= range;
@@ -155,6 +159,7 @@ export class PlayerActionService {
                 key: "move",
                 data: {
                     entityId: playerEntity.entityId,
+                    path: movePath,
                 },
             },
         ]);

@@ -3,7 +3,7 @@ import {
     AsyncDependencyResolver,
     AsyncResolver,
 } from "../../../core/app/Controller/DependencyResolver";
-import { PositionUtils } from "../../../game-lib";
+import { Position, PositionUtils } from "../../../game-lib";
 import { Action } from "../../Action/data/Action";
 import { CharacterClass } from "../../CharacterClass/data/CharacterClass";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
@@ -58,7 +58,10 @@ export class MobService implements AsyncResolver {
         let PA = stats.energy;
         let PM = stats.mouvement;
         let firstTry = true;
-        while (firstTry || (PM !== lastPM && PA !== lastPA)) {
+        let i = 0;
+        while (firstTry || PM !== lastPM || PA !== lastPA) {
+            i++;
+            console.log("Iteration " + i);
             const animations: GameEventAnimation[] = [];
             firstTry = false;
             lastPA = PA;
@@ -70,6 +73,7 @@ export class MobService implements AsyncResolver {
             const action = this.getAttack(charClass, playerRange, PA);
             if (PA) {
                 if (action) {
+                    console.log("Did attack");
                     // do damages
                     const damage = action.damage
                         ? action.damage.min +
@@ -96,6 +100,7 @@ export class MobService implements AsyncResolver {
             }
             if (PM) {
                 if (!action) {
+                    console.log("Did mouvement");
                     while (playerRange > 0 && PM > 0) {
                         playerRange = this.getDistance(entity, nearestPlayer);
 
@@ -105,6 +110,7 @@ export class MobService implements AsyncResolver {
                             game.plateau
                         );
                         const originalPosition = { ...entity.position };
+                        const movePath: Position[] = [{ ...entity.position }];
                         while (PM > 0 && moves.length > 1) {
                             game.plateau[entity.position.x][
                                 entity.position.y
@@ -113,6 +119,7 @@ export class MobService implements AsyncResolver {
                                 entity.position,
                                 moves[0]
                             );
+                            movePath.push({ ...entity.position });
                             game.plateau[entity.position.x][
                                 entity.position.y
                             ].entityId = entity.entityId;
@@ -129,6 +136,7 @@ export class MobService implements AsyncResolver {
                                 key: "move",
                                 data: {
                                     entityId: entity.entityId,
+                                    path: movePath,
                                 },
                             });
                         }
@@ -141,6 +149,7 @@ export class MobService implements AsyncResolver {
             if (await this.gameTurnService.detectGameEnd(game)) {
                 return;
             }
+            console.log(PM, lastPM, PA, lastPA);
         }
     }
 
