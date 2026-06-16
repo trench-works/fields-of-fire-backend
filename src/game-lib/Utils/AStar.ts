@@ -23,6 +23,23 @@ export abstract class AStar<Cell> {
         this.closedList = new Map();
     }
 
+    findPathPositions(
+        start: Position,
+        end: Position,
+        cellBoard: Cell[][]
+    ): Position[] {
+        const movements = this.findPath(start, end, cellBoard);
+        let currentPosition = { ...start };
+
+        return [
+            { ...start },
+            ...movements.map((move) => {
+                currentPosition = PositionUtils.add(currentPosition, move);
+                return { ...currentPosition };
+            }),
+        ];
+    }
+
     findPath(start: Position, end: Position, cellBoard: Cell[][]): Position[] {
         this.withStart(start);
         this.withEnd(end);

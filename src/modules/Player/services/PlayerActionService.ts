@@ -6,7 +6,7 @@ import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Effect } from "../../Effect/data/Effect";
 import { GameEventAnimation } from "../../Game/application/interfaces/GameUpdateEvent";
 import { Entity } from "../../Game/data/Entity";
-import { Cell, Game } from "../../Game/data/Game";
+import { Cell, CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
@@ -142,15 +142,16 @@ export class PlayerActionService {
                 },
             };
         }
+        const movePath: Position[] = new CellAStar().findPathPositions(
+            playerEntity.position,
+            destination.position,
+            game.plateau
+        );
         const currentCase =
             game.plateau[playerEntity.position.x][playerEntity.position.y];
-        currentCase.entityId = undefined;
         // Occupe la nouvelle case
+        currentCase.entityId = undefined;
         destination.entityId = playerEntity.entityId;
-        const movePath: Position[] = [
-            { ...playerEntity.position },
-            { ...destination.position },
-        ];
         // Met à jour la position
         playerEntity.position = destination.position;
         playerEntity.stats.mouvement -= range;
