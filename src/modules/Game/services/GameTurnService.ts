@@ -77,8 +77,10 @@ export class GameTurnService implements AsyncResolver {
 
     async finishTurn(gameId: string) {
         //this.turnTimeoutRepository.clearTimeout(gameId);
-        const game = (await this.gameDataManager.get(gameId))!;
-
+        const game = await this.gameDataManager.get(gameId);
+        if (!game) {
+            return;
+        }
         this.detectEntityDeath(game);
         if (await this.detectGameEnd(game)) {
             return;
