@@ -103,7 +103,19 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
                 zoneType: [ActionZoneType.DIAMOND],
                 zoneSize:1,
                 effectList :["doped"]
-            }
+            },
+            amputate: {
+                id: "amputate",
+                name: "Amputation",
+                description: "Attaque de mêlée",
+                cost: 2,
+                range: 1,
+                damage: { min: 1, max: 4 },
+                actionType: ActionType.MELEE,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize: 1,
+                effectList: ["amputated"]
+            },
         });
     }
 }

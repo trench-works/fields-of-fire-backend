@@ -66,11 +66,11 @@ export class CharacterClassRepository extends FolderRepository<
                     initiative: 70,
                     dodging: 5,
                     energy: 4,
-                    mouvement: 2,
+                    mouvement: 3,
                 },
                 classDescription:
                     "Un soigneur spécialisé dans le soutien de ses alliés. Le Medic est équipé d'une armure légère et d'un pistolet, ce qui lui permet de se déplacer rapidement et d'attaquer à distance. Sa principale force réside dans sa capacité à soigner les blessures de ses alliés et à fournir des buffs pour améliorer leurs performances au combat.",
-                actionList: ["walk", "shoot", "heal"],
+                actionList: ["walk", "shoot", "heal", "amputate"],
             },
             entente_caporal: {
                 id: "entente_caporal",
@@ -85,7 +85,7 @@ export class CharacterClassRepository extends FolderRepository<
                     initiative: 90,
                     dodging: 5,
                     energy: 4,
-                    mouvement: 4,
+                    mouvement: 2,
                 },
                 classDescription:
                     "Un combattant intelligent et discipliné, le Caporal est équipé d'un sabre et d'une fusil, ce qui lui permet de mettre à distance les ennemies et de causer des dégâts importants à moyenne et logngue portée. Il excelle dans les combats en groupe, de pars sa capacité à booster ses alliés.",

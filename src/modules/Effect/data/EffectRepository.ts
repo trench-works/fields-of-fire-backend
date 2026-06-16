@@ -9,7 +9,7 @@ export class EffectRepository extends FolderRepository<Effect> {
   }
   constructor() {
     super("effects", {
-      amputed : {
+      amputated : {
         id : "amputated",
         name : "amputé",
         duration : 2,
