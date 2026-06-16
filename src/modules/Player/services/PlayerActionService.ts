@@ -1,7 +1,7 @@
 import { Logger, Provide, SocketError } from "../../../core";
 
 import { Position, PositionUtils } from "../../../game-lib/Utils";
-import { Action, ActionType, ActionUtils } from "../../Action/data/Action";
+import { Action, ActionUtils } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Effect } from "../../Effect/data/Effect";
 import { GameEventAnimation } from "../../Game/application/interfaces/GameUpdateEvent";
@@ -14,6 +14,7 @@ import { Stats } from "../../Stat/data/Stats";
 import { PlayerCancelAction } from "../application/interfaces/PlayerCancelAction";
 import { Player } from "../data/Player";
 import { PlayerOutputActions } from "../web/PlayerSocketActions";
+import { AttackService } from "./AttackService";
 
 export enum PlayerActionId {
     WALK = "walk",
@@ -38,6 +39,8 @@ export class PlayerActionService {
     private readonly socketManager!: GameWebSocketManager;
     @Provide(GameTurnService)
     private readonly gameTurnService!: GameTurnService;
+    @Provide(AttackService)
+    private readonly attackService!: AttackService;
 
     async finishTurn(
         gameId: string,
@@ -208,9 +211,9 @@ export class PlayerActionService {
         this.logger.log(`player ${playerEntity}`);
         for (const target of targetEntity) {
             if (action.damage) {
-                const damage = this.calculateDamage(
-                    playerEntity,
+                const damage = this.attackService.calculateDamage(
                     action,
+                    playerEntity,
                     target
                 );
                 this.applyDamage(target, damage);
@@ -239,46 +242,6 @@ export class PlayerActionService {
         return Boolean(!cell.entityId && !cell.isHole && !cell.isWall);
     }
 
-    calculateDamage(attacker: Entity, action: Action, target: Entity): number {
-        const damageRange = action.damage!.max - action.damage!.min + 1;
-        const randomDamage =
-            Math.floor(Math.random() * damageRange) + action.damage!.min;
-
-        let statBonus;
-
-        switch (action.actionType) {
-            case ActionType.MELEE:
-                {
-                    statBonus = Math.ceil(attacker.stats!.strength / 10);
-                }
-                break;
-            case ActionType.RANGED:
-                {
-                    statBonus = Math.ceil(attacker.stats!.precision / 10);
-                }
-                break;
-            default: {
-                statBonus = 0;
-            }
-        }
-
-        let brutTotal;
-        let reduction;
-        if (action.damage!.min < 0) {
-            brutTotal = randomDamage - statBonus;
-        } else {
-            brutTotal = randomDamage + statBonus;
-            reduction = Math.ceil(brutTotal * (target.stats!.armor / 100));
-        }
-
-        this.logger.log(`Calculated : ${brutTotal - (reduction ?? 0)} dammage`);
-
-        const finalDamage = brutTotal - (reduction ?? 0);
-
-        return finalDamage;
-
-        //TODO: ajouter les effets de l'attaque, et ajout de chances d'échecs
-    }
     applyDamage(target: Entity, damage: number) {
         if (!target.stats) {
             this.logger.error("Target entity has no stats");

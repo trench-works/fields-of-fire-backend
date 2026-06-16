@@ -1,4 +1,4 @@
-import { Logger, Provide, Ran } from "../../../core";
+import { Logger, Provide } from "../../../core";
 import {
     AsyncDependencyResolver,
     AsyncResolver,
@@ -14,6 +14,7 @@ import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { Stats } from "../../Stat/data/Stats";
+import { AttackService } from "./AttackService";
 
 export class MobService implements AsyncResolver {
     @Provide(GameDataManager)
@@ -24,6 +25,8 @@ export class MobService implements AsyncResolver {
     private readonly socketManager!: GameWebSocketManager;
     @Provide(CharacterClassRepository)
     private readonly classRepository!: CharacterClassRepository;
+    @Provide(AttackService)
+    private readonly attackService!: AttackService;
 
     private gameTurnService!: GameTurnService;
 
@@ -71,10 +74,12 @@ export class MobService implements AsyncResolver {
             if (PA) {
                 if (action) {
                     // do damages
-                    const damage = action.damage
-                        ? action.damage.min +
-                          Ran.int(action.damage.max - action.damage.min)
-                        : 0;
+                    const damage = this.attackService.calculateDamage(
+                        action,
+                        entity,
+                        nearestPlayer
+                    );
+
                     nearestPlayer.stats.life -= damage; //TODO: apply defense and dodge
                     //TODO: do zone damages
                     // remove energy points

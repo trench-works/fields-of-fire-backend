@@ -74,6 +74,28 @@ export class WsManager<
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async emitMap<PayloadObject extends object = any>(
+        actionId: OutputActions,
+        key: Partial<RessourceKeyObject>,
+        getPayload: (
+            client: RessourceClient<RessourceKeyObject>
+        ) => PayloadObject
+    ): Promise<void> {
+        const promises: Promise<void>[] = [];
+        for (const client of this.clients.values()) {
+            if (RessourceKeyUtils.compareKeys(client.key, key)) {
+                promises.push(
+                    this.send(client.socket, {
+                        actionId,
+                        payload: getPayload(client),
+                    })
+                );
+            }
+        }
+        await Promise.all(promises);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async emit<PayloadObject extends object = any>(
         action: MultipleClientsOutputAction<
             RessourceKeyObject,
