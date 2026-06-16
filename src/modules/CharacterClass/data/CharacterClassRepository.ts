@@ -39,7 +39,8 @@ export class CharacterClassRepository extends FolderRepository<
                 name: "Fantassin de l'Entente",
                 playable: true,
                 stats: {
-                    life: 24,
+                    life: 28,
+                    maxLife: 32,
                     precision: 10,
                     strength: 20,
                     armor: 0,
@@ -57,8 +58,9 @@ export class CharacterClassRepository extends FolderRepository<
                 name: "Médecin de l'Entente",
                 playable: true,
                 stats: {
-                    life: 16,
-                    precision: 5,
+                    life: 20,
+                    maxLife: 20,
+                    precision: 10,
                     strength: 10,
                     armor: 0,
                     initiative: 70,
@@ -75,9 +77,10 @@ export class CharacterClassRepository extends FolderRepository<
                 name: "Caporal de l'Entente",
                 playable: true,
                 stats: {
-                    life: 20,
-                    precision: 15,
-                    strength: 30,
+                    life: 24,
+                    maxLife: 24,
+                    precision: 20,
+                    strength: 10,
                     armor: 0,
                     initiative: 90,
                     dodging: 5,
@@ -99,6 +102,7 @@ export class CharacterClassRepository extends FolderRepository<
                 playable: false,
                 stats: {
                     life: 24,
+                    maxLife: 24,
                     precision: 10,
                     strength: 20,
                     armor: 0,
@@ -115,7 +119,8 @@ export class CharacterClassRepository extends FolderRepository<
                 name: "Médecin Coquin",
                 playable: false,
                 stats: {
-                    life: 24,
+                    life: 18,
+                    maxLife: 18,
                     precision: 10,
                     strength: 20,
                     armor: 0,
@@ -132,7 +137,8 @@ export class CharacterClassRepository extends FolderRepository<
                 name: "Caporal Coquin",
                 playable: false,
                 stats: {
-                    life: 24,
+                    life: 21,
+                    maxLife: 21,
                     precision: 10,
                     strength: 20,
                     armor: 0,

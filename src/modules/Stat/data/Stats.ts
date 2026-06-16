@@ -3,6 +3,7 @@ import { Entity } from "../../Game/data/Entity";
 
 export class Stats {
     life!: number;
+    maxLife!: number;
     precision!: number;
     strength!: number;
     armor!: number;

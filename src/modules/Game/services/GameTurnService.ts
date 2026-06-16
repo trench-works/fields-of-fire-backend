@@ -97,8 +97,8 @@ export class GameTurnService implements AsyncResolver {
         playerEntity.stats.energy = entityClass.stats.energy;
         playerEntity.stats.mouvement = entityClass.stats.mouvement;
         playerEntity.effects = playerEntity.effects
-            .map((effect) => ({ ...effect, duration: effect.duration - 1 }))
-            .filter((effect) => effect.duration > 0);
+            .map((effect) => ({...effect, duration: effect.duration ? effect.duration - 1 : effect.duration}))
+            .filter((effect) => effect.duration === null || effect.duration > 0)
 
         this.gameDataManager.set(game.id, game);
 

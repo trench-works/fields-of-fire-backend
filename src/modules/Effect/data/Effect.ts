@@ -9,7 +9,7 @@ export class Effect {
     id!: string;
     name!: string;
     type!: EffectType;
-    duration!: number;
+    duration!: number | null;
     modifier!: Stats;
     author?: string;
 }
