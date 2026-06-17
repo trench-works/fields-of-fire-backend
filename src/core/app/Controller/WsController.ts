@@ -312,7 +312,7 @@ export class WsController<
         socket.on("close", (): void => {
             this.socketManager.unset(user.id);
         });
-        this.socketManager.clients.set(user.id, { socket, key });
+        this.socketManager.set(user.id, { socket, key });
         this.send(socket, { actionId: "subscribed" });
     }
 }

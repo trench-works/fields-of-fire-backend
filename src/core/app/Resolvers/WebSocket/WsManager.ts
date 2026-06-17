@@ -28,7 +28,8 @@ export class WsManager<
     }
 
     set(userId: string, { socket, key }: RessourceClient<RessourceKeyObject>) {
-        if (this.clients.has(userId)) {
+        const existing = this.clients.get(userId);
+        if (existing && existing.socket.readyState === WebSocket.OPEN) {
             return;
         }
         this.clients.set(userId, { socket, key });
@@ -50,13 +51,28 @@ export class WsManager<
               >
             | ValidationError[]
     ): Promise<void> {
+        this.logger.log(
+            "send called, readyState:",
+            socket.readyState,
+            "action:",
+            action
+        );
         return new Promise<void>((resolve, reject) => {
             if (!action) {
                 resolve();
                 return;
             }
+
+            if (socket.readyState !== 1) {
+                this.logger.error(
+                    `SOCKET NOT OPEN, readyState: ${socket.readyState}`
+                );
+                resolve();
+                return;
+            }
+
             try {
-                let message = "";
+                let message: string = "";
                 if (Object.keys(action).includes("actionId")) {
                     message = JSON.stringify(action);
                 } else {
@@ -65,7 +81,15 @@ export class WsManager<
                         error: action,
                     });
                 }
-                socket.send(message, () => resolve());
+                socket.send(message, (err) => {
+                    if (err) {
+                        this.logger.error("SOCKET SEND ERROR:", err);
+                        reject(err);
+                    } else {
+                        this.logger.debug("SOCKET SEND SUCCESS:", message);
+                        resolve();
+                    }
+                });
             } catch {
                 this.logger.error("CANT SEND PAYLOAD", JSON.stringify(action));
                 reject();
