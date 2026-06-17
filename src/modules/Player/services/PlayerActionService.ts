@@ -26,6 +26,8 @@ export enum PlayerActionId {
     INTIMIDATION = "intimidation",
     SNEAKY = "sneaky",
     DOPAGE = "dopage",
+    CHARGE = "charge",
+    FIGHTING_DRUG= "fighting_drug"
 }
 
 export class PlayerActionService {
@@ -101,6 +103,8 @@ export class PlayerActionService {
             case PlayerActionId.INTIMIDATION:
             case PlayerActionId.SNEAKY:
             case PlayerActionId.DOPAGE:
+            case PlayerActionId.CHARGE:
+            case PlayerActionId.FIGHTING_DRUG:
             case PlayerActionId.SHOOT:
             case PlayerActionId.HEAL:
                 return await this.attack(

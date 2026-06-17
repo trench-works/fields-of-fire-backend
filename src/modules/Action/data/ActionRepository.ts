@@ -116,6 +116,28 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
                 zoneSize: 1,
                 effectList: ["amputated"]
             },
+            charge : {
+                id: "charge",
+                name: "Chargez !",
+                description: "boost en zone",
+                cost: 2,
+                range: 0,
+                actionType: ActionType.OTHER,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize: 3,
+                effectList: ["charge"]
+            },
+            fighting_drug :{
+                id: "fighting_drug",
+                name: "Drogue de combat",
+                description: "boost en zone",
+                cost: 4,
+                range: 1,
+                actionType: ActionType.OTHER,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize: 1,
+                effectList: ["enhanced_drug"]
+            },
         });
     }
 }

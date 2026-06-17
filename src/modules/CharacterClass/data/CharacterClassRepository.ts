@@ -51,7 +51,7 @@ export class CharacterClassRepository extends FolderRepository<
                 },
                 classDescription:
                     "Un soldat polyvalent, capable de s'adapter à différentes situations sur le champ de bataille. Il est équipé d'un fusil avec baïonnette, ce qui lui permet d'attaquer efficacement à mi-distance et en mélée. Le Fantassin est également capable de se booster lui-même en s'injectant des produits dopants",
-                actionList: ["walk", "shoot", "bayonet", "dopage"],
+                actionList: ["walk", "shoot", "bayonet", "dopage", "charge"],
             },
             entente_medic: {
                 id: "entente_medic",
@@ -70,7 +70,7 @@ export class CharacterClassRepository extends FolderRepository<
                 },
                 classDescription:
                     "Un soigneur spécialisé dans le soutien de ses alliés. Le Medic est équipé d'un fusil et d'un hachoir, ce qui lui permet d'attaquer à distance et en mélée. Sa principale force réside dans sa capacité à soigner les blessures de ses alliés mais également infliger des malus au ennemies.",
-                actionList: ["walk", "shoot", "heal", "amputate"],
+                actionList: ["walk", "shoot", "heal", "amputate", "fighting_drug"],
             },
             entente_caporal: {
                 id: "entente_caporal",

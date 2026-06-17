@@ -23,7 +23,7 @@ export class EffectRepository extends FolderRepository<Effect> {
             armor : 0,
             dodging : 0,
             initiative : 0,
-            energy : -2,
+            energy : -1,
             mouvement : 0
           },
       },
@@ -63,7 +63,42 @@ export class EffectRepository extends FolderRepository<Effect> {
             mouvement : 0
           },
       },
-
+      charge : {
+        id : "charge",
+        name : "charge",
+        duration : 1,
+        type : EffectType.APPLY,
+        modifier : 
+          {
+            life : 0,
+            maxLife : 0,
+            strength : 0,
+            precision : 0,
+            armor : 0,
+            dodging : 0,
+            initiative : 0,
+            energy : 0,
+            mouvement : 2
+          },
+      },
+      enhanced_drug : {
+        id : "enhanced_drug",
+        name : "Drogue de combat",
+        duration : 2,
+        type : EffectType.APPLY,
+        modifier : 
+          {
+            life : 0,
+            maxLife : 0,
+            strength : 10,
+            precision : 10,
+            armor : 0,
+            dodging : 0,
+            initiative : 0,
+            energy : 2,
+            mouvement : 0
+          },
+      },
       // Boost pour la BoostList
       healUpBoost : {
         id : "healUpBoost",
