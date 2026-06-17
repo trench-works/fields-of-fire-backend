@@ -103,7 +103,6 @@ export class PlayerActionService {
             case PlayerActionId.INTIMIDATION:
             case PlayerActionId.SNEAKY:
             case PlayerActionId.DOPAGE:
-            case PlayerActionId.CHARGE:
             case PlayerActionId.FIGHTING_DRUG:
             case PlayerActionId.SHOOT:
             case PlayerActionId.HEAL:
@@ -114,10 +113,37 @@ export class PlayerActionService {
                     action,
                     destination
                 );
-
+            case PlayerActionId.CHARGE:
+                return await this.boost(
+                    game,
+                    player,
+                    playerEntity,
+                    action,
+                    destination
+                )
             default:
                 this.logger.error("Unknown action ID");
         }
+    }
+
+    async boost(game: Game,
+        player: Player,
+        playerEntity: Entity,
+        action: Action,
+        destination: Cell
+    ): Promise<void | SocketError | PlayerCancelAction> {
+        this.checkIfAllowed(playerEntity, action, destination);
+
+        const targetList= this.getTarget(game, playerEntity, action, destination);
+  
+        for (const target of targetList) {
+            this.logger.debug(`action.effectList : ${action.effectList}`);
+            for (const effect of action.effectList!) {
+                this.applyEffect(player.name, target, effect);
+            }
+        }
+        this.animate(game, playerEntity, action, destination, targetList);
+        await this.gameDataManager.set(game.id, game);
     }
 
     async move(
@@ -125,20 +151,14 @@ export class PlayerActionService {
         playerEntity: Entity,
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
-        if (!this.checkMoveDestination(destination)) {
-            return {
-                actionId: PlayerOutputActions.CANCEL_ACTION,
-                payload: {
-                    reason: "occupied",
-                },
-            };
-        }
         // Libère l'ancienne case
         const range = PositionUtils.distance(
             playerEntity.position,
             destination.position
         );
-        if (range > playerEntity.stats.mouvement) {
+
+        const mouvement = Stats.fromEntity(playerEntity).mouvement;
+        if (range > mouvement) {
             return {
                 actionId: PlayerOutputActions.CANCEL_ACTION,
                 payload: {
@@ -180,41 +200,11 @@ export class PlayerActionService {
         action: Action,
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
-        if (Stats.fromEntity(playerEntity).energy < action.cost) {
-            return {
-                actionId: PlayerOutputActions.CANCEL_ACTION,
-                payload: {
-                    reason: "energy",
-                },
-            };
-        }
-        const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
-            action,
-            game,
-            destination.position
-        );
-        const animations: GameEventAnimation[] = [
-            {
-                key: "attack",
-                data: {
-                    entityId: playerEntity.entityId,
-                    actionId: action.id,
-                    origin: playerEntity.position,
-                    target: destination.position,
-                    hits: targetEntity.map((target) => target.position),
-                },
-            },
-        ];
-        if (action.targetRequired && !destination?.entityId) {
-            return {
-                actionId: PlayerOutputActions.CANCEL_ACTION,
-                payload: {
-                    reason: "target-visible",
-                },
-            };
-        }
-        this.logger.log(`player ${playerEntity}`);
-        for (const target of targetEntity) {
+        this.checkIfAllowed(playerEntity, action, destination);
+
+        const targetList= this.getTarget(game, playerEntity, action, destination);
+
+        for (const target of targetList) {
             if (action.damage) {
                 const damage = this.attackService.calculateDamage(
                     action,
@@ -230,16 +220,15 @@ export class PlayerActionService {
                 }
             }
         }
-
         //to finalize
         playerEntity.stats.energy -= action.cost;
-        animations.push(...this.gameTurnService.detectEntityDeath(game));
         await this.gameDataManager.set(game.id, game);
 
         this.logger.log(
             `Player ${playerEntity.entityId} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
         );
-        await this.socketManager.emitUpdate(game, animations);
+        this.animate(game, playerEntity, action, destination, targetList);
+        
         await this.gameTurnService.detectGameEnd(game);
     }
 
@@ -271,6 +260,54 @@ export class PlayerActionService {
         if (caster) {
             effect.author = caster;
         }
+        target.stats.energy += effect.modifier.energy;
+        target.stats.mouvement += effect.modifier.mouvement;
+
         target.effects.push(effect);
+    }
+
+    getTarget(game : Game, playerEntity : Entity, action : Action, destination : Cell) : Entity[]{
+        const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
+            action,
+            game,
+            destination.position
+        );
+        return targetEntity;
+    }
+
+    async animate(game : Game, playerEntity: Entity, action : Action, destination: Cell, targetEntity : Entity[]){
+        const animations: GameEventAnimation[] = [
+            {
+                key: "attack",
+                data: {
+                    entityId: playerEntity.entityId,
+                    actionId: action.id,
+                    origin: playerEntity.position,
+                    target: destination.position,
+                    hits: targetEntity.map((target) => target.position),
+                },
+            },
+        ];
+        animations.push(...this.gameTurnService.detectEntityDeath(game));
+        await this.socketManager.emitUpdate(game, animations);
+    }
+
+    checkIfAllowed(playerEntity: Entity, action : Action, destination : Cell){
+        if (Stats.fromEntity(playerEntity).energy < action.cost) {
+            return {
+                actionId: PlayerOutputActions.CANCEL_ACTION,
+                payload: {
+                    reason: "energy",
+                },
+            };
+        }
+        if (action.targetRequired && !destination?.entityId) {
+            return {
+                actionId: PlayerOutputActions.CANCEL_ACTION,
+                payload: {
+                    reason: "target-visible",
+                },
+            };
+        }
     }
 }
