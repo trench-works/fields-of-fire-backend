@@ -173,15 +173,15 @@ export class GameService {
         await this.lobbyDataManager.delete(lobbyId);
         await this.gameDataManager.set(gameId, game);
 
-        const newPlayingPlayer = game.players.find(
-            (player) => player.entityId === game.playerTurns[0]
-        )!;
-        this.turnTimeoutRepository.newTimeout(newPlayingPlayer.playerId, () =>
-            this.playerActionService.finishTurn(
-                game.id,
-                newPlayingPlayer.playerId
-            )
-        );
+        // const newPlayingPlayer = game.players.find( //FIXME: player turn timeout system is shitty and creating issues
+        //     (player) => player.entityId === game.playerTurns[0]
+        // )!;
+        // this.turnTimeoutRepository.newTimeout(newPlayingPlayer.playerId, () =>
+        //     this.playerActionService.finishTurn(
+        //         game.id,
+        //         newPlayingPlayer.playerId
+        //     )
+        // );
 
         return game;
     }

@@ -3,6 +3,7 @@ import { Entity } from "../../Game/data/Entity";
 
 export class Stats {
     life!: number;
+    maxLife!: number;
     precision!: number;
     strength!: number;
     armor!: number;
@@ -29,5 +30,25 @@ export class Stats {
                 .filter((effect) => effect.type === EffectType.APPLY)
                 .map((effect) => effect.modifier)
         );
+    }
+
+    static getEntityEffect(entity: Entity): Stats {
+        const emptyStats : Stats = {
+            life: 0,
+            maxLife: 0,
+            precision: 0,
+            strength: 0,
+            armor: 0,
+            initiative: 0,
+            dodging: 0,
+            energy: 0,
+            mouvement: 0
+        };
+        return Stats.add(
+            emptyStats,
+            ...entity.effects
+                .filter((effect) => effect.type === EffectType.APPLY)
+                .map((effect) => effect.modifier)
+        )
     }
 }

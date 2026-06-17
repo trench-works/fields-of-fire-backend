@@ -6,7 +6,7 @@ import {
 } from "../../../types/Action";
 import { Provide } from "../../../decorators";
 import { Logger } from "../../Providers";
-import { SocketError } from "../../../errors";
+import { ValidationError } from "class-validator";
 
 type RessourceClient<RessourceKeyObject extends Record<string, unknown>> = {
     socket: WebSocket;
@@ -43,18 +43,27 @@ export class WsManager<
 
     async send<PayloadObject extends object = object>(
         socket: WebSocket,
-        action: SingleClientOutputAction<
-            PayloadObject,
-            OutputActions | ReturnActions
-        >
+        action:
+            | SingleClientOutputAction<
+                  PayloadObject,
+                  OutputActions | ReturnActions
+              >
+            | ValidationError[]
     ): Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            if (!action) {
+                resolve();
+                return;
+            }
             try {
                 let message = "";
-                if (action instanceof SocketError) {
-                    message = JSON.stringify({ error: action });
-                } else {
+                if (Object.keys(action).includes("actionId")) {
                     message = JSON.stringify(action);
+                } else {
+                    message = JSON.stringify({
+                        actionId: "error",
+                        error: action,
+                    });
                 }
                 socket.send(message, () => resolve());
             } catch {
@@ -62,6 +71,28 @@ export class WsManager<
                 reject();
             }
         });
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async emitMap<PayloadObject extends object = any>(
+        actionId: OutputActions,
+        key: Partial<RessourceKeyObject>,
+        getPayload: (
+            client: RessourceClient<RessourceKeyObject>
+        ) => PayloadObject
+    ): Promise<void> {
+        const promises: Promise<void>[] = [];
+        for (const client of this.clients.values()) {
+            if (RessourceKeyUtils.compareKeys(client.key, key)) {
+                promises.push(
+                    this.send(client.socket, {
+                        actionId,
+                        payload: getPayload(client),
+                    })
+                );
+            }
+        }
+        await Promise.all(promises);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

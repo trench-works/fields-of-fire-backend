@@ -79,7 +79,7 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
                 range: 6,
                 damage: { min: 2, max: 5 },
                 actionType: ActionType.RANGED,
-                zoneType: [ActionZoneType.CIRCLE],
+                zoneType: [ActionZoneType.DIAMOND],
                 zoneSize: 2,
             },
             intimidation: {
@@ -92,7 +92,52 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
                 zoneType: [ActionZoneType.DIAMOND],
                 zoneSize:1,
                 effectList :["intimidated"]
-            }
+            },
+            dopage: {
+                id: "dopage",
+                name: "Dopage",
+                description: "Buff sur soi",
+                cost : 1,
+                range : 0,
+                actionType: ActionType.OTHER,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize:1,
+                effectList :["doped"]
+            },
+            amputate: {
+                id: "amputate",
+                name: "Amputation",
+                description: "Attaque de mêlée",
+                cost: 2,
+                range: 1,
+                damage: { min: 1, max: 4 },
+                actionType: ActionType.MELEE,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize: 1,
+                effectList: ["amputated"]
+            },
+            charge : {
+                id: "charge",
+                name: "Chargez !",
+                description: "boost en zone",
+                cost: 2,
+                range: 0,
+                actionType: ActionType.OTHER,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize: 3,
+                effectList: ["charge"]
+            },
+            fighting_drug :{
+                id: "fighting_drug",
+                name: "Drogue de combat",
+                description: "boost en zone",
+                cost: 4,
+                range: 1,
+                actionType: ActionType.OTHER,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize: 1,
+                effectList: ["enhanced_drug"]
+            },
         });
     }
 }

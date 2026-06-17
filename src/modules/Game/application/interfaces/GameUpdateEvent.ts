@@ -1,4 +1,4 @@
-import { AnimatedPayload, GameAnimation } from "../../../../game-lib";
+import { AnimatedPayload, GameAnimation, Position } from "../../../../game-lib";
 import { Game } from "../../data/Game";
 
 export type GameEventAnimation =
@@ -6,6 +6,7 @@ export type GameEventAnimation =
           "move",
           {
               entityId: string;
+              path: Position[];
           }
       >
     | GameAnimation<
@@ -13,7 +14,15 @@ export type GameEventAnimation =
           {
               entityId: string;
               actionId: string;
-              target: { x: number; y: number };
+              origin: Position;
+              target: Position;
+              hits: Position[];
+          }
+      >
+    | GameAnimation<
+          "death",
+          {
+              entityId: string;
           }
       >;
 

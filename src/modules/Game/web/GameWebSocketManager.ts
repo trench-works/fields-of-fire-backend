@@ -26,10 +26,10 @@ export class GameWebSocketManager extends WsManager<
     }
 
     async emitGameEnd(gameId: string, lobby: Lobby, playerWin: boolean) {
-        await this.emit<GameEndEvent>({
-            actionId: GameOutputActions.GAME_END,
-            key: { gameId },
-            payload: { lobbyId: lobby.id, playerWin },
-        });
+        await this.emitMap<GameEndEvent>(
+            GameOutputActions.GAME_END,
+            { gameId },
+            () => ({ lobbyId: lobby.id, playerWin }) //TODO: add end game boost selection, send unique payload for each client
+        );
     }
 }

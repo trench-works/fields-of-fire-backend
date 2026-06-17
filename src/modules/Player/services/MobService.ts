@@ -1,9 +1,9 @@
-import { Logger, Provide, Ran } from "../../../core";
+import { Logger, Provide } from "../../../core";
 import {
     AsyncDependencyResolver,
     AsyncResolver,
 } from "../../../core/app/Controller/DependencyResolver";
-import { PositionUtils } from "../../../game-lib";
+import { Position, PositionUtils } from "../../../game-lib";
 import { Action } from "../../Action/data/Action";
 import { CharacterClass } from "../../CharacterClass/data/CharacterClass";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
@@ -14,6 +14,7 @@ import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { Stats } from "../../Stat/data/Stats";
+import { AttackService } from "./AttackService";
 
 export class MobService implements AsyncResolver {
     @Provide(GameDataManager)
@@ -24,6 +25,8 @@ export class MobService implements AsyncResolver {
     private readonly socketManager!: GameWebSocketManager;
     @Provide(CharacterClassRepository)
     private readonly classRepository!: CharacterClassRepository;
+    @Provide(AttackService)
+    private readonly attackService!: AttackService;
 
     private gameTurnService!: GameTurnService;
 
@@ -58,7 +61,7 @@ export class MobService implements AsyncResolver {
         let PA = stats.energy;
         let PM = stats.mouvement;
         let firstTry = true;
-        while (firstTry || (PM !== lastPM && PA !== lastPA)) {
+        while (firstTry || PM !== lastPM || PA !== lastPA) {
             const animations: GameEventAnimation[] = [];
             firstTry = false;
             lastPA = PA;
@@ -71,11 +74,14 @@ export class MobService implements AsyncResolver {
             if (PA) {
                 if (action) {
                     // do damages
-                    const damage = action.damage
-                        ? action.damage.min +
-                          Ran.int(action.damage.max - action.damage.min)
-                        : 0;
+                    const damage = this.attackService.calculateDamage(
+                        action,
+                        entity,
+                        nearestPlayer
+                    );
+
                     nearestPlayer.stats.life -= damage; //TODO: apply defense and dodge
+                    //TODO: do zone damages
                     // remove energy points
                     PA -= action.cost;
                     animations.push({
@@ -83,14 +89,21 @@ export class MobService implements AsyncResolver {
                         data: {
                             entityId: entity.entityId,
                             actionId: action.id,
+                            origin: entity.position,
                             target: nearestPlayer.position,
+                            hits: [nearestPlayer.position],
                         },
                     });
+                    animations.push(
+                        ...this.gameTurnService.detectEntityDeath(game)
+                    );
                 }
             }
             if (PM) {
                 if (!action) {
-                    while (playerRange > 0 && PM > 0) {
+                    let hasMoved = true;
+                    while (playerRange > 0 && PM > 0 && hasMoved) {
+                        hasMoved = false;
                         playerRange = this.getDistance(entity, nearestPlayer);
 
                         const moves = new CellAStar().findPath(
@@ -99,6 +112,7 @@ export class MobService implements AsyncResolver {
                             game.plateau
                         );
                         const originalPosition = { ...entity.position };
+                        const movePath: Position[] = [{ ...entity.position }];
                         while (PM > 0 && moves.length > 1) {
                             game.plateau[entity.position.x][
                                 entity.position.y
@@ -107,6 +121,7 @@ export class MobService implements AsyncResolver {
                                 entity.position,
                                 moves[0]
                             );
+                            movePath.push({ ...entity.position });
                             game.plateau[entity.position.x][
                                 entity.position.y
                             ].entityId = entity.entityId;
@@ -119,10 +134,12 @@ export class MobService implements AsyncResolver {
                                 entity.position
                             )
                         ) {
+                            hasMoved = true;
                             animations.push({
                                 key: "move",
                                 data: {
                                     entityId: entity.entityId,
+                                    path: movePath,
                                 },
                             });
                         }
@@ -132,6 +149,9 @@ export class MobService implements AsyncResolver {
             // Update users display
             await this.gameDataManager.set(game.id, game);
             await this.socketManager.emitUpdate(game, animations);
+            if (await this.gameTurnService.detectGameEnd(game)) {
+                return;
+            }
         }
     }
 
