@@ -142,6 +142,8 @@ export class PlayerActionService {
                 this.applyEffect(player.name, target, effect);
             }
         }
+
+        playerEntity.stats.energy -= action.cost;
         this.animate(game, playerEntity, action, destination, targetList);
         await this.gameDataManager.set(game.id, game);
     }
@@ -179,6 +181,7 @@ export class PlayerActionService {
         // Met à jour la position
         playerEntity.position = destination.position;
         playerEntity.stats.mouvement -= range;
+        
 
         await this.gameDataManager.set(game.id, game);
 
@@ -191,6 +194,7 @@ export class PlayerActionService {
                 },
             },
         ]);
+        
     }
 
     async attack(
@@ -263,6 +267,11 @@ export class PlayerActionService {
         target.stats.energy += effect.modifier.energy;
         target.stats.mouvement += effect.modifier.mouvement;
 
+        if(target.stats.energy || target.stats.mouvement){
+            if (effect.duration === 1){
+                return;
+            }
+        }
         target.effects.push(effect);
     }
 
