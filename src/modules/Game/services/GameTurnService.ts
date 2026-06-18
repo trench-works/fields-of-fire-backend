@@ -72,7 +72,6 @@ export class GameTurnService implements AsyncResolver {
                 if (entity.dead) {
                     entity.dead = false;
                     entity.stats.life = entity.stats.maxLife;
-                    game.readyPlayers.push(player.playerId);
                     boostArray.push([]);
                 } else {
                     const boosts =
@@ -80,10 +79,12 @@ export class GameTurnService implements AsyncResolver {
                     boostArray.push(boosts);
                 }
             }
-            this.socketManager.emitGameEnd(game.id, (i) => ({
+            game.isStopped = true;
+            await this.socketManager.emitGameEnd(game.id, (i) => ({
                 playerWin: aliveMobsCount === 0,
                 boosts: boostArray[i],
             }));
+            await this.gameDataManager.set(game.id, game);
             return true;
         }
         return false;
@@ -92,7 +93,7 @@ export class GameTurnService implements AsyncResolver {
     async finishTurn(gameId: string) {
         //this.turnTimeoutRepository.clearTimeout(gameId);
         const game = await this.gameDataManager.get(gameId);
-        if (!game) {
+        if (!game || game.isStopped) {
             return;
         }
         this.detectEntityDeath(game);

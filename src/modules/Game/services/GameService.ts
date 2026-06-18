@@ -129,6 +129,7 @@ export class GameService {
             playerTurns: await this.getTurns(entities),
             readyPlayers: [],
             round: 1,
+            isStopped: false,
         };
         await this.lobbyDataManager.delete(lobbyId);
         await this.gameDataManager.set(gameId, game);
@@ -274,8 +275,8 @@ export class GameService {
         }
 
         game.playerTurns = await this.getTurns(game.entities);
-
         game.round++;
+        game.isStopped = false;
 
         await this.gameDataManager.set(gameId, game);
         await this.gameSocket.emitGameRenew(game);

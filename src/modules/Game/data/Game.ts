@@ -24,6 +24,7 @@ export type Game = {
     //things relative to rounds
     readyPlayers: string[];
     round: number;
+    isStopped: boolean;
 };
 
 export class CellAStar extends AStar<Cell> {

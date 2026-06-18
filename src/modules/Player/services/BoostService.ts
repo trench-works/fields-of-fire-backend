@@ -43,8 +43,8 @@ export class BoostService {
     async getBoostProbabilityMap(
         boostType: BoostType,
         bans: string[]
-    ): Promise<[Record<number, Boost>, number]> {
-        const probabilityMap: Record<number, Boost> = {};
+    ): Promise<[[number, Boost][], number]> {
+        const probabilityMap: [number, Boost][] = [];
         let total = 0;
         for (const boost of (await this.boostRepository.list()).filter(
             (boost) =>
@@ -52,7 +52,7 @@ export class BoostService {
                 !bans.includes(boost.id)
         )) {
             total += boost.probability;
-            probabilityMap[total] = boost;
+            probabilityMap.push([total, boost]);
         }
         return [probabilityMap, total];
     }
@@ -69,7 +69,9 @@ export class BoostService {
         );
         for (let i = 0; i < count; i++) {
             const random = Ran.int(total);
-            boosts.push(probabilityMap[random]);
+            boosts.push(
+                probabilityMap.filter((entry) => entry[0] >= random)[0][1]
+            );
         }
         return boosts;
     }
@@ -85,17 +87,18 @@ export class BoostService {
     ): Promise<Boost[]> {
         const boosts: Boost[] = [];
         //si les joueur son plus nombreux que les ennemis alors les enenmis ont automatiquement un renfort
+        const reinforcement =
+            (await this.boostRepository.get("reinforcement"))!;
         while (playerCount > mobCount && boostCount > boosts.length) {
-            boosts.push((await this.boostRepository.get("reinforcement"))!);
+            boosts.push(reinforcement);
         }
         if (boostCount > boosts.length) {
-            boosts.push(
-                ...(await this.getRandomBoosts(
-                    boostCount - boosts.length,
-                    BoostType.AI,
-                    mobCount === 8 ? ["reinforcement"] : []
-                ))
+            const randomBoosts = await this.getRandomBoosts(
+                boostCount - boosts.length,
+                BoostType.AI,
+                mobCount === 8 ? ["reinforcement"] : []
             );
+            boosts.push(...randomBoosts);
         }
 
         return boosts;
