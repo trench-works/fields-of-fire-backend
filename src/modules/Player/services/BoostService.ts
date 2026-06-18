@@ -14,7 +14,7 @@ export class BoostService {
     @Provide(BoostRepository)
     private readonly boostRepository!: BoostRepository;
 
-    async manageBoost(playerEntity: Entity, boostId: string): Promise<void> {
+    async manageBoost(entity: Entity, boostId: string): Promise<void> {
         const boost = await this.boostRepository.get(boostId);
         if (!boost) return;
         const effects = await Promise.all(
@@ -23,21 +23,18 @@ export class BoostService {
         switch (boostId) {
             case "heal":
                 // Remet la vie au max, pas d'effet ajouté
-                playerEntity.stats.life = playerEntity.stats.maxLife;
+                entity.stats.life = entity.stats.maxLife;
                 break;
             default:
                 {
                     for (const effect of effects) {
                         if (effect) {
-                            playerEntity.effects.push(effect);
+                            entity.effects.push(effect);
                         }
                     }
 
                     for (const statBoost of boost.boosts) {
-                        playerEntity.stats = Stats.add(
-                            playerEntity.stats,
-                            statBoost
-                        );
+                        entity.stats = Stats.add(entity.stats, statBoost);
                     }
                 }
                 break;
