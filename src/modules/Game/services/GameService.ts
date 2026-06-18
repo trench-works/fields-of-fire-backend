@@ -19,6 +19,7 @@ import { CharacterClassRepository } from "../../CharacterClass/data/CharacterCla
 import { GameCreationError } from "./errors/GameCreationError";
 import { UserRepository } from "../../User/data/UserRepository";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
+import { BoostService } from "../../Player/services/BoostService";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -33,6 +34,8 @@ export class GameService {
     private readonly userRepository!: UserRepository;
     @Provide(GameWebSocketManager)
     private readonly gameSocket!: GameWebSocketManager;
+    @Provide(BoostService)
+    private readonly boostService!: BoostService;
 
     async getPlayerCurrentGame(
         userId: string
@@ -63,53 +66,22 @@ export class GameService {
         }
         const gameId = Id.get();
         const plateau: Cell[][] = Board.getRandomPremade();
-        const npcsAndEntities: { npc: Mob; entity: Entity }[] = [];
         const classes = await this.classRepository.list();
-        for (let i = 0; i < 2; i++) {
-            const entityId = Id.get();
-            const mobCells = plateau
-                .flat()
-                .filter((cell) => !cell.entityId && cell.isMobStart);
-            const mobCell = mobCells[Ran.int(mobCells.length)];
-            if (!mobCell) {
-                return new GameCreationError();
-            }
-            mobCell.entityId = entityId;
-            // get a random mob class
-            const mobClasses = classes.filter(
-                (charClass) => !charClass.playable
-            );
-            const charClass = mobClasses[Ran.int(mobClasses.length)];
-            npcsAndEntities.push({
-                npc: {
-                    entityId,
-                    gameId,
-                },
-                entity: {
-                    entityId,
-                    position: { ...mobCell.position },
-                    classId: charClass.id,
-                    entityType: EntityType.ENEMY,
-                    stats: charClass.stats,
-                    effects: [],
-                    side: "mob",
-                    dead: false,
-                },
-            });
-        }
+
+        const [mobs, mobsEntities] = await this.getMobs(
+            gameId,
+            plateau,
+            2,
+            0,
+            lobby.players.length
+        );
+
         const entitiesAndPlayers: { player: Player; entity: Entity }[] = [];
         this.logger.log(lobby.players);
         for (const lobbyPlayer of lobby.players) {
             const entityId = Id.get();
-            const playerCells = plateau
-                .flat()
-                .filter((cell) => !cell.entityId && cell.isPlayerStart);
-            const playerCell = playerCells[Ran.int(playerCells.length)];
-            if (!playerCell) {
-                throw new GameCreationError();
-            }
+            const playerCell = await this.placeEntity(entityId, plateau, false);
             const user = await this.userRepository.get(lobbyPlayer.userId);
-            playerCell.entityId = entityId;
             const charClass = classes.find(
                 (charClass) => charClass.id === lobbyPlayer.classId
             )!;
@@ -135,14 +107,14 @@ export class GameService {
         }
         const entities = [
             ...entitiesAndPlayers.map(({ entity }) => entity),
-            ...npcsAndEntities.map(({ entity }) => entity),
+            ...mobsEntities,
         ];
         const game: Game = {
             id: gameId,
             creatorId: userId,
             plateau: plateau,
             players: entitiesAndPlayers.map(({ player }) => player),
-            npc: npcsAndEntities.map(({ npc }) => npc),
+            npc: mobs,
             entities: entities.sort((entityA, entityB) => {
                 const classA = classes.find(
                     (charClass) => charClass.id === entityA.classId
@@ -154,19 +126,7 @@ export class GameService {
                     ? 1
                     : -1;
             }),
-            playerTurns: entities
-                .sort((entityA, entityB) => {
-                    const classA = classes.find(
-                        (charClass) => charClass.id === entityA.classId
-                    )!;
-                    const classB = classes.find(
-                        (charClass) => charClass.id === entityB.classId
-                    )!;
-                    return classA.stats.initiative < classB.stats.initiative
-                        ? 1
-                        : -1;
-                })
-                .map((entity) => entity.entityId),
+            playerTurns: await this.getTurns(entities),
             readyPlayers: [],
             round: 1,
         };
@@ -186,19 +146,134 @@ export class GameService {
         return game;
     }
 
+    private async placeEntity(
+        entityId: string,
+        plateau: Cell[][],
+        isMob: boolean
+    ): Promise<Cell> {
+        const placementCells = plateau
+            .flat()
+            .filter((cell) =>
+                !cell.entityId && isMob ? cell.isMobStart : cell.isPlayerStart
+            );
+        const placementCell = placementCells[Ran.int(placementCells.length)];
+        if (!placementCell) {
+            throw new GameCreationError();
+        }
+        placementCell.entityId = entityId;
+        return placementCell;
+    }
+
+    private async getTurns(entities: Entity[]): Promise<string[]> {
+        const classes = await this.classRepository.list();
+        return entities
+            .sort((entityA, entityB) => {
+                const classA = classes.find(
+                    (charClass) => charClass.id === entityA.classId
+                )!;
+                const classB = classes.find(
+                    (charClass) => charClass.id === entityB.classId
+                )!;
+                return classA.stats.initiative < classB.stats.initiative
+                    ? 1
+                    : -1;
+            })
+            .map((entity) => entity.entityId);
+    }
+
+    private async getMobs(
+        gameId: string,
+        plateau: Cell[][],
+        mobCount: number,
+        boostCount: number,
+        playersCount: number
+    ): Promise<[Mob[], Entity[]]> {
+        //TODO: appliquer des boosts
+        const classes = await this.classRepository.list();
+
+        const npcs: Mob[] = [];
+        const entities: Entity[] = [];
+
+        for (let i = 0; i < mobCount; i++) {
+            const entityId = Id.get();
+            const mobCell = await this.placeEntity(entityId, plateau, true);
+            // get a random mob class
+            const mobClasses = classes.filter(
+                (charClass) => !charClass.playable
+            );
+            const charClass = mobClasses[Ran.int(mobClasses.length)];
+            npcs.push({
+                entityId,
+                gameId,
+            });
+
+            const entity: Entity = {
+                entityId,
+                position: { ...mobCell.position },
+                classId: charClass.id,
+                entityType: EntityType.ENEMY,
+                stats: charClass.stats,
+                effects: [],
+                side: "mob",
+                dead: false,
+            };
+
+            const boosts = await this.boostService.getMobBoost(
+                playersCount,
+                mobCount,
+                boostCount
+            );
+            for (const boost of boosts) {
+                if (boost.id === "reinforcement") {
+                    mobCount++;
+                } else {
+                    await this.boostService.applyBoost(entity, boost.id);
+                }
+            }
+            entities.push(entity);
+        }
+
+        return [npcs, entities];
+    }
+
     async newGameFromGame(gameId: string) {
         const game = (await this.gameDataManager.get(gameId))!;
 
         game.readyPlayers = [];
-        //TODO: supprimer les entités qui correspondent aux mobs
-        game.npc = [];
-        //TODO: générer des nouveaux mobs
-        //TODO: leur appliquer x boots selon le round game.round
+        for (const line of game.plateau) {
+            for (const cell of line) {
+                cell.entityId = undefined;
+            }
+        }
+        for (const npc of game.npc) {
+            const entityIndex = game.entities.findIndex(
+                (entity) => entity.entityId === npc.entityId
+            );
+            game.entities.splice(entityIndex, 1);
+        }
+        const [npcs, mobsEntities] = await this.getMobs(
+            game.id,
+            game.plateau,
+            2,
+            game.round,
+            game.players.length
+        );
+        game.npc = npcs;
+        game.entities.push(...mobsEntities);
 
-        //TODO: changer la position des joueurs pour les rmeettre sur des cases de spawn
+        for (const player of game.players) {
+            const entity = game.entities.find(
+                (entity) => entity.entityId === player.entityId
+            )!;
+            const playerCell = await this.placeEntity(
+                entity.entityId,
+                game.plateau,
+                false
+            );
+            entity.position = { ...playerCell.position };
+        }
 
-        game.playerTurns = [];
-        //TODO: recompléter le playerTurns
+        game.playerTurns = await this.getTurns(game.entities);
 
         game.round++;
 

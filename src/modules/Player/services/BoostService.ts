@@ -2,8 +2,7 @@ import { Logger, Provide, Ran } from "../../../core";
 import { Boost, BoostType } from "../../Effect/data/Boost";
 import { BoostRepository } from "../../Effect/data/BoostRepository";
 import { EffectRepository } from "../../Effect/data/EffectRepository";
-import { Entity, EntityType } from "../../Game/data/Entity";
-import { Game } from "../../Game/data/Game";
+import { Entity } from "../../Game/data/Entity";
 import { Stats } from "../../Stat/data/Stats";
 
 export class BoostService {
@@ -79,23 +78,26 @@ export class BoostService {
         return await this.getRandomBoosts(3, BoostType.PLAYER, []);
     }
 
-    async getEnnemiBoost(game: Game): Promise<Boost> {
-        const ennemies = game.entities.filter((entity: Entity) => {
-            return entity.entityType === EntityType.ENEMY;
-        });
-        const playerNumber = game.entities.length - ennemies.length;
-
+    async getMobBoost(
+        playerCount: number,
+        mobCount: number,
+        boostCount: number
+    ): Promise<Boost[]> {
+        const boosts: Boost[] = [];
         //si les joueur son plus nombreux que les ennemis alors les enenmis ont automatiquement un renfort
-        if (playerNumber > ennemies.length) {
-            return (await this.boostRepository.get("reinforcement"))!;
+        while (playerCount > mobCount && boostCount > boosts.length) {
+            boosts.push((await this.boostRepository.get("reinforcement"))!);
+        }
+        if (boostCount > boosts.length) {
+            boosts.push(
+                ...(await this.getRandomBoosts(
+                    boostCount - boosts.length,
+                    BoostType.AI,
+                    mobCount === 8 ? ["reinforcement"] : []
+                ))
+            );
         }
 
-        return (
-            await this.getRandomBoosts(
-                1,
-                BoostType.AI,
-                ennemies.length === 8 ? ["reinforcement"] : []
-            )
-        )[0];
+        return boosts;
     }
 }
