@@ -101,6 +101,7 @@ export class GameService {
             });
         }
         const entitiesAndPlayers: { player: Player; entity: Entity }[] = [];
+        this.logger.log(lobby.players);
         for (const lobbyPlayer of lobby.players) {
             const entityId = Id.get();
             const playerCells = plateau

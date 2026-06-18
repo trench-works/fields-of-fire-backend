@@ -1,4 +1,4 @@
-import { Id, NotFoundError, Provide, SocketError } from "../../../core";
+import { Id, Logger, NotFoundError, Provide, SocketError } from "../../../core";
 import { LobbyDataManager } from "../data/LobbyDataManager";
 import { Lobby } from "../data/Lobby";
 import { LobbyResponse } from "../../Menu/application/interfaces/UpdateLobbyListResponse";
@@ -12,6 +12,8 @@ export class LobbyService {
     private readonly menuWebSocketManager!: MenuWebSocketManager;
     @Provide(UserRepository)
     private readonly userRepository!: UserRepository;
+    @Provide("Logger")
+    private readonly logger!: Logger;
 
     async createLobby(userId: string) {
         const lobby = await this.lobbyDataManager.addLobby({
@@ -23,11 +25,12 @@ export class LobbyService {
             playerId: Id.get(),
             classId: "entente_fantassin",
         });
-        this.onLobbiesUpdate();
+        this.onLobbiesUpdate(lobby);
         return lobby;
     }
 
-    async onLobbiesUpdate() {
+    async onLobbiesUpdate(lobby : Lobby) {
+        await this.lobbyDataManager.set(lobby.id, lobby);
         this.menuWebSocketManager.emitLobbiesUpdate(await this.getLobbies());
     }
 
@@ -42,7 +45,7 @@ export class LobbyService {
         lobby.players = lobby.players.filter(
             (player) => player.userId !== userId
         );
-        this.onLobbiesUpdate();
+        this.onLobbiesUpdate(lobby);
         return lobby;
     }
 
@@ -83,7 +86,8 @@ export class LobbyService {
             playerId: Id.get(),
             classId: "entente_fantassin",
         });
-        this.onLobbiesUpdate();
+        this.onLobbiesUpdate(lobby);
+        this.logger.log(lobby.players)
         return lobby;
     }
 
