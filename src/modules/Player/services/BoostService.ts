@@ -1,111 +1,104 @@
 import { Logger, Provide, Ran } from "../../../core";
+import { Boost, BoostType } from "../../Effect/data/Boost";
+import { BoostRepository } from "../../Effect/data/BoostRepository";
 import { EffectRepository } from "../../Effect/data/EffectRepository";
-import { Entity } from "../../Game/data/Entity";
+import { Entity, EntityType } from "../../Game/data/Entity";
 import { Game } from "../../Game/data/Game";
-import { BoostType, EnnemiBoost } from "../data/BoostType";
+import { Stats } from "../../Stat/data/Stats";
 
 export class BoostService {
     @Provide("Logger")
     private readonly logger!: Logger;
     @Provide(EffectRepository)
     private readonly effectRepository!: EffectRepository;
+    @Provide(BoostRepository)
+    private readonly boostRepository!: BoostRepository;
 
-    async manageBoost(playerEntity: Entity, boostId: BoostType): Promise<void> {
-        const boost = await this.effectRepository.get(boostId);
+    async manageBoost(playerEntity: Entity, boostId: string): Promise<void> {
+        const boost = await this.boostRepository.get(boostId);
         if (!boost) return;
-
+        const effects = await Promise.all(
+            boost.effects.map((effectId) => this.effectRepository.get(effectId))
+        );
         switch (boostId) {
-            case BoostType.LIFE:
-                // +maxLife ET +life actuels
-                playerEntity.stats.maxLife += boost.modifier.maxLife;
-                playerEntity.stats.life += boost.modifier.maxLife;
-                playerEntity.effects.push({ ...boost });
-                break;
-
-            case BoostType.HEAL_UP:
+            case "heal":
                 // Remet la vie au max, pas d'effet ajouté
                 playerEntity.stats.life = playerEntity.stats.maxLife;
                 break;
-
-            // Vampire et Range : on empile les effets (comptés via entity.effects)
-            case BoostType.VAMPIRE:
-            case BoostType.RANGE:
-                playerEntity.effects.push({ ...boost });
-                break;
-
-            // Stats pures : on empile aussi via effects
             default:
-                playerEntity.effects.push({ ...boost });
+                {
+                    for (const effect of effects) {
+                        if (effect) {
+                            playerEntity.effects.push(effect);
+                        }
+                    }
+
+                    for (const statBoost of boost.boosts) {
+                        playerEntity.stats = Stats.add(
+                            playerEntity.stats,
+                            statBoost
+                        );
+                    }
+                }
                 break;
         }
     }
 
-    getPlayerBoostSelection() {
-        
+    async getBoostProbabilityMap(
+        boostType: BoostType,
+        bans: string[]
+    ): Promise<[Record<number, Boost>, number]> {
+        const probabilityMap: Record<number, Boost> = {};
+        let total = 0;
+        for (const boost of (await this.boostRepository.list()).filter(
+            (boost) =>
+                (!boost.type || boost.type === boostType) &&
+                !bans.includes(boost.id)
+        )) {
+            total += boost.probability;
+            probabilityMap[total] = boost;
+        }
+        return [probabilityMap, total];
     }
 
-    getEnnemiBoost(game: Game) {
+    async getRandomBoosts(
+        count: number,
+        boostType: BoostType,
+        bans: string[]
+    ): Promise<Boost[]> {
+        const boosts: Boost[] = [];
+        const [probabilityMap, total] = await this.getBoostProbabilityMap(
+            boostType,
+            bans
+        );
+        for (let i = 0; i < count; i++) {
+            const random = Ran.int(total);
+            boosts.push(probabilityMap[random]);
+        }
+        return boosts;
+    }
+
+    async getPlayerBoostSelection(): Promise<Boost[]> {
+        return await this.getRandomBoosts(3, BoostType.PLAYER, []);
+    }
+
+    async getEnnemiBoost(game: Game): Promise<Boost> {
         const ennemies = game.entities.filter((entity: Entity) => {
-            return entity.entityType === "ENEMY";
+            return entity.entityType === EntityType.ENEMY;
         });
         const playerNumber = game.entities.length - ennemies.length;
-        const diceRoll = Ran.int(100);
 
         //si les joueur son plus nombreux que les ennemis alors les enenmis ont automatiquement un renfort
-        if(playerNumber > ennemies.length  ){
-            return EnnemiBoost.REINFORCEMENT;
+        if (playerNumber > ennemies.length) {
+            return (await this.boostRepository.get("reinforcement"))!;
         }
 
-        if(playerNumber === ennemies.length ) {
-            switch(true) {
-                case diceRoll < 25 :
-                    return EnnemiBoost.REINFORCEMENT;
-                case diceRoll < 45 :
-                    return EnnemiBoost.UPPRECISION;
-                case diceRoll < 60 :
-                    return EnnemiBoost.UPSTRENGTH;
-                case diceRoll < 75 :
-                    return EnnemiBoost.UPLIFE;
-                case diceRoll < 90 :
-                    return EnnemiBoost.UPMOUVEMENT;
-                case diceRoll < 100 :
-                    return EnnemiBoost.UPENERGY;
-            }
-        }
-        
-        if(playerNumber < ennemies.length ) {
-            switch(true) {
-                case diceRoll < 10 :
-                    return EnnemiBoost.REINFORCEMENT;
-                case diceRoll < 35 :
-                    return EnnemiBoost.UPPRECISION;
-                case diceRoll < 60 :
-                    return EnnemiBoost.UPSTRENGTH;
-                case diceRoll < 85 :
-                    return EnnemiBoost.UPLIFE;
-                case diceRoll < 92 :
-                    return EnnemiBoost.UPMOUVEMENT;
-                case diceRoll < 100 :
-                    return EnnemiBoost.UPENERGY;
-            }
-        }
-
-        //on ne rajoute pas + que 8 ennemis max.
-        if (ennemies.length === 8) {
-            switch(true) {
-                case diceRoll < 30 :
-                    return EnnemiBoost.UPPRECISION;
-                case diceRoll < 60:
-                    return EnnemiBoost.UPSTRENGTH;
-                case diceRoll < 80 :
-                    return EnnemiBoost.UPLIFE;
-                case diceRoll < 90 :
-                    return EnnemiBoost.UPMOUVEMENT;
-                case diceRoll < 100 :
-                    return EnnemiBoost.UPENERGY;
-            }
-        }
-
-        
-}
+        return (
+            await this.getRandomBoosts(
+                1,
+                BoostType.AI,
+                ennemies.length === 8 ? ["reinforcement"] : []
+            )
+        )[0];
+    }
 }

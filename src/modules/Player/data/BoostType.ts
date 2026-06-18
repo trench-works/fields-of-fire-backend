@@ -1,23 +1,23 @@
-export enum BoostType {
-    HEAL_UP = "healUpBoost",
-    ARMOR = "armorBoost",
-    VERSATILE = "versatileBoost",
-    STRENGTH = "strenghtBoost",
-    PRECISION= "precisionBoost",
-    LIFE = "lifeBoost",
-    VAMPIRE = "vampireBoost",
-    RANGE = "rangeBoost",
-    REACTION = "reactionBoost",
-    ENERGY = "energyBoost",
-    MOUVEMENT = "mouvementBoost",
-    DODGING = "dodgingBoost"
-}
+// export enum BoostType {
+//     HEAL_UP = "healUp",
+//     ARMOR = "armor",
+//     VERSATILE = "versatile",
+//     STRENGTH = "strenght",
+//     PRECISION = "precision",
+//     LIFE = "life",
+//     VAMPIRE = "vampire",
+//     RANGE = "range",
+//     REACTION = "reaction",
+//     ENERGY = "energy",
+//     MOUVEMENT = "mouvement",
+//     DODGING = "dodging",
+// }
 
-export enum EnnemiBoost {
-    REINFORCEMENT = "reinforcement",
-    UPPRECISION = "upPrecision",
-    UPSTRENGTH = "upStrength",
-    UPLIFE = "upLife",
-    UPENERGY = "upEnergy",
-    UPMOUVEMENT = "upMouvement"
-}
+// export enum EnnemiBoost {
+//     REINFORCEMENT = "reinforcement",
+//     UP_PRECISION = "upPrecision",
+//     UP_STRENGTH = "upStrength",
+//     UP_LIFE = "upLife",
+//     UP_ENERGY = "upEnergy",
+//     UP_MOUVEMENT = "upMouvement",
+// }
