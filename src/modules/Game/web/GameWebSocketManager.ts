@@ -1,5 +1,5 @@
 import { WsManager } from "../../../core";
-import { Lobby } from "../../Lobby/data/Lobby";
+import { Boost } from "../../Effect/data/Boost";
 import {
     GameOutputActions,
     GameReturnActions,
@@ -25,11 +25,11 @@ export class GameWebSocketManager extends WsManager<
         });
     }
 
-    async emitGameEnd(gameId: string, lobby: Lobby, playerWin: boolean) {
+    async emitGameEnd(gameId: string, playerWin: boolean, boosts: Boost[]) {
         await this.emitMap<GameEndEvent>(
             GameOutputActions.GAME_END,
             { gameId },
-            () => ({ lobbyId: lobby.id, playerWin }) //TODO: add end game boost selection, send unique payload for each client
+            () => ({ playerWin, boosts }) //TODO: add end game boost selection, send unique payload for each client
         );
     }
 }

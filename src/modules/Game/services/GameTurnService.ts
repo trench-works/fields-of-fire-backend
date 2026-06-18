@@ -4,8 +4,8 @@ import {
     AsyncResolver,
 } from "../../../core/app/Controller/DependencyResolver";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
-import { LobbyService } from "../../Lobby/services/LobbyService";
 import { TurnTimeoutRepository } from "../../Player/data/TurnTimeoutRepository";
+import { BoostService } from "../../Player/services/BoostService";
 import { MobService } from "../../Player/services/MobService";
 import { Stats } from "../../Stat/data/Stats";
 import { GameEventAnimation } from "../application/interfaces/GameUpdateEvent";
@@ -22,8 +22,8 @@ export class GameTurnService implements AsyncResolver {
     private readonly socketManager!: GameWebSocketManager;
     @Provide(TurnTimeoutRepository)
     private readonly turnTimeoutRepository!: TurnTimeoutRepository;
-    @Provide(LobbyService)
-    private readonly lobbyService!: LobbyService;
+    @Provide(BoostService)
+    private readonly boostService!: BoostService;
 
     private mobService!: MobService;
 
@@ -63,13 +63,14 @@ export class GameTurnService implements AsyncResolver {
             (entity) => entity.side === "mob" && !entity.dead
         ).length;
         if (alivePlayersCount === 0 || aliveMobsCount === 0) {
-            const lobby = await this.lobbyService.createLobby(game.creatorId);
+            //const lobby = await this.lobbyService.createLobby(game.creatorId);
+            const boost = await this.boostService.getPlayerBoostSelection();
             this.socketManager.emitGameEnd(
                 game.id,
-                lobby,
-                aliveMobsCount === 0
+                aliveMobsCount === 0,
+                boost
             );
-            await this.gameDataManager.delete(game.id);
+            //await this.gameDataManager.delete(game.id);
             return true;
         }
         return false;
@@ -95,11 +96,18 @@ export class GameTurnService implements AsyncResolver {
             playerEntity.classId
         ))!;
         playerEntity.effects = playerEntity.effects
-            .map((effect) => ({...effect, duration: effect.duration ? effect.duration - 1 : effect.duration}))
-            .filter((effect) => effect.duration === null || effect.duration > 0)
+            .map((effect) => ({
+                ...effect,
+                duration: effect.duration
+                    ? effect.duration - 1
+                    : effect.duration,
+            }))
+            .filter(
+                (effect) => effect.duration === null || effect.duration > 0
+            );
         playerEntity.stats.energy = entityClass.stats.energy;
         playerEntity.stats.mouvement = entityClass.stats.mouvement;
-        
+
         this.gameDataManager.set(game.id, game);
 
         // If new playing entity is a mob, then launch playing actions for the mob
