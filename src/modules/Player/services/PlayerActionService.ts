@@ -15,6 +15,7 @@ import { PlayerCancelAction } from "../application/interfaces/PlayerCancelAction
 import { Player } from "../data/Player";
 import { PlayerOutputActions } from "../web/PlayerSocketActions";
 import { AttackService } from "./AttackService";
+import { BoostService } from "./BoostService";
 
 export enum PlayerActionId {
     WALK = "walk",
@@ -43,6 +44,8 @@ export class PlayerActionService {
     private readonly gameTurnService!: GameTurnService;
     @Provide(AttackService)
     private readonly attackService!: AttackService;
+    @Provide(BoostService)
+    private readonly boostService!: BoostService;
 
     async finishTurn(
         gameId: string,
@@ -205,7 +208,7 @@ export class PlayerActionService {
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
-
+        
         const targetList= this.getTarget(game, playerEntity, action, destination);
 
         for (const target of targetList) {

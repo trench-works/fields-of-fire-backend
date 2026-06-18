@@ -70,7 +70,7 @@ export class CharacterClassRepository extends FolderRepository<
                 },
                 classDescription:
                     "Un soigneur spécialisé dans le soutien de ses alliés. Le Medic est équipé d'un fusil et d'un hachoir, ce qui lui permet d'attaquer à distance et en mélée. Sa principale force réside dans sa capacité à soigner les blessures de ses alliés mais également infliger des malus au ennemies.",
-                actionList: ["walk", "shoot", "heal", "amputate", "fighting_drug"],
+                actionList: ["walk", "shoot", "heal", "amputate", "fighting_drug", "dopage", "intimidation"],
             },
             entente_caporal: {
                 id: "entente_caporal",
