@@ -12,3 +12,12 @@ export enum BoostType {
     MOUVEMENT = "mouvementBoost",
     DODGING = "dodgingBoost"
 }
+
+export enum EnnemiBoost {
+    REINFORCEMENT = "reinforcement",
+    UPPRECISION = "upPrecision",
+    UPSTRENGTH = "upStrength",
+    UPLIFE = "upLife",
+    UPENERGY = "upEnergy",
+    UPMOUVEMENT = "upMouvement"
+}
