@@ -39,4 +39,28 @@ export class PlayerService {
             this.gameService.newGameFromGame(game.id);
         }
     }
+
+    async disconnect(gameId: string, playerId: string) {
+        const game = await this.gameDataManager.get(gameId);
+        if (!game) {
+            return;
+        }
+        const playerIndex = game.players.findIndex(
+            (player) => player.playerId === playerId
+        );
+        const [player] = game.players.splice(playerIndex, 1);
+        const entityIndex = game.entities.findIndex(
+            (entity) => entity.entityId === player.entityId
+        );
+        game.entities.splice(entityIndex, 1);
+        game.playerTurns = game.playerTurns.filter(
+            (player) => player !== playerId
+        );
+        game.readyPlayers = game.readyPlayers.filter(
+            (player) => player !== playerId
+        );
+        //TODO: pousse au tour suivant si c'était le joueur actuel et que la game est toujours en cours
+        //TODO: émettre un event update
+        await this.gameDataManager.set(gameId, game);
+    }
 }

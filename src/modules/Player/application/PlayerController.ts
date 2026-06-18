@@ -38,6 +38,11 @@ export class PlayerController extends WsController<
         this.on(PlayerInputActions.READY, this.playerReady.bind(this), {
             payloadType: PlayerReady,
         });
+        this.on(PlayerInputActions.DISCONNECT, this.disconnect.bind(this));
+    }
+
+    async disconnect({ key }: WsListenerOptions<PlayerKey>) {
+        return await this.playerService.disconnect(key.gameId, key.playerId);
     }
 
     async playerReady({
