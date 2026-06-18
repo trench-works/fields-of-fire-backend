@@ -2,6 +2,7 @@ import { Module } from "../../core";
 import { PlayerController } from "./application/PlayerController";
 import { TurnTimeoutRepository } from "./data/TurnTimeoutRepository";
 import { AttackService } from "./services/AttackService";
+import { BoostService } from "./services/BoostService";
 import { EntityService } from "./services/EntityService";
 import { MobService } from "./services/MobService";
 import { PlayerActionService } from "./services/PlayerActionService";
@@ -18,6 +19,7 @@ export class PlayerModule extends Module {
                 MobService,
                 EntityService,
                 AttackService,
+                BoostService,
             ],
         });
     }

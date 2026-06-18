@@ -36,4 +36,9 @@ export abstract class FolderRepository<
         }
         return JSON.parse(JSON.stringify(await this.entityToRessource(entity)));
     }
+
+    async set(key: string, value: Entity): Promise<Entity> {
+        this.dataMap.set(key, value);
+        return value;
+    }
 }

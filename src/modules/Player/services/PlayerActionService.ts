@@ -15,6 +15,7 @@ import { PlayerCancelAction } from "../application/interfaces/PlayerCancelAction
 import { Player } from "../data/Player";
 import { PlayerOutputActions } from "../web/PlayerSocketActions";
 import { AttackService } from "./AttackService";
+import { BoostService } from "./BoostService";
 
 export enum PlayerActionId {
     WALK = "walk",
@@ -27,7 +28,8 @@ export enum PlayerActionId {
     SNEAKY = "sneaky",
     DOPAGE = "dopage",
     CHARGE = "charge",
-    FIGHTING_DRUG= "fighting_drug"
+    FIGHTING_DRUG= "fighting_drug",
+    SABER = "saber",
 }
 
 export class PlayerActionService {
@@ -43,6 +45,8 @@ export class PlayerActionService {
     private readonly gameTurnService!: GameTurnService;
     @Provide(AttackService)
     private readonly attackService!: AttackService;
+    @Provide(BoostService)
+    private readonly boostService!: BoostService;
 
     async finishTurn(
         gameId: string,
@@ -100,12 +104,9 @@ export class PlayerActionService {
             case PlayerActionId.AMPUTATE:
             case PlayerActionId.ARTILLERY_SUPPORT:
             case PlayerActionId.BAYONET:
-            case PlayerActionId.INTIMIDATION:
-            case PlayerActionId.SNEAKY:
-            case PlayerActionId.DOPAGE:
-            case PlayerActionId.FIGHTING_DRUG:
             case PlayerActionId.SHOOT:
             case PlayerActionId.HEAL:
+            case PlayerActionId.SABER:
                 return await this.attack(
                     game,
                     player,
@@ -113,6 +114,10 @@ export class PlayerActionService {
                     action,
                     destination
                 );
+            case PlayerActionId.INTIMIDATION:
+            case PlayerActionId.DOPAGE:
+            case PlayerActionId.SNEAKY:
+            case PlayerActionId.FIGHTING_DRUG:
             case PlayerActionId.CHARGE:
                 return await this.boost(
                     game,
@@ -142,6 +147,8 @@ export class PlayerActionService {
                 this.applyEffect(player.name, target, effect);
             }
         }
+
+        playerEntity.stats.energy -= action.cost;
         this.animate(game, playerEntity, action, destination, targetList);
         await this.gameDataManager.set(game.id, game);
     }
@@ -179,6 +186,7 @@ export class PlayerActionService {
         // Met à jour la position
         playerEntity.position = destination.position;
         playerEntity.stats.mouvement -= range;
+        
 
         await this.gameDataManager.set(game.id, game);
 
@@ -191,6 +199,7 @@ export class PlayerActionService {
                 },
             },
         ]);
+        
     }
 
     async attack(
@@ -201,7 +210,7 @@ export class PlayerActionService {
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
-
+        
         const targetList= this.getTarget(game, playerEntity, action, destination);
 
         for (const target of targetList) {
@@ -257,13 +266,12 @@ export class PlayerActionService {
             this.logger.error("Target entity has no stats");
             return;
         }
+        const effectCopy = { ...effect };
         if (caster) {
-            effect.author = caster;
+            effectCopy.author = caster;
         }
-        target.stats.energy += effect.modifier.energy;
-        target.stats.mouvement += effect.modifier.mouvement;
 
-        target.effects.push(effect);
+        target.effects.push(effectCopy);
     }
 
     getTarget(game : Game, playerEntity : Entity, action : Action, destination : Cell) : Entity[]{
@@ -293,6 +301,7 @@ export class PlayerActionService {
     }
 
     checkIfAllowed(playerEntity: Entity, action : Action, destination : Cell){
+        this.logger.log("WHATS THE VALUE ?" + Stats.fromEntity(playerEntity).energy);
         if (Stats.fromEntity(playerEntity).energy < action.cost) {
             return {
                 actionId: PlayerOutputActions.CANCEL_ACTION,

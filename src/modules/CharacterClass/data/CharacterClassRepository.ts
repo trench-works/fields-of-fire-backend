@@ -94,6 +94,7 @@ export class CharacterClassRepository extends FolderRepository<
                     "shoot",
                     "artillery_support",
                     "intimidation",
+                    "saber",
                 ],
             },
             alliance_fantassin: {

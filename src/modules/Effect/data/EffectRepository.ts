@@ -316,7 +316,6 @@ export class EffectRepository extends FolderRepository<Effect> {
             mouvement : 1
           },
       },
-
     });
   }
 }
