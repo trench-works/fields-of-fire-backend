@@ -18,8 +18,7 @@ import { Player } from "../../Player/data/Player";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { GameCreationError } from "./errors/GameCreationError";
 import { UserRepository } from "../../User/data/UserRepository";
-import { TurnTimeoutRepository } from "../../Player/data/TurnTimeoutRepository";
-import { PlayerActionService } from "../../Player/services/PlayerActionService";
+import { GameWebSocketManager } from "../web/GameWebSocketManager";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -32,10 +31,8 @@ export class GameService {
     private readonly logger!: LoggerService;
     @Provide(UserRepository)
     private readonly userRepository!: UserRepository;
-    @Provide(TurnTimeoutRepository)
-    private readonly turnTimeoutRepository!: TurnTimeoutRepository;
-    @Provide(PlayerActionService)
-    private readonly playerActionService!: PlayerActionService;
+    @Provide(GameWebSocketManager)
+    private readonly gameSocket!: GameWebSocketManager;
 
     async getPlayerCurrentGame(
         userId: string
@@ -170,6 +167,8 @@ export class GameService {
                         : -1;
                 })
                 .map((entity) => entity.entityId),
+            readyPlayers: [],
+            round: 1,
         };
         await this.lobbyDataManager.delete(lobbyId);
         await this.gameDataManager.set(gameId, game);
@@ -185,5 +184,25 @@ export class GameService {
         // );
 
         return game;
+    }
+
+    async newGameFromGame(gameId: string) {
+        const game = (await this.gameDataManager.get(gameId))!;
+
+        game.readyPlayers = [];
+        //TODO: supprimer les entités qui correspondent aux mobs
+        game.npc = [];
+        //TODO: générer des nouveaux mobs
+        //TODO: leur appliquer x boots selon le round game.round
+
+        //TODO: changer la position des joueurs pour les rmeettre sur des cases de spawn
+
+        game.playerTurns = [];
+        //TODO: recompléter le playerTurns
+
+        game.round++;
+
+        await this.gameDataManager.set(gameId, game);
+        await this.gameSocket.emitGameRenew(game);
     }
 }

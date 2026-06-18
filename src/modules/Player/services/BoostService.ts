@@ -14,7 +14,7 @@ export class BoostService {
     @Provide(BoostRepository)
     private readonly boostRepository!: BoostRepository;
 
-    async manageBoost(entity: Entity, boostId: string): Promise<void> {
+    async applyBoost(entity: Entity, boostId: string): Promise<void> {
         const boost = await this.boostRepository.get(boostId);
         if (!boost) return;
         const effects = await Promise.all(

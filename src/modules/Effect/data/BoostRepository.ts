@@ -1,5 +1,5 @@
 import { FolderRepository } from "../../../core";
-import { Boost } from "./Boost";
+import { Boost, BoostType } from "./Boost";
 
 export class BoostRepository extends FolderRepository<Boost> {
     async entityToRessource(entity: Boost): Promise<Boost> {
@@ -106,6 +106,7 @@ export class BoostRepository extends FolderRepository<Boost> {
                 effects: [],
                 boosts: [],
                 probability: 1,
+                type: BoostType.AI,
             },
         });
     }

@@ -15,6 +15,8 @@ import { PlayerWebSocketManager } from "../web/PlayerWebSocketManager";
 import { GameOutputActions } from "../../Game/application/interfaces/GameAction";
 import { SingleClientOutputError } from "../../../core/types/Action";
 import { PlayerCancelAction } from "./interfaces/PlayerCancelAction";
+import { PlayerReady } from "./interfaces/PlayerReady";
+import { PlayerService } from "../services/PlayerService";
 
 export class PlayerController extends WsController<
     PlayerKey,
@@ -24,6 +26,8 @@ export class PlayerController extends WsController<
     constructor(
         @Provide(PlayerActionService)
         private readonly playerActionService: PlayerActionService,
+        @Provide(PlayerService)
+        private readonly playerService: PlayerService,
         @Provide(PlayerWebSocketManager) socketManager: PlayerWebSocketManager
     ) {
         super({ topic: "game", key: PlayerKey, socketManager });
@@ -31,6 +35,23 @@ export class PlayerController extends WsController<
         this.on(PlayerInputActions.ACTION, this.action.bind(this), {
             payloadType: PlayerAction,
         });
+        this.on(PlayerInputActions.READY, this.playerReady.bind(this), {
+            payloadType: PlayerReady,
+        });
+    }
+
+    async playerReady({
+        key,
+        payload,
+    }: WsListenerOptions<
+        PlayerKey,
+        PlayerReady
+    >): Promise<SingleClientOutputError> {
+        return await this.playerService.setGamePlayerReady(
+            key.playerId,
+            key.gameId,
+            payload.boostId
+        );
     }
 
     async finishTurn({

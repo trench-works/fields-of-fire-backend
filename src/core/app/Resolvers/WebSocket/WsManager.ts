@@ -8,7 +8,9 @@ import { Provide } from "../../../decorators";
 import { Logger } from "../../Providers";
 import { ValidationError } from "class-validator";
 
-type RessourceClient<RessourceKeyObject extends Record<string, unknown>> = {
+export type RessourceClient<
+    RessourceKeyObject extends Record<string, unknown>,
+> = {
     socket: WebSocket;
     key: RessourceKeyObject;
 };
@@ -78,19 +80,22 @@ export class WsManager<
         actionId: OutputActions,
         key: Partial<RessourceKeyObject>,
         getPayload: (
-            client: RessourceClient<RessourceKeyObject>
+            client: RessourceClient<RessourceKeyObject>,
+            index: number
         ) => PayloadObject
     ): Promise<void> {
         const promises: Promise<void>[] = [];
+        let i = 0;
         for (const client of this.clients.values()) {
             if (RessourceKeyUtils.compareKeys(client.key, key)) {
                 promises.push(
                     this.send(client.socket, {
                         actionId,
-                        payload: getPayload(client),
+                        payload: getPayload(client, i),
                     })
                 );
             }
+            i++;
         }
         await Promise.all(promises);
     }

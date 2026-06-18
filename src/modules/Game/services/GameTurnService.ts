@@ -4,7 +4,7 @@ import {
     AsyncResolver,
 } from "../../../core/app/Controller/DependencyResolver";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
-import { TurnTimeoutRepository } from "../../Player/data/TurnTimeoutRepository";
+import { Boost } from "../../Effect/data/Boost";
 import { BoostService } from "../../Player/services/BoostService";
 import { MobService } from "../../Player/services/MobService";
 import { Stats } from "../../Stat/data/Stats";
@@ -12,6 +12,7 @@ import { GameEventAnimation } from "../application/interfaces/GameUpdateEvent";
 import { Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
+import { GameService } from "./GameService";
 
 export class GameTurnService implements AsyncResolver {
     @Provide(GameDataManager)
@@ -20,8 +21,8 @@ export class GameTurnService implements AsyncResolver {
     private readonly classRepository!: CharacterClassRepository;
     @Provide(GameWebSocketManager)
     private readonly socketManager!: GameWebSocketManager;
-    @Provide(TurnTimeoutRepository)
-    private readonly turnTimeoutRepository!: TurnTimeoutRepository;
+    @Provide(GameService)
+    private readonly gameService!: GameService;
     @Provide(BoostService)
     private readonly boostService!: BoostService;
 
@@ -63,14 +64,26 @@ export class GameTurnService implements AsyncResolver {
             (entity) => entity.side === "mob" && !entity.dead
         ).length;
         if (alivePlayersCount === 0 || aliveMobsCount === 0) {
-            //const lobby = await this.lobbyService.createLobby(game.creatorId);
-            const boost = await this.boostService.getPlayerBoostSelection();
-            this.socketManager.emitGameEnd(
-                game.id,
-                aliveMobsCount === 0,
-                boost
-            );
-            //await this.gameDataManager.delete(game.id);
+            const boostArray: Boost[][] = [];
+            for (const player of game.players) {
+                const entity = game.entities.find(
+                    (entity) => entity.entityId === player.entityId
+                )!;
+                if (entity.dead) {
+                    entity.dead = false;
+                    entity.stats.life = entity.stats.maxLife;
+                    game.readyPlayers.push(player.playerId);
+                    boostArray.push([]);
+                } else {
+                    const boosts =
+                        await this.boostService.getPlayerBoostSelection();
+                    boostArray.push(boosts);
+                }
+            }
+            this.socketManager.emitGameEnd(game.id, (i) => ({
+                playerWin: aliveMobsCount === 0,
+                boosts: boostArray[i],
+            }));
             return true;
         }
         return false;
