@@ -1,4 +1,3 @@
-import { EntityType } from "../../Game/data/Entity";
 import { Stats } from "../../Stat/data/Stats";
 
 export enum BoostType {
