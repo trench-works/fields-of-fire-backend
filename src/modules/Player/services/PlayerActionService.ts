@@ -28,7 +28,8 @@ export enum PlayerActionId {
     SNEAKY = "sneaky",
     DOPAGE = "dopage",
     CHARGE = "charge",
-    FIGHTING_DRUG= "fighting_drug"
+    FIGHTING_DRUG= "fighting_drug",
+    SABER = "saber",
 }
 
 export class PlayerActionService {
@@ -103,12 +104,9 @@ export class PlayerActionService {
             case PlayerActionId.AMPUTATE:
             case PlayerActionId.ARTILLERY_SUPPORT:
             case PlayerActionId.BAYONET:
-            case PlayerActionId.INTIMIDATION:
-            case PlayerActionId.SNEAKY:
-            case PlayerActionId.DOPAGE:
-            case PlayerActionId.FIGHTING_DRUG:
             case PlayerActionId.SHOOT:
             case PlayerActionId.HEAL:
+            case PlayerActionId.SABER:
                 return await this.attack(
                     game,
                     player,
@@ -116,6 +114,10 @@ export class PlayerActionService {
                     action,
                     destination
                 );
+            case PlayerActionId.INTIMIDATION:
+            case PlayerActionId.DOPAGE:
+            case PlayerActionId.SNEAKY:
+            case PlayerActionId.FIGHTING_DRUG:
             case PlayerActionId.CHARGE:
                 return await this.boost(
                     game,
@@ -264,18 +266,12 @@ export class PlayerActionService {
             this.logger.error("Target entity has no stats");
             return;
         }
+        const effectCopy = { ...effect };
         if (caster) {
-            effect.author = caster;
+            effectCopy.author = caster;
         }
-        target.stats.energy += effect.modifier.energy;
-        target.stats.mouvement += effect.modifier.mouvement;
 
-        if(target.stats.energy || target.stats.mouvement){
-            if (effect.duration === 1){
-                return;
-            }
-        }
-        target.effects.push(effect);
+        target.effects.push(effectCopy);
     }
 
     getTarget(game : Game, playerEntity : Entity, action : Action, destination : Cell) : Entity[]{
@@ -305,6 +301,7 @@ export class PlayerActionService {
     }
 
     checkIfAllowed(playerEntity: Entity, action : Action, destination : Cell){
+        this.logger.log("WHATS THE VALUE ?" + Stats.fromEntity(playerEntity).energy);
         if (Stats.fromEntity(playerEntity).energy < action.cost) {
             return {
                 actionId: PlayerOutputActions.CANCEL_ACTION,

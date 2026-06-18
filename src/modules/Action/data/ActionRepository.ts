@@ -56,6 +56,7 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
                 cost: 1,
                 range: 1,
                 damage: { min: -3, max: -1 },
+                actionType: ActionType.MELEE,
                 targetRequired: true,
                 zoneType: [ActionZoneType.DIAMOND],
                 zoneSize: 1,
@@ -130,13 +131,24 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
             fighting_drug :{
                 id: "fighting_drug",
                 name: "Drogue de combat",
-                description: "boost en zone",
+                description: "Boost monocible",
                 cost: 4,
                 range: 1,
                 actionType: ActionType.OTHER,
                 zoneType: [ActionZoneType.DIAMOND],
                 zoneSize: 1,
                 effectList: ["enhanced_drug"]
+            },
+            saber :{
+                id: "saber",
+                name: "Sabrer",
+                description: "Frappe monocible",
+                cost: 2,
+                range: 1,
+                damage: { min: 1, max: 3 },
+                actionType: ActionType.MELEE,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize: 1,
             },
         });
     }

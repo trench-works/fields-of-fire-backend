@@ -97,8 +97,14 @@ export class GameTurnService implements AsyncResolver {
         playerEntity.effects = playerEntity.effects
             .map((effect) => ({...effect, duration: effect.duration ? effect.duration - 1 : effect.duration}))
             .filter((effect) => effect.duration === null || effect.duration > 0)
-        playerEntity.stats.energy = entityClass.stats.energy + Stats.getEntityEffect(playerEntity).energy;
-        playerEntity.stats.mouvement = entityClass.stats.mouvement + Stats.getEntityEffect(playerEntity).mouvement;
+        playerEntity.stats.energy = entityClass.stats.energy;
+        playerEntity.stats.mouvement = entityClass.stats.mouvement;
+
+        console.warn("entityClass.stats.energy", entityClass.stats.energy);
+        console.warn("getEntityEffect.energy", Stats.getEntityEffect(playerEntity).energy);
+        console.warn("result", entityClass.stats.energy + Stats.getEntityEffect(playerEntity).energy);
+        console.warn("finishTurn called for", playingEntityId);
+
         this.gameDataManager.set(game.id, game);
 
         // If new playing entity is a mob, then launch playing actions for the mob
