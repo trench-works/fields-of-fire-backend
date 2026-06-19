@@ -20,7 +20,7 @@ export class Entity {
 
     stats!: Stats;
     effects!: Effect[];
-    permanentBoosts?: Partial<Stats>;
+    permanentBoosts!: Partial<Stats>;
 
     side!: "player" | "mob";
     dead!: boolean;

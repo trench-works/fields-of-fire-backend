@@ -24,22 +24,23 @@ export class BoostService {
                 // Remet la vie au max, pas d'effet ajouté
                 entity.stats.life = entity.stats.maxLife;
                 break;
-            default:
-                {
-                    for (const effect of effects) {
-                        if (effect) entity.effects.push({ ...effect });
+            default: {
+                for (const effect of effects) {
+                    if (effect) {
+                        entity.effects.push({ ...effect });
                     }
-                    for (const statBoost of boost.boosts) {
-                        // Stocke dans permanentBoosts au lieu de stats
-                        entity.permanentBoosts = Stats.add(
-                            entity.permanentBoosts as Stats ?? {},
-                            statBoost
-                        );
-                        // Applique immédiatement sur stats pour ce combat
-                        entity.stats = Stats.add(entity.stats, statBoost);
-                    }
-                    break;
                 }
+                this.logger.log("will apply boosts", boost.boosts);
+                // Stocke dans permanentBoosts au lieu de stats
+                entity.permanentBoosts = Stats.add(
+                    (entity.permanentBoosts as Stats) ?? {},
+                    ...boost.boosts
+                );
+                // Applique immédiatement sur stats pour ce combat
+                entity.stats = Stats.add(entity.stats, ...boost.boosts);
+
+                break;
+            }
         }
     }
 

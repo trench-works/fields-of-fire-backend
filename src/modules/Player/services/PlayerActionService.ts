@@ -293,7 +293,7 @@ export class PlayerActionService {
             action,
             game,
             destination.position
-        );
+        ).filter((entity) => entity.entityType === playerEntity.entityType);
         return targetEntity;
     }
 
