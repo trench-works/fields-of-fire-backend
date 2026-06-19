@@ -1,10 +1,12 @@
-import { Provide } from "../../../core";
+import { Logger, Provide } from "../../../core";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameService } from "../../Game/services/GameService";
 import { LobbyService } from "../../Lobby/services/LobbyService";
 import { BoostService } from "./BoostService";
 
 export class PlayerService {
+    @Provide("Logger")
+    private readonly logger!: Logger;
     @Provide(GameService) private readonly gameService!: GameService;
     @Provide(GameDataManager)
     private readonly gameDataManager!: GameDataManager;
@@ -18,6 +20,7 @@ export class PlayerService {
         gameId: string,
         boostId: string
     ) {
+        this.logger.log(`Player ${playerId} chose boost ${boostId}`);
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
             return;
@@ -31,7 +34,14 @@ export class PlayerService {
         const entity = game.entities.find(
             (entity) => entity.entityId === player.entityId
         )!;
+        this.logger.debug(
+            `Player ${playerId} has stats ${JSON.stringify(entity.stats)}`
+        );
         await this.boostService.applyBoost(entity, boostId);
+
+        this.logger.debug(
+            `Player ${playerId} has stats ${JSON.stringify(entity.stats)} after booost`
+        );
         game.readyPlayers.push(playerId);
         await this.gameDataManager.set(gameId, game);
 

@@ -105,7 +105,6 @@ export class BoostRepository extends FolderRepository<Boost> {
                 boosts: [
                     {
                         dodging: 3,
-                        mouvement: 1,
                     },
                 ],
                 probability: 1,
