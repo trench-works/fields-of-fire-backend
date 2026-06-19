@@ -28,7 +28,7 @@ export enum PlayerActionId {
     SNEAKY = "sneaky",
     DOPAGE = "dopage",
     CHARGE = "charge",
-    FIGHTING_DRUG= "fighting_drug",
+    FIGHTING_DRUG = "fighting_drug",
     SABER = "saber",
 }
 
@@ -125,13 +125,14 @@ export class PlayerActionService {
                     playerEntity,
                     action,
                     destination
-                )
+                );
             default:
                 this.logger.error("Unknown action ID");
         }
     }
 
-    async boost(game: Game,
+    async boost(
+        game: Game,
         player: Player,
         playerEntity: Entity,
         action: Action,
@@ -139,8 +140,13 @@ export class PlayerActionService {
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
 
-        const targetList= this.getTarget(game, playerEntity, action, destination);
-  
+        const targetList = this.getTarget(
+            game,
+            playerEntity,
+            action,
+            destination
+        );
+
         for (const target of targetList) {
             this.logger.debug(`action.effectList : ${action.effectList}`);
             for (const effect of action.effectList!) {
@@ -186,7 +192,6 @@ export class PlayerActionService {
         // Met à jour la position
         playerEntity.position = destination.position;
         playerEntity.stats.mouvement -= range;
-        
 
         await this.gameDataManager.set(game.id, game);
 
@@ -199,7 +204,6 @@ export class PlayerActionService {
                 },
             },
         ]);
-        
     }
 
     async attack(
@@ -210,8 +214,13 @@ export class PlayerActionService {
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
-        
-        const targetList= this.getTarget(game, playerEntity, action, destination);
+
+        const targetList = this.getTarget(
+            game,
+            playerEntity,
+            action,
+            destination
+        );
 
         for (const target of targetList) {
             if (action.damage) {
@@ -231,14 +240,14 @@ export class PlayerActionService {
         }
         //to finalize
         playerEntity.stats.energy -= action.cost;
-        await this.gameDataManager.set(game.id, game);
 
         this.logger.log(
             `Player ${playerEntity.entityId} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
         );
         this.animate(game, playerEntity, action, destination, targetList);
-        
+
         await this.gameTurnService.detectGameEnd(game);
+        await this.gameDataManager.set(game.id, game);
     }
 
     checkMoveDestination(cell: Cell): boolean {
@@ -274,7 +283,12 @@ export class PlayerActionService {
         target.effects.push(effectCopy);
     }
 
-    getTarget(game : Game, playerEntity : Entity, action : Action, destination : Cell) : Entity[]{
+    getTarget(
+        game: Game,
+        playerEntity: Entity,
+        action: Action,
+        destination: Cell
+    ): Entity[] {
         const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
             action,
             game,
@@ -283,7 +297,13 @@ export class PlayerActionService {
         return targetEntity;
     }
 
-    async animate(game : Game, playerEntity: Entity, action : Action, destination: Cell, targetEntity : Entity[]){
+    async animate(
+        game: Game,
+        playerEntity: Entity,
+        action: Action,
+        destination: Cell,
+        targetEntity: Entity[]
+    ) {
         const animations: GameEventAnimation[] = [
             {
                 key: "attack",
@@ -300,8 +320,10 @@ export class PlayerActionService {
         await this.socketManager.emitUpdate(game, animations);
     }
 
-    checkIfAllowed(playerEntity: Entity, action : Action, destination : Cell){
-        this.logger.log("WHATS THE VALUE ?" + Stats.fromEntity(playerEntity).energy);
+    checkIfAllowed(playerEntity: Entity, action: Action, destination: Cell) {
+        this.logger.log(
+            "WHATS THE VALUE ?" + Stats.fromEntity(playerEntity).energy
+        );
         if (Stats.fromEntity(playerEntity).energy < action.cost) {
             return {
                 actionId: PlayerOutputActions.CANCEL_ACTION,

@@ -12,7 +12,7 @@ export class Stats {
     energy!: number;
     mouvement!: number;
 
-    static add(baseStats: Stats, ...stats: Stats[]): Stats {
+    static add(baseStats: Stats, ...stats: Partial<Stats>[]): Stats {
         const addedStats = { ...baseStats };
         for (const stat of stats) {
             for (const [key, value] of Object.entries(stat)) {
@@ -33,7 +33,7 @@ export class Stats {
     }
 
     static getEntityEffect(entity: Entity): Stats {
-        const emptyStats : Stats = {
+        const emptyStats: Stats = {
             life: 0,
             maxLife: 0,
             precision: 0,
@@ -42,13 +42,13 @@ export class Stats {
             initiative: 0,
             dodging: 0,
             energy: 0,
-            mouvement: 0
+            mouvement: 0,
         };
         return Stats.add(
             emptyStats,
             ...entity.effects
                 .filter((effect) => effect.type === EffectType.APPLY)
                 .map((effect) => effect.modifier)
-        )
+        );
     }
 }

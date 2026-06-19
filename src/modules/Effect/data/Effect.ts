@@ -12,4 +12,5 @@ export class Effect {
     duration!: number | null;
     modifier!: Stats;
     author?: string;
+    description?: string;
 }

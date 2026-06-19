@@ -16,8 +16,8 @@ import {
 } from "./interfaces/LobbyAction";
 import { ChangeClass } from "./interfaces/ChangeClass";
 import { SingleClientOutputError } from "../../../core/types/Action";
-import { Lobby } from "../data/Lobby";
 import { Game } from "../../Game/data/Game";
+import { LobbyUpdate } from "./interfaces/LobbyUpdate";
 
 export class LobbyController extends WsController<
     LobbyKeys,
@@ -71,10 +71,10 @@ export class LobbyController extends WsController<
         if (lobby instanceof NotFoundError) {
             return lobby;
         }
-        this.emit<Lobby>({
+        this.emit<LobbyUpdate>({
             actionId: LobbyOutputActions.UPDATE,
             key: { lobbyId },
-            payload: lobby,
+            payload: { lobby },
         });
     }
 
@@ -94,10 +94,10 @@ export class LobbyController extends WsController<
         if (lobby instanceof NotFoundError) {
             return lobby;
         }
-        this.emit<Lobby>({
+        this.emit<LobbyUpdate>({
             actionId: LobbyOutputActions.UPDATE,
             key: { lobbyId },
-            payload: lobby,
+            payload: { lobby },
         });
     }
 }

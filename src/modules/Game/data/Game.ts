@@ -20,6 +20,11 @@ export type Game = {
     npc: Mob[];
     entities: Entity[];
     playerTurns: string[];
+
+    //things relative to rounds
+    readyPlayers: string[];
+    round: number;
+    isStopped: boolean;
 };
 
 export class CellAStar extends AStar<Cell> {

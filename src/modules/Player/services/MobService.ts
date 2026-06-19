@@ -147,11 +147,11 @@ export class MobService implements AsyncResolver {
                 }
             }
             // Update users display
-            await this.gameDataManager.set(game.id, game);
             await this.socketManager.emitUpdate(game, animations);
             if (await this.gameTurnService.detectGameEnd(game)) {
                 return;
             }
+            await this.gameDataManager.set(game.id, game);
         }
     }
 

@@ -20,16 +20,18 @@ export class LobbyService {
             creatorId: userId,
             maxPlayers: 4,
         });
+        const user = await this.userRepository.get(userId)!;
         lobby.players.push({
             userId,
             playerId: Id.get(),
             classId: "entente_fantassin",
+            name: user?.username ?? "Entente Fantassin",
         });
         this.onLobbiesUpdate(lobby);
         return lobby;
     }
 
-    async onLobbiesUpdate(lobby : Lobby) {
+    async onLobbiesUpdate(lobby: Lobby) {
         await this.lobbyDataManager.set(lobby.id, lobby);
         this.menuWebSocketManager.emitLobbiesUpdate(await this.getLobbies());
     }
@@ -81,13 +83,15 @@ export class LobbyService {
         if (lobby.players.length === lobby.maxPlayers) {
             return new SocketError("Lobby is already full !");
         }
+        const user = await this.userRepository.get(userId)!;
         lobby.players.push({
             userId,
             playerId: Id.get(),
             classId: "entente_fantassin",
+            name: user?.username ?? "Entente Fantassin",
         });
         this.onLobbiesUpdate(lobby);
-        this.logger.log(lobby.players)
+        this.logger.log(lobby.players);
         return lobby;
     }
 

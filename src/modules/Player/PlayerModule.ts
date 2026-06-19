@@ -6,6 +6,7 @@ import { BoostService } from "./services/BoostService";
 import { EntityService } from "./services/EntityService";
 import { MobService } from "./services/MobService";
 import { PlayerActionService } from "./services/PlayerActionService";
+import { PlayerService } from "./services/PlayerService";
 import { PlayerWebSocketManager } from "./web/PlayerWebSocketManager";
 
 export class PlayerModule extends Module {
@@ -20,6 +21,7 @@ export class PlayerModule extends Module {
                 EntityService,
                 AttackService,
                 BoostService,
+                PlayerService,
             ],
         });
     }

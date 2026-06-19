@@ -1,11 +1,11 @@
 import { WsManager } from "../../../core";
-import { Lobby } from "../../Lobby/data/Lobby";
 import {
     GameOutputActions,
     GameReturnActions,
 } from "../application/interfaces/GameAction";
 import { GameEndEvent } from "../application/interfaces/GameEndEvent";
 import { GameKey } from "../application/interfaces/GameKey";
+import { GameRenew } from "../application/interfaces/GameRenew";
 import {
     GameEventAnimation,
     GameUpdateEvent,
@@ -25,11 +25,22 @@ export class GameWebSocketManager extends WsManager<
         });
     }
 
-    async emitGameEnd(gameId: string, lobby: Lobby, playerWin: boolean) {
+    async emitGameRenew(game: Game) {
+        await this.emit<GameRenew>({
+            actionId: GameOutputActions.GAME_RENEW,
+            key: { gameId: game.id },
+            payload: { data: game },
+        });
+    }
+
+    async emitGameEnd(
+        gameId: string,
+        getPayload: (index: number) => GameEndEvent
+    ) {
         await this.emitMap<GameEndEvent>(
             GameOutputActions.GAME_END,
             { gameId },
-            () => ({ lobbyId: lobby.id, playerWin }) //TODO: add end game boost selection, send unique payload for each client
+            (_, i) => getPayload(i)
         );
     }
 }
