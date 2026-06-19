@@ -53,8 +53,9 @@ export class AttackService {
                 Stats.fromEntity(target).life - finalDamage >
                 targetStats.maxLife
             ) {
-                finalDamage =
-                    targetStats.maxLife - Stats.fromEntity(target).life;
+                finalDamage = -(
+                    targetStats.maxLife - Stats.fromEntity(target).life
+                );
             }
         } else {
             brutTotal = randomDamage + statBonus;

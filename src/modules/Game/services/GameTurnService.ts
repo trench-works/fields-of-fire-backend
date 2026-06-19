@@ -36,7 +36,7 @@ export class GameTurnService implements AsyncResolver {
         const animations: GameEventAnimation[] = [];
         if (game.entities) {
             for (const entity of game.entities) {
-                if (Stats.fromEntity(entity).life <= 0 && !entity.dead) {
+                if (entity.stats.life <= 0 && !entity.dead) {
                     entity.dead = true;
                     game.playerTurns = game.playerTurns.filter(
                         (entityId) => entityId !== entity.entityId
@@ -119,13 +119,15 @@ export class GameTurnService implements AsyncResolver {
             .filter(
                 (effect) => effect.duration === null || effect.duration > 0
             );
-        playerEntity.stats.mouvement = entityClass.stats.mouvement 
-            + Stats.getEntityEffect(playerEntity).mouvement
-            + ((playerEntity.permanentBoosts?.mouvement) ?? 0);
+        playerEntity.stats.mouvement =
+            entityClass.stats.mouvement +
+            Stats.getEntityEffect(playerEntity).mouvement +
+            (playerEntity.permanentBoosts?.mouvement ?? 0);
 
-        playerEntity.stats.energy = entityClass.stats.energy 
-            + Stats.getEntityEffect(playerEntity).energy
-            + ((playerEntity.permanentBoosts?.energy) ?? 0);
+        playerEntity.stats.energy =
+            entityClass.stats.energy +
+            Stats.getEntityEffect(playerEntity).energy +
+            (playerEntity.permanentBoosts?.energy ?? 0);
 
         this.gameDataManager.set(game.id, game);
 
