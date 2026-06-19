@@ -5,15 +5,15 @@ import {
     LogLevel,
 } from "../core";
 
-export type MemoireOublieesConfig = {
+export type FieldsOfFireConfig = {
     app: AppConfig;
     redis: RedisConnectorProps;
     mongo: MongoConnectorProps;
 };
 
-export const ConfigMap = (): MemoireOublieesConfig => ({
+export const ConfigMap = (): FieldsOfFireConfig => ({
     app: {
-        name: process.env.APP_NAME ?? "Memoires Oubliees",
+        name: process.env.APP_NAME ?? "Fields Of Fire",
         port: Number(process.env.SERVER_PORT ?? 3000),
         logLevel: (process.env.LOG_LEVEL as LogLevel) ?? LogLevel.DEBUG,
     },
@@ -24,6 +24,6 @@ export const ConfigMap = (): MemoireOublieesConfig => ({
     mongo: {
         host: process.env.MONGO_HOST ?? "localhost",
         port: Number(process.env.MONGO_PORT ?? 27017),
-        name: process.env.MONGO_DB_NAME ?? "MemoiresOubliees",
+        name: process.env.MONGO_DB_NAME ?? "FieldsOfFire",
     },
 });

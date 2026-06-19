@@ -1,6 +1,6 @@
-﻿# Les Mémoires Oubliées
+﻿# Fields of Fire
 
-Voici le serveur WebSocket du projet Mémoires Oubliées.
+Voici le serveur WebSocket du projet Fields of Fire.
 
 ## Struture Applicative
 
@@ -12,10 +12,10 @@ Le **WebSocket** du client va venir s'abonner à un **Controller** à l'entrée 
 
 ### E.g
 
--   Entrée dans la liste des lobby disponibles -> abonnement au Controller "Menu" -> récupération de la liste des lobby
--   Si un lobby est créé, mis à jour ou supprimé -> On envoit la liste à jour à tous les clients connectés
--   Le joueur clique pour rejoindre un lobby -> mise à jour du lobby -> envoi d'un message au socket du client concerné
--   Déconnexion du Socket
+- Entrée dans la liste des lobby disponibles -> abonnement au Controller "Menu" -> récupération de la liste des lobby
+- Si un lobby est créé, mis à jour ou supprimé -> On envoit la liste à jour à tous les clients connectés
+- Le joueur clique pour rejoindre un lobby -> mise à jour du lobby -> envoi d'un message au socket du client concerné
+- Déconnexion du Socket
 
 # Framework Peregrin
 
@@ -28,6 +28,7 @@ Le framework de l'application (baptisé Peregrin) fournit une interface simple e
 Il est basé sur un système d'injection (simplifiant et optimisation l'utilisation de dépendances inter-modules).
 
 Il fournit aussi des services de base:
+
 - LoggerService -> Injectable avec le nom "Logger"
 - ConfigService -> Injectable avec le nom "ConfigService"
 

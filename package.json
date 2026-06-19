@@ -1,14 +1,14 @@
 {
-    "name": "memoires-oubliees-server",
+    "name": "fields-of-fire-backend",
     "version": "0.0.1",
     "description": "",
-    "homepage": "https://github.com/aalafTeam/lesMemoiresOubliees_server#readme",
+    "homepage": "https://github.com/trench-works/fields-of-fire-backend#readme",
     "bugs": {
-        "url": "https://github.com/aalafTeam/lesMemoiresOubliees_server/issues"
+        "url": "https://github.com/trench-works/fields-of-fire-backend/issues"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/aalafTeam/lesMemoiresOubliees_server.git"
+        "url": "git+https://github.com/trench-works/fields-of-fire-backend.git"
     },
     "license": "ISC",
     "author": "",
