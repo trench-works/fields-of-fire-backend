@@ -267,9 +267,10 @@ export class GameService {
         for (const player of game.players) {
             const entity = game.entities.find(e => e.entityId === player.entityId)!;
             const charClass = await this.classRepository.get(entity.classId);
-            
+            const previousLife = entity.stats.life;
             // Réinitialise aux stats de base + permanentBoosts uniquement
             entity.stats = Stats.add(charClass!.stats, entity.permanentBoosts as Stats ?? {});
+            entity.stats.life = previousLife;
             entity.effects = entity.effects.filter(e => e.duration === null); // garde les effets permanents
             
             const playerCell = await this.placeEntity(entity.entityId, game.plateau, false);

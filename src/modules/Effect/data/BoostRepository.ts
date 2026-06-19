@@ -13,7 +13,12 @@ export class BoostRepository extends FolderRepository<Boost> {
                 id: "life",
                 name: "Renforcement Musculaire",
                 effects: [],
-                boosts: [{ maxLife: 10 }],
+                boosts: [
+                    { 
+                        maxLife: 10,
+                        life: 10,
+                    }
+                ],
                 probability: 1,
             },
             precision: {

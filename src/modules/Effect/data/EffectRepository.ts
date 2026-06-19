@@ -136,7 +136,7 @@ export class EffectRepository extends FolderRepository<Effect> {
                 type: EffectType.APPLY,
                 modifier: {
                     life: 5,
-                    maxLife: 0,
+                    maxLife: 5,
                     strength: 3,
                     precision: 3,
                     armor: 0,
