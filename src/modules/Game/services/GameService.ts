@@ -20,6 +20,7 @@ import { GameCreationError } from "./errors/GameCreationError";
 import { UserRepository } from "../../User/data/UserRepository";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
 import { BoostService } from "../../Player/services/BoostService";
+import { Stats } from "../../Stat/data/Stats";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -100,6 +101,7 @@ export class GameService {
                     entityType: EntityType.ALLY,
                     stats: charClass.stats,
                     effects: [],
+                    permanentBoosts: {},
                     side: "player",
                     dead: false,
                 },
@@ -263,14 +265,14 @@ export class GameService {
         game.entities.push(...mobsEntities);
 
         for (const player of game.players) {
-            const entity = game.entities.find(
-                (entity) => entity.entityId === player.entityId
-            )!;
-            const playerCell = await this.placeEntity(
-                entity.entityId,
-                game.plateau,
-                false
-            );
+            const entity = game.entities.find(e => e.entityId === player.entityId)!;
+            const charClass = await this.classRepository.get(entity.classId);
+            
+            // Réinitialise aux stats de base + permanentBoosts uniquement
+            entity.stats = Stats.add(charClass!.stats, entity.permanentBoosts as Stats ?? {});
+            entity.effects = entity.effects.filter(e => e.duration === null); // garde les effets permanents
+            
+            const playerCell = await this.placeEntity(entity.entityId, game.plateau, false);
             entity.position = { ...playerCell.position };
         }
 

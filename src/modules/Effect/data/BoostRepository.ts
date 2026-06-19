@@ -78,14 +78,14 @@ export class BoostRepository extends FolderRepository<Boost> {
                 id: "energy",
                 name: "Energie",
                 effects: [],
-                boosts: [{ energy: 2 }],
+                boosts: [{ energy: 1 }],
                 probability: 1,
             },
             acceleration: {
                 id: "acceleration",
                 name: "Acceleration",
                 effects: [],
-                boosts: [{ mouvement: 2 }],
+                boosts: [{ mouvement: 1 }],
                 probability: 1,
             },
             dodge: {

@@ -27,16 +27,19 @@ export class BoostService {
             default:
                 {
                     for (const effect of effects) {
-                        if (effect) {
-                            entity.effects.push(effect);
-                        }
+                        if (effect) entity.effects.push({ ...effect });
                     }
-
                     for (const statBoost of boost.boosts) {
+                        // Stocke dans permanentBoosts au lieu de stats
+                        entity.permanentBoosts = Stats.add(
+                            entity.permanentBoosts as Stats ?? {},
+                            statBoost
+                        );
+                        // Applique immédiatement sur stats pour ce combat
                         entity.stats = Stats.add(entity.stats, statBoost);
                     }
+                    break;
                 }
-                break;
         }
     }
 

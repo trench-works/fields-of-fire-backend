@@ -62,6 +62,22 @@ export class AttackService {
         }
 
         this.logger.log(`Calculated : ${brutTotal} - ${reduction}`);
+        
+        // Vampire : vol de vie par stack
+        if (action.damage!.min >= 0) { // seulement sur les dégâts positifs, pas les heals
+            const vampireStacks = attacker.effects.filter(
+                (e) => e.id === "vampire"
+            ).length;
+            
+            if (vampireStacks > 0) {
+                const lifeSteal = Math.ceil(finalDamage / 2) * vampireStacks;
+                attacker.stats.life = Math.min(
+                    attacker.stats.life + lifeSteal,
+                    Stats.fromEntity(attacker).maxLife,
+                );
+            }
+        }
+
         return finalDamage;
 
         //TODO: ajouter les effets de l'attaque, et ajout de chances d'échecs

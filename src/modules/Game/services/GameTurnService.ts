@@ -119,8 +119,13 @@ export class GameTurnService implements AsyncResolver {
             .filter(
                 (effect) => effect.duration === null || effect.duration > 0
             );
-        playerEntity.stats.energy = entityClass.stats.energy;
-        playerEntity.stats.mouvement = entityClass.stats.mouvement;
+        playerEntity.stats.mouvement = entityClass.stats.mouvement 
+            + Stats.getEntityEffect(playerEntity).mouvement
+            + ((playerEntity.permanentBoosts?.mouvement) ?? 0);
+
+        playerEntity.stats.energy = entityClass.stats.energy 
+            + Stats.getEntityEffect(playerEntity).energy
+            + ((playerEntity.permanentBoosts?.energy) ?? 0);
 
         this.gameDataManager.set(game.id, game);
 
