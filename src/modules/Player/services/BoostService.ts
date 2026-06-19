@@ -93,7 +93,7 @@ export class BoostService {
         //si les joueur son plus nombreux que les ennemis alors les enenmis ont automatiquement un renfort
         const reinforcement =
             (await this.boostRepository.get("reinforcement"))!;
-        while (playerCount > mobCount && boostCount > boosts.length) {
+        while (playerCount >= mobCount && boostCount > boosts.length) {
             boosts.push(reinforcement);
         }
         if (boostCount > boosts.length) {

@@ -51,8 +51,7 @@ export class EffectRepository extends FolderRepository<Effect> {
             enhanced_drug: {
                 id: "enhanced_drug",
                 name: "Drogue de combat",
-                //duration is normaly 2 but im hiding the bug
-                duration: 1,
+                duration: 2,
                 type: EffectType.APPLY,
                 modifier: {
                     strength: 10,
@@ -74,17 +73,6 @@ export class EffectRepository extends FolderRepository<Effect> {
                 duration: null,
                 type: EffectType.APPLY,
                 modifier: {},
-            },
-            reaction: {
-                id: "reaction",
-                name: "Adrenaline",
-                duration: null,
-                type: EffectType.APPLY,
-                modifier: {
-                    strength: 3,
-                    precision: 3,
-                    initiative: 15,
-                },
             },
         });
     }

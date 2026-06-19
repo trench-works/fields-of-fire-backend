@@ -75,11 +75,14 @@ export class BoostRepository extends FolderRepository<Boost> {
             reaction: {
                 id: "reaction",
                 name: "Adrénaline",
-                effects: ["reaction"],
+                effects: [],
                 boosts: [
                     {
                         life: 5,
                         maxLife: 5,
+                        strength: 3,
+                        precision: 3,
+                        initiative: 15,
                     },
                 ],
                 probability: 1,
