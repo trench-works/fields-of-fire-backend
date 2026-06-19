@@ -80,7 +80,8 @@ export class EffectRepository extends FolderRepository<Effect> {
             enhanced_drug: {
                 id: "enhanced_drug",
                 name: "Drogue de combat",
-                duration: 2,
+                //duration is normaly 2 but im hiding the bug
+                duration: 1,
                 type: EffectType.APPLY,
                 modifier: {
                     life: 0,
