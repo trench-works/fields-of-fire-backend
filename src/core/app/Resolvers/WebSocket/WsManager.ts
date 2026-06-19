@@ -53,12 +53,6 @@ export class WsManager<
               >
             | ValidationError[]
     ): Promise<void> {
-        this.logger.log(
-            "send called, readyState:",
-            socket.readyState,
-            "action:",
-            action
-        );
         return new Promise<void>((resolve, reject) => {
             if (!action) {
                 resolve();
@@ -85,10 +79,8 @@ export class WsManager<
                 }
                 socket.send(message, (err) => {
                     if (err) {
-                        this.logger.error("SOCKET SEND ERROR:", err);
                         reject(err);
                     } else {
-                        this.logger.debug("SOCKET SEND SUCCESS:", message);
                         resolve();
                     }
                 });

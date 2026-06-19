@@ -26,10 +26,6 @@ export class WsTopicManager<
                 payload,
             }: InputAction<SubcribePayload<RessourceKeyObject>> =
                 JSON.parse(rawData);
-            this.logger.debug(
-                `Incoming Request on ${this.topic} with payload`,
-                rawData
-            );
             if (actionId === "subscribe") {
                 this.subscribe(socket, payload);
             }
