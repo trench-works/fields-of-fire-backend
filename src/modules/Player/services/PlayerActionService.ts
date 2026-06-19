@@ -231,7 +231,7 @@ export class PlayerActionService {
                 );
                 this.applyDamage(target, damage);
             }
-            if (action.effectList) {
+            if (action.effectList && target.stats.life > 0) {
                 this.logger.debug(`action.effectList : ${action.effectList}`);
                 for (const effect of action.effectList) {
                     this.applyEffect(player.name, target, effect);

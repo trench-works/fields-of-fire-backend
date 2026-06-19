@@ -195,7 +195,7 @@ export class MobService implements AsyncResolver {
         }
 
         const targetEntityId = Object.entries(entitiesRange).sort(
-            ([, aRange], [, bRange]) => (aRange > bRange ? -1 : 1)
+            ([, aRange], [, bRange]) => (aRange > bRange ? 1 : -1)
         )?.[0]?.[0];
 
         return game.entities.find(
