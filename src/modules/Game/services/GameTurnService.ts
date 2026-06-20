@@ -122,7 +122,7 @@ export class GameTurnService implements AsyncResolver {
         playerEntity.stats.mouvement = entityClass.stats.totalMouvement;
         playerEntity.stats.energy = entityClass.stats.totalEnergy;
 
-        this.gameDataManager.set(game.id, game);
+        await this.gameDataManager.set(game.id, game);
 
         // If new playing entity is a mob, then launch playing actions for the mob
         const newPlayingMob = game.npc.find(

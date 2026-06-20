@@ -63,7 +63,7 @@ export class WsManager<
                 this.logger.error(
                     `SOCKET NOT OPEN, readyState: ${socket.readyState}`
                 );
-                resolve();
+                reject();
                 return;
             }
 
@@ -82,6 +82,7 @@ export class WsManager<
                 this.logger.error("CANT SEND PAYLOAD", JSON.stringify(action));
                 reject();
             }
+            resolve();
         });
     }
 
@@ -120,9 +121,7 @@ export class WsManager<
     ): Promise<void> {
         const promises: Promise<void>[] = [];
         for (const client of this.clients.values()) {
-            console.log(client.key, action.key);
             if (RessourceKeyUtils.compareKeys(client.key, action.key)) {
-                console.log("will do sending");
                 promises.push(this.send(client.socket, action));
             }
         }
