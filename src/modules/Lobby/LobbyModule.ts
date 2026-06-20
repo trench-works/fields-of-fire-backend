@@ -4,6 +4,7 @@ import { LobbyHttpController } from "./application/LobbyHttpController";
 import { LobbyDataManager } from "./data/LobbyDataManager";
 import { LobbyGuard } from "./services/LobbyGuard";
 import { LobbyService } from "./services/LobbyService";
+import { LobbyPlayerService } from "./services/LobbysPlayerService";
 import { LobbyWebSocketManager } from "./web/LobbyWebSocketManager";
 
 export class LobbyModule extends Module {
@@ -15,6 +16,7 @@ export class LobbyModule extends Module {
                 LobbyService,
                 LobbyGuard,
                 LobbyWebSocketManager,
+                LobbyPlayerService
             ],
         });
     }
