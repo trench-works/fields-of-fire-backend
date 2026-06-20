@@ -62,6 +62,7 @@ export class MobService implements AsyncResolver {
         let PM = stats.mouvement;
         let firstTry = true;
         while (firstTry || PM !== lastPM || PA !== lastPA) {
+            this.logger.debug("Mob calculating a turn");
             const animations: GameEventAnimation[] = [];
             firstTry = false;
             lastPA = PA;
@@ -73,6 +74,7 @@ export class MobService implements AsyncResolver {
             const action = this.getAttack(charClass, playerRange, PA);
             if (PA) {
                 if (action) {
+                    this.logger.log("will attack");
                     // do damages
                     const damage = this.attackService.calculateDamage(
                         action,
@@ -101,6 +103,7 @@ export class MobService implements AsyncResolver {
             }
             if (PM) {
                 if (!action) {
+                    this.logger.log("will move");
                     let hasMoved = true;
                     while (playerRange > 0 && PM > 0 && hasMoved) {
                         hasMoved = false;

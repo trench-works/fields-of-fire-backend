@@ -31,7 +31,7 @@ export class WsManager<
 
     set(userId: string, { socket, key }: RessourceClient<RessourceKeyObject>) {
         const existing = this.clients.get(userId);
-        if (existing && existing.socket.readyState === WebSocket.OPEN) {
+        if (existing && existing.socket.readyState === 1) {
             return;
         }
         this.clients.set(userId, { socket, key });
@@ -63,7 +63,7 @@ export class WsManager<
                 this.logger.error(
                     `SOCKET NOT OPEN, readyState: ${socket.readyState}`
                 );
-                resolve();
+                reject();
                 return;
             }
 
@@ -77,17 +77,12 @@ export class WsManager<
                         error: action,
                     });
                 }
-                socket.send(message, (err) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve();
-                    }
-                });
+                socket.send(message);
             } catch {
                 this.logger.error("CANT SEND PAYLOAD", JSON.stringify(action));
                 reject();
             }
+            resolve();
         });
     }
 
