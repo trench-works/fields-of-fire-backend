@@ -16,7 +16,7 @@ export class LobbyModule extends Module {
                 LobbyService,
                 LobbyGuard,
                 LobbyWebSocketManager,
-                LobbyPlayerService,
+                LobbyPlayerService
             ],
         });
     }

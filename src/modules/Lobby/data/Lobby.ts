@@ -12,4 +12,5 @@ export class Lobby {
     maxPlayers!: number;
     creatorId!: string;
     players!: LobbyPlayer[];
+    playerReady !: string[]
 }

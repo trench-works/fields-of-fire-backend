@@ -25,6 +25,7 @@ export class LobbyService {
             creatorName: user?.username ?? "NO_NAME",
             name : `Partie de ${user?.username ?? "NO_NAME"}`,
             maxPlayers: 4,
+            playerReady : []
         });
        
         lobby.players.push({

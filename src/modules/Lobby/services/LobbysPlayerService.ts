@@ -26,8 +26,12 @@ export class LobbyPlayerService {
             this.logger.error(`error on removing ${JSON.stringify(userId)} to ${JSON.stringify(lobbyId)} `)
             return lobby;
         }
+        const leavingPlayer = lobby.players.find((player) => player.userId === userId)?.playerId
         lobby.players = lobby.players.filter(
             (player) => player.userId !== userId
+        );
+        lobby.playerReady = lobby.playerReady.filter(
+            (player) => player !== leavingPlayer
         );
         this.lobbyService.onLobbiesUpdate(lobby);
         this.lobbyService.onLobbyUpdate(lobby);
@@ -79,6 +83,28 @@ export class LobbyPlayerService {
         this.lobbyService.onLobbiesUpdate(lobby);
         this.lobbyService.onLobbyUpdate(lobby);
         this.logger.log(lobby.players);
+        return lobby;
+    }
+
+    async setLobbyPlayerReady(
+        lobbyId: string,
+        playerId: string,
+    ) {
+        this.logger.log(`Player ${playerId} is ready in ${lobbyId}`);
+        const lobby = await this.lobbyDataManager.get(lobbyId);;
+        if (!lobby) {
+             this.logger.error(`setLobbyPlayer rdy couldn't find lobby`)
+            return;
+        }
+        if (lobby.playerReady.includes(playerId)) {
+            this.logger.error(`setLobbyPlayer already as ${playerId} in ${JSON.stringify(lobby.playerReady)}`)
+            return;
+        }
+
+        lobby.playerReady.push(playerId);
+
+        await this.lobbyDataManager.set(lobbyId, lobby);
+
         return lobby;
     }
 }

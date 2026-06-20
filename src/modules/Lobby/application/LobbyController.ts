@@ -19,6 +19,7 @@ import { SingleClientOutputError } from "../../../core/types/Action";
 import { Game } from "../../Game/data/Game";
 import { LobbyUpdate } from "./interfaces/LobbyUpdate";
 import { LobbyPlayerService } from "../services/LobbysPlayerService";
+import { PlayerReady } from "./interfaces/PlayerReady";
 
 export class LobbyController extends WsController<
     LobbyKeys,
@@ -44,6 +45,7 @@ export class LobbyController extends WsController<
             this.handleClassChange.bind(this),
             { payloadType: ChangeClass }
         );
+        this.on(LobbyInputActions.READY, this.handleSetReady.bind(this));
         this.on(LobbyInputActions.START, this.startGame.bind(this));
     }
 
@@ -88,6 +90,7 @@ export class LobbyController extends WsController<
         LobbyKeys,
         ChangeClass
     >): Promise<void | SingleClientOutputError> {
+        this.logger.debug(`the key is ${lobbyId}`)
         const lobby = await this.lobbyPlayerService.changeClass(
             lobbyId,
             user.id,
@@ -102,4 +105,29 @@ export class LobbyController extends WsController<
             payload: { lobby },
         });
     }
+
+    async handleSetReady({
+        key: { lobbyId },
+        payload: { playerId },
+    }: WsListenerOptions<
+        LobbyKeys,
+        PlayerReady
+    >): Promise<void | SingleClientOutputError> {
+        this.logger.debug(`the key is ${lobbyId}`)
+        const lobby = await this.lobbyPlayerService.setLobbyPlayerReady(
+            lobbyId,
+            playerId
+        );
+        if (lobby instanceof NotFoundError || !lobby) {
+            this.logger.error(`hendlesetRdy went wrong ${lobby}`)
+            return lobby;
+        }
+        this.logger.log(`trying to send the readyList `)
+        this.emit<LobbyUpdate>({
+            actionId: LobbyOutputActions.UPDATE,
+            key: { lobbyId },
+            payload: { lobby },
+        });
+    }
+
 }
