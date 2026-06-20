@@ -32,12 +32,18 @@ export class Stats {
     }
 
     static fromEntity(entity: Entity): Stats {
-        return Stats.add(
+        const total = Stats.add(
             entity.stats,
             ...entity.effects
                 .filter((effect) => effect.type === EffectType.APPLY)
                 .map((effect) => effect.modifier)
         );
+
+        // Caper energy and mouvementà 0
+        total.energy = Math.max(total.energy, 0);
+        total.mouvement = Math.max(total.mouvement, 0);
+        total.life = Math.max(total.life, 0);
+        return total;
     }
 
     static getEntityEffect(entity: Entity): Stats {

@@ -31,11 +31,6 @@ export class BoostService {
                     }
                 }
                 this.logger.log("will apply boosts", boost.boosts);
-                // Stocke dans permanentBoosts au lieu de stats
-                entity.permanentBoosts = Stats.add(
-                    entity.permanentBoosts,
-                    ...boost.boosts
-                );
                 // Applique immédiatement sur stats pour ce combat
                 entity.stats = Stats.add(entity.stats, ...boost.boosts);
 

@@ -31,7 +31,7 @@ export class WsManager<
 
     set(userId: string, { socket, key }: RessourceClient<RessourceKeyObject>) {
         const existing = this.clients.get(userId);
-        if (existing && existing.socket.readyState === WebSocket.OPEN) {
+        if (existing && existing.socket.readyState === 1) {
             return;
         }
         this.clients.set(userId, { socket, key });
@@ -77,13 +77,7 @@ export class WsManager<
                         error: action,
                     });
                 }
-                socket.send(message, (err) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve();
-                    }
-                });
+                socket.send(message);
             } catch {
                 this.logger.error("CANT SEND PAYLOAD", JSON.stringify(action));
                 reject();
@@ -126,7 +120,9 @@ export class WsManager<
     ): Promise<void> {
         const promises: Promise<void>[] = [];
         for (const client of this.clients.values()) {
+            console.log(client.key, action.key);
             if (RessourceKeyUtils.compareKeys(client.key, action.key)) {
+                console.log("will do sending");
                 promises.push(this.send(client.socket, action));
             }
         }

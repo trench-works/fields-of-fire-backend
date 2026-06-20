@@ -140,7 +140,7 @@ export class PlayerActionService {
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
 
-        const targetList = this.getTarget(
+        const targetList = this.getBoostTarget(
             game,
             playerEntity,
             action,
@@ -184,6 +184,7 @@ export class PlayerActionService {
             destination.position,
             game.plateau
         );
+
         const currentCase =
             game.plateau[playerEntity.position.x][playerEntity.position.y];
         // Occupe la nouvelle case
@@ -215,12 +216,7 @@ export class PlayerActionService {
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
 
-        const targetList = this.getTarget(
-            game,
-            playerEntity,
-            action,
-            destination
-        );
+        const targetList = this.getAttackTarget(game, action, destination);
 
         for (const target of targetList) {
             if (action.damage) {
@@ -231,7 +227,7 @@ export class PlayerActionService {
                 );
                 this.applyDamage(target, damage);
             }
-            if (action.effectList && target.stats.life > 0) {
+            if (action.effectList) {
                 this.logger.debug(`action.effectList : ${action.effectList}`);
                 for (const effect of action.effectList) {
                     this.applyEffect(player.name, target, effect);
@@ -246,8 +242,9 @@ export class PlayerActionService {
         );
         this.animate(game, playerEntity, action, destination, targetList);
 
-        await this.gameTurnService.detectGameEnd(game);
         await this.gameDataManager.set(game.id, game);
+
+        await this.gameTurnService.detectGameEnd(game);
     }
 
     checkMoveDestination(cell: Cell): boolean {
@@ -266,8 +263,6 @@ export class PlayerActionService {
         if (target.stats.life < 0) {
             target.stats.life = 0;
         }
-
-        return target.stats.life;
     }
 
     applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
@@ -283,18 +278,28 @@ export class PlayerActionService {
         target.effects.push(effectCopy);
     }
 
-    getTarget(
-        game: Game,
-        playerEntity: Entity,
-        action: Action,
-        destination: Cell
-    ): Entity[] {
+    getTarget(game: Game, action: Action, destination: Cell): Entity[] {
         const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
             action,
             game,
             destination.position
-        ).filter((entity) => entity.entityType === playerEntity.entityType);
+        );
         return targetEntity;
+    }
+
+    getAttackTarget(game: Game, action: Action, destination: Cell) {
+        return this.getTarget(game, action, destination);
+    }
+
+    getBoostTarget(
+        game: Game,
+        playerEntity: Entity,
+        action: Action,
+        destination: Cell
+    ) {
+        return this.getTarget(game, action, destination).filter(
+            (entity) => entity.entityType === playerEntity.entityType
+        );
     }
 
     async animate(
