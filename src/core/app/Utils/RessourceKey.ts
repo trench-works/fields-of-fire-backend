@@ -5,9 +5,10 @@ export function compareKeys<
     if (clientKey === undefined || actionKey === undefined) {
         return false;
     }
-    return Object.keys(clientKey).every(
-        (key: string) =>
+    return Object.keys(clientKey).every((key: string) => {
+        return (
             actionKey[`${key}`] === undefined ||
             clientKey[`${key}`] === actionKey[`${key}`]
-    );
+        );
+    });
 }
