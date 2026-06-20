@@ -18,6 +18,7 @@ import { ChangeClass } from "./interfaces/ChangeClass";
 import { SingleClientOutputError } from "../../../core/types/Action";
 import { Game } from "../../Game/data/Game";
 import { LobbyUpdate } from "./interfaces/LobbyUpdate";
+import { LobbyPlayerService } from "../services/LobbysPlayerService";
 
 export class LobbyController extends WsController<
     LobbyKeys,
@@ -27,6 +28,7 @@ export class LobbyController extends WsController<
 > {
     constructor(
         @Provide(LobbyService) private readonly lobbyService: LobbyService,
+        @Provide(LobbyPlayerService) private readonly lobbyPlayerService: LobbyPlayerService,
         @Provide(GameService) private readonly gameService: GameService,
         @Provide(LobbyWebSocketManager) socketManager: LobbyWebSocketManager
     ) {
@@ -67,7 +69,7 @@ export class LobbyController extends WsController<
         key: { lobbyId },
         user,
     }: WsListenerOptions<LobbyKeys>): Promise<void | SingleClientOutputError> {
-        const lobby = await this.lobbyService.removePlayer(lobbyId, user.id);
+        const lobby = await this.lobbyPlayerService.removePlayer(lobbyId, user.id);
         if (lobby instanceof NotFoundError) {
             return lobby;
         }
@@ -86,7 +88,7 @@ export class LobbyController extends WsController<
         LobbyKeys,
         ChangeClass
     >): Promise<void | SingleClientOutputError> {
-        const lobby = await this.lobbyService.changeClass(
+        const lobby = await this.lobbyPlayerService.changeClass(
             lobbyId,
             user.id,
             classId
