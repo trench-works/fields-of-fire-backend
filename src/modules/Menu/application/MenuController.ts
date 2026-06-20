@@ -75,13 +75,10 @@ export class MenuController extends WsController<
         return {
             actionId: MenuReturnActions.JOIN,
             payload: {
-                lobbyId: lobby.id,
-                playerId: lobby.players.find((player) => player.userId === id)!
-                    .playerId,
+                    lobby: lobby,
             },
         };
     }
-
     async joinLobby({
         user: { id },
         payload: { lobbyId },
@@ -95,9 +92,7 @@ export class MenuController extends WsController<
         return {
             actionId: MenuReturnActions.JOIN,
             payload: {
-                lobbyId: lobby.id,
-                playerId: lobby.players.find((player) => player.userId === id)!
-                    .playerId,
+                lobby: lobby,
             },
         };
     }

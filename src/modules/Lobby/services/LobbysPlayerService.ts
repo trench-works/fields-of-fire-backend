@@ -23,12 +23,14 @@ export class LobbyPlayerService {
     ): Promise<Lobby | NotFoundError> {
         const lobby = await this.lobbyDataManager.getLobby(lobbyId);
         if (lobby instanceof NotFoundError) {
+            this.logger.error(`error on removing ${JSON.stringify(userId)} to ${JSON.stringify(lobbyId)} `)
             return lobby;
         }
         lobby.players = lobby.players.filter(
             (player) => player.userId !== userId
         );
         this.lobbyService.onLobbiesUpdate(lobby);
+        this.lobbyService.onLobbyUpdate(lobby);
         return lobby;
     }
 
@@ -39,11 +41,13 @@ export class LobbyPlayerService {
     ): Promise<Lobby | NotFoundError> {
         const lobby = await this.lobbyDataManager.getLobby(lobbyId);
         if (lobby instanceof NotFoundError) {
+            this.logger.error(`error on changing ${JSON.stringify(classId)} for ${JSON.stringify(userId)} to ${JSON.stringify(lobbyId)} `)
             return lobby;
         }
         lobby.players.find((player) => player.userId === userId)!.classId =
             classId;
         await this.lobbyDataManager.set(lobbyId, lobby);
+        this.lobbyService.onLobbyUpdate(lobby);
         return lobby;
     }
 
@@ -53,6 +57,7 @@ export class LobbyPlayerService {
     ): Promise<Lobby | SocketError> {
         const lobby = await this.lobbyDataManager.get(lobbyId);
         if (!lobby) {
+            this.logger.error(`error on adding ${JSON.stringify(userId)} to ${JSON.stringify(lobbyId)} `)
             return new NotFoundError();
         }
         const currentPlayer = lobby.players.find(
@@ -72,6 +77,7 @@ export class LobbyPlayerService {
             name: user?.username ?? "Entente Fantassin",
         });
         this.lobbyService.onLobbiesUpdate(lobby);
+        this.lobbyService.onLobbyUpdate(lobby);
         this.logger.log(lobby.players);
         return lobby;
     }

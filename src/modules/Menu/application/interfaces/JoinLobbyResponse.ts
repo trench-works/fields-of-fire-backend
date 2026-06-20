@@ -1,4 +1,5 @@
+import { Lobby } from "../../../Lobby/data/Lobby";
+
 export class JoinLobbyResponse {
-    lobbyId!: string;
-    playerId!: string;
+    lobby!: Lobby;
 }

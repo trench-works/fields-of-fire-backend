@@ -19,11 +19,14 @@ export class LobbyService {
     private readonly logger!: Logger;
 
     async createLobby(userId: string) {
+        const user = await this.userRepository.get(userId)!;
         const lobby = await this.lobbyDataManager.addLobby({
             creatorId: userId,
+            creatorName: user?.username ?? "NO_NAME",
+            name : `Partie de ${user?.username ?? "NO_NAME"}`,
             maxPlayers: 4,
         });
-        const user = await this.userRepository.get(userId)!;
+       
         lobby.players.push({
             userId,
             playerId: Id.get(),
@@ -37,6 +40,9 @@ export class LobbyService {
     async onLobbiesUpdate(lobby: Lobby) {
         await this.lobbyDataManager.set(lobby.id, lobby);
         this.menuWebSocketManager.emitLobbiesUpdate(await this.getLobbies());
+    }
+
+    async onLobbyUpdate(lobby: Lobby) {
         this.lobbyWebSocketManager.emitLobbyUpdate(lobby);
     }
 
@@ -52,6 +58,7 @@ export class LobbyService {
                     maxPlayers: lobby.maxPlayers,
                     creatorId: lobby.creatorId,
                     players: lobby.players,
+                    name : lobby.name
                 };
             })
         );
