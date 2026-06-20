@@ -4,20 +4,28 @@ import { Entity } from "../../Game/data/Entity";
 export class Stats {
     life!: number;
     maxLife!: number;
+
+    energy!: number;
+    totalEnergy!: number;
+
+    mouvement!: number;
+    totalMouvement!: number;
+
     precision!: number;
     strength!: number;
     armor!: number;
     initiative!: number;
     dodging!: number;
-    energy!: number;
-    mouvement!: number;
 
-    static add(baseStats: Stats, ...stats: Partial<Stats>[]): Stats {
+    static add<BaseStat extends Partial<Stats>>(
+        baseStats: BaseStat,
+        ...stats: Partial<Stats>[]
+    ): BaseStat {
         const addedStats = { ...baseStats };
         for (const stat of stats) {
             for (const [key, value] of Object.entries(stat)) {
                 addedStats[key as keyof Stats] =
-                    addedStats[key as keyof Stats] + value;
+                    (addedStats[key as keyof Stats] ?? 0) + value;
             }
         }
         return addedStats;
@@ -42,7 +50,9 @@ export class Stats {
             initiative: 0,
             dodging: 0,
             energy: 0,
+            totalEnergy: 0,
             mouvement: 0,
+            totalMouvement: 0,
         };
         return Stats.add(
             emptyStats,
