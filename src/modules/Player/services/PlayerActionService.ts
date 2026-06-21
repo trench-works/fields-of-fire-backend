@@ -59,9 +59,7 @@ export class PlayerActionService {
 
         // Determinate if it is player's turn
         const playingEntityId = game.playerTurns[0];
-        const player = game.players.find(
-            (player) => player.playerId === playerId
-        );
+        const player = game.players.find((player) => player.id === playerId);
         if (playingEntityId !== player?.entityId) {
             return new SocketError("It is not the player's turn");
         }
@@ -82,11 +80,9 @@ export class PlayerActionService {
             return new SocketError("Game not found");
         }
         const destination = game.plateau[target.x][target.y];
-        const player = game.players.find(
-            (player) => player.playerId === playerId
-        )!;
+        const player = game.players.find((player) => player.id === playerId)!;
         const playerEntity = game.entities.find(
-            (e) => e.entityId === player!.entityId
+            (e) => e.id === player!.entityId
         );
         if (!playerEntity) {
             return new SocketError("Entity not found");
@@ -189,7 +185,7 @@ export class PlayerActionService {
             game.plateau[playerEntity.position.x][playerEntity.position.y];
         // Occupe la nouvelle case
         currentCase.entityId = undefined;
-        destination.entityId = playerEntity.entityId;
+        destination.entityId = playerEntity.id;
         // Met à jour la position
         playerEntity.position = destination.position;
         playerEntity.stats.mouvement -= range;
@@ -200,7 +196,7 @@ export class PlayerActionService {
             {
                 key: "move",
                 data: {
-                    entityId: playerEntity.entityId,
+                    entityId: playerEntity.id,
                     path: movePath,
                 },
             },
@@ -238,7 +234,7 @@ export class PlayerActionService {
         playerEntity.stats.energy -= action.cost;
 
         this.logger.log(
-            `Player ${playerEntity.entityId} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
+            `Player ${playerEntity.id} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
         );
         this.animate(game, playerEntity, action, destination, targetList);
 
@@ -258,7 +254,7 @@ export class PlayerActionService {
         }
         target.stats.life -= damage;
         this.logger.log(
-            `Applied ${damage} damage to entity ${target.entityId}, remaining life: ${target.stats.life}`
+            `Applied ${damage} damage to entity ${target.id}, remaining life: ${target.stats.life}`
         );
         if (target.stats.life < 0) {
             target.stats.life = 0;
@@ -298,7 +294,7 @@ export class PlayerActionService {
         destination: Cell
     ) {
         return this.getTarget(game, action, destination).filter(
-            (entity) => entity.entityType === playerEntity.entityType
+            (entity) => entity.teamId === playerEntity.teamId
         );
     }
 
@@ -313,7 +309,7 @@ export class PlayerActionService {
             {
                 key: "attack",
                 data: {
-                    entityId: playerEntity.entityId,
+                    entityId: playerEntity.id,
                     actionId: action.id,
                     origin: playerEntity.position,
                     target: destination.position,

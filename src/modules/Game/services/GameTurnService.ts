@@ -10,6 +10,7 @@ import { MobService } from "../../Player/services/MobService";
 import { GameEventAnimation } from "../application/interfaces/GameUpdateEvent";
 import { Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
+import { TeamName } from "../data/Team";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
 import { GameService } from "./GameService";
 
@@ -38,7 +39,7 @@ export class GameTurnService implements AsyncResolver {
                 if (entity.stats.life <= 0 && !entity.dead) {
                     entity.dead = true;
                     game.playerTurns = game.playerTurns.filter(
-                        (entityId) => entityId !== entity.entityId
+                        (entityId) => entityId !== entity.id
                     );
                     game.plateau[entity.position.x][
                         entity.position.y
@@ -46,7 +47,7 @@ export class GameTurnService implements AsyncResolver {
                     animations.push({
                         key: "death",
                         data: {
-                            entityId: entity.entityId,
+                            entityId: entity.id,
                         },
                     });
                 }
@@ -56,17 +57,18 @@ export class GameTurnService implements AsyncResolver {
     }
 
     public async detectGameEnd(game: Game): Promise<boolean> {
-        const alivePlayersCount = game.entities.filter(
-            (entity) => entity.side === "player" && !entity.dead
-        ).length;
-        const aliveMobsCount = game.entities.filter(
-            (entity) => entity.side === "mob" && !entity.dead
-        ).length;
-        if (alivePlayersCount === 0 || aliveMobsCount === 0) {
+        const aliveTeams = game.teams.filter((team) =>
+            team.entitiesIds.some(
+                (entityId) =>
+                    game.entities.find((entity) => entity.id === entityId)!
+                        .dead === false
+            )
+        );
+        if (aliveTeams.length <= 1) {
             const boostArray: Boost[][] = [];
             for (const player of game.players) {
                 const entity = game.entities.find(
-                    (entity) => entity.entityId === player.entityId
+                    (entity) => entity.id === player.entityId
                 )!;
                 if (entity.dead) {
                     entity.dead = false;
@@ -80,7 +82,7 @@ export class GameTurnService implements AsyncResolver {
             }
             game.isStopped = true;
             await this.socketManager.emitGameEnd(game.id, (i) => ({
-                playerWin: aliveMobsCount === 0,
+                playerWin: aliveTeams?.[0]?.name === TeamName.PLAYERS,
                 boosts: boostArray[i],
             }));
             await this.gameDataManager.set(game.id, game);
@@ -103,11 +105,8 @@ export class GameTurnService implements AsyncResolver {
         const playingEntityId = game.playerTurns.shift()!;
         game.playerTurns.push(playingEntityId);
         const playerEntity = game.entities.find(
-            (entity) => entity.entityId === playingEntityId
+            (entity) => entity.id === playingEntityId
         )!;
-        const entityClass = (await this.classRepository.get(
-            playerEntity.classId
-        ))!;
         playerEntity.effects = playerEntity.effects
             .map((effect) => ({
                 ...effect,
@@ -119,8 +118,8 @@ export class GameTurnService implements AsyncResolver {
                 (effect) => effect.duration === null || effect.duration > 0
             );
 
-        playerEntity.stats.mouvement = entityClass.stats.totalMouvement;
-        playerEntity.stats.energy = entityClass.stats.totalEnergy;
+        playerEntity.stats.mouvement = playerEntity.stats.totalMouvement;
+        playerEntity.stats.energy = playerEntity.stats.totalEnergy;
 
         await this.gameDataManager.set(game.id, game);
 

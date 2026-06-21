@@ -48,7 +48,7 @@ export class MobService implements AsyncResolver {
 
     private async mobAction(game: Game) {
         const entity = game.entities.find(
-            (entity) => entity.entityId === game.playerTurns[0]
+            (entity) => entity.id === game.playerTurns[0]
         )!;
         //const mob = game.npc.find((mob) => mob.entityId === entity.entityId)!;
         const charClass = await this.classRepository.get(entity.classId);
@@ -89,7 +89,7 @@ export class MobService implements AsyncResolver {
                     animations.push({
                         key: "attack",
                         data: {
-                            entityId: entity.entityId,
+                            entityId: entity.id,
                             actionId: action.id,
                             origin: entity.position,
                             target: nearestPlayer.position,
@@ -127,7 +127,7 @@ export class MobService implements AsyncResolver {
                             movePath.push({ ...entity.position });
                             game.plateau[entity.position.x][
                                 entity.position.y
-                            ].entityId = entity.entityId;
+                            ].entityId = entity.id;
                             PM--;
                             moves.shift();
                         }
@@ -141,7 +141,7 @@ export class MobService implements AsyncResolver {
                             animations.push({
                                 key: "move",
                                 data: {
-                                    entityId: entity.entityId,
+                                    entityId: entity.id,
                                     path: movePath,
                                 },
                             });
@@ -192,17 +192,15 @@ export class MobService implements AsyncResolver {
     private getNearestPlayer(game: Game, mob: Entity): Entity {
         const entitiesRange: Record<string, number> = {};
         for (const entity of game.entities.filter(
-            (entity) => entity.side === "player" && !entity.dead
+            (entity) => entity.teamId !== mob.teamId && !entity.dead
         )) {
-            entitiesRange[entity.entityId] = this.getDistance(mob, entity);
+            entitiesRange[entity.id] = this.getDistance(mob, entity);
         }
 
         const targetEntityId = Object.entries(entitiesRange).sort(
             ([, aRange], [, bRange]) => (aRange > bRange ? 1 : -1)
         )?.[0]?.[0];
 
-        return game.entities.find(
-            (entity) => entity.entityId === targetEntityId
-        )!;
+        return game.entities.find((entity) => entity.id === targetEntityId)!;
     }
 }

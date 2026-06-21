@@ -17,7 +17,7 @@ export class EntityService {
         const currentCase = game.plateau[entity.position.x][entity.position.y];
         currentCase.entityId = undefined;
         // Occupe la nouvelle case
-        destination.entityId = entity.entityId;
+        destination.entityId = entity.id;
         // Met à jour la position
         entity.position = target;
 
