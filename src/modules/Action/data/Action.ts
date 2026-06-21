@@ -42,7 +42,7 @@ export class ActionEntity {
 export enum ActionType {
     RANGED = "ranged",
     MELEE = "melee",
-    OTHER = "other"
+    OTHER = "other",
 }
 
 export enum ActionZoneType {
@@ -101,9 +101,7 @@ export class ActionUtils {
                 )
             ) {
                 entities.push(
-                    game.entities.find(
-                        (entity) => entity.entityId === cell.entityId
-                    )!
+                    game.entities.find((entity) => entity.id === cell.entityId)!
                 );
             }
         }

@@ -12,7 +12,6 @@ import { GameDataManager } from "../data/GameRepository";
 import { LobbyDataManager } from "../../Lobby/data/LobbyDataManager";
 import { JoinGameResponse } from "../application/interfaces/JoinGameResponse";
 import { Board } from "../data/Board";
-import { Mob } from "../data/Mob";
 import { Entity, EntityType } from "../data/Entity";
 import { Player } from "../../Player/data/Player";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
@@ -20,6 +19,8 @@ import { GameCreationError } from "./errors/GameCreationError";
 import { UserRepository } from "../../User/data/UserRepository";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
 import { BoostService } from "../../Player/services/BoostService";
+import { Team, TeamColor, TeamName } from "../data/Team";
+import { NPC } from "../data/NPC";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -48,7 +49,7 @@ export class GameService {
         }
         const player = game.players.find((player) => player.userId === userId)!;
         const playerEntity = game.entities.find(
-            (entity) => entity.entityId === player.entityId
+            (entity) => entity.id === player.entityId
         )!;
         return { game, player, playerEntity };
     }
@@ -68,64 +69,73 @@ export class GameService {
         const plateau: Cell[][] = Board.getRandomPremade();
         const classes = await this.classRepository.list();
 
+        const playersTeam: Team = {
+            id: Id.get(),
+            name: TeamName.PLAYERS,
+            color: TeamColor.BLUE,
+            playerIds: [],
+            npcIds: [],
+            entitiesIds: [],
+        };
+        const mobsTeam: Team = {
+            id: Id.get(),
+            name: TeamName.MOBS,
+            color: TeamColor.ROUGE,
+            playerIds: [],
+            npcIds: [],
+            entitiesIds: [],
+        };
         const [mobs, mobsEntities] = await this.getMobs(
             gameId,
             plateau,
             2,
             0,
-            lobby.players.length
+            lobby.players.length,
+            mobsTeam
         );
-
-        const entitiesAndPlayers: { player: Player; entity: Entity }[] = [];
+        const playersEntities: Entity[] = [];
+        const players: Player[] = [];
         this.logger.log(lobby.players);
         for (const lobbyPlayer of lobby.players) {
             const entityId = Id.get();
-            const playerCell = await this.placeEntity(entityId, plateau, false);
+            const playerCell = await this.placeEntity(entityId, plateau);
             const user = await this.userRepository.get(lobbyPlayer.userId);
             const charClass = classes.find(
                 (charClass) => charClass.id === lobbyPlayer.classId
             )!;
-            entitiesAndPlayers.push({
-                player: {
-                    playerId: lobbyPlayer.playerId,
-                    userId: lobbyPlayer.userId,
-                    entityId,
-                    gameId,
-                    name: user?.username ?? charClass.name,
-                },
-                entity: {
-                    entityId,
-                    position: { ...playerCell.position },
-                    classId: lobbyPlayer.classId,
-                    entityType: EntityType.ALLY,
-                    stats: charClass.stats,
-                    effects: [],
-                    side: "player",
-                    dead: false,
-                },
+            players.push({
+                id: lobbyPlayer.playerId,
+                userId: lobbyPlayer.userId,
+                entityId,
+                gameId,
+                name: user?.username ?? charClass.name,
+            });
+            playersEntities.push({
+                id: entityId,
+                teamId: playersTeam.id,
+                controllerId: lobbyPlayer.playerId,
+                position: { ...playerCell.position },
+                classId: lobbyPlayer.classId,
+                type: EntityType.PLAYER,
+                stats: charClass.stats,
+                effects: [],
+                dead: false,
             });
         }
-        const entities = [
-            ...entitiesAndPlayers.map(({ entity }) => entity),
-            ...mobsEntities,
-        ];
+        const entities = [...playersEntities, ...mobsEntities];
         const game: Game = {
             id: gameId,
+            mode: lobby.mode,
             creatorId: userId,
             plateau: plateau,
-            players: entitiesAndPlayers.map(({ player }) => player),
+            players: players,
             npc: mobs,
             entities: entities.sort((entityA, entityB) => {
-                const classA = classes.find(
-                    (charClass) => charClass.id === entityA.classId
-                )!;
-                const classB = classes.find(
-                    (charClass) => charClass.id === entityB.classId
-                )!;
-                return classA.stats.initiative < classB.stats.initiative
+                return entityA.stats.initiative < entityB.stats.initiative
                     ? 1
                     : -1;
             }),
+            teams: [playersTeam, mobsTeam],
             playerTurns: await this.getTurns(entities),
             readyPlayers: [],
             round: 1,
@@ -149,14 +159,11 @@ export class GameService {
 
     private async placeEntity(
         entityId: string,
-        plateau: Cell[][],
-        isMob: boolean
+        plateau: Cell[][]
     ): Promise<Cell> {
         const placementCells = plateau
             .flat()
-            .filter((cell) =>
-                !cell.entityId && isMob ? cell.isMobStart : cell.isPlayerStart
-            );
+            .filter((cell) => !cell.entityId && cell.isStart);
         const placementCell = placementCells[Ran.int(placementCells.length)];
         if (!placementCell) {
             throw new GameCreationError();
@@ -179,7 +186,7 @@ export class GameService {
                     ? 1
                     : -1;
             })
-            .map((entity) => entity.entityId);
+            .map((entity) => entity.id);
     }
 
     private async getMobs(
@@ -187,37 +194,43 @@ export class GameService {
         plateau: Cell[][],
         mobCount: number,
         boostCount: number,
-        playersCount: number
-    ): Promise<[Mob[], Entity[]]> {
+        playersCount: number,
+        team: Team
+    ): Promise<[NPC[], Entity[]]> {
         //TODO: appliquer des boosts
         const classes = await this.classRepository.list();
 
-        const npcs: Mob[] = [];
+        const npcs: NPC[] = [];
         const entities: Entity[] = [];
 
         for (let i = 0; i < mobCount; i++) {
             const entityId = Id.get();
-            const mobCell = await this.placeEntity(entityId, plateau, true);
+            const mobCell = await this.placeEntity(entityId, plateau);
             // get a random mob class
             const mobClasses = classes.filter(
                 (charClass) => !charClass.playable
             );
             const charClass = mobClasses[Ran.int(mobClasses.length)];
-            npcs.push({
+            const npc: NPC = {
+                id: Id.get(),
                 entityId,
                 gameId,
-            });
+            };
+            team.npcIds.push(npc.id);
+            npcs.push(npc);
 
             const entity: Entity = {
-                entityId,
+                id: entityId,
+                teamId: team.id,
+                controllerId: npc.id,
                 position: { ...mobCell.position },
                 classId: charClass.id,
-                entityType: EntityType.ENEMY,
+                type: EntityType.NPC,
                 stats: charClass.stats,
                 effects: [],
-                side: "mob",
                 dead: false,
             };
+            team.entitiesIds.push(entity.id);
 
             const boosts = await this.boostService.getMobBoost(
                 playersCount,
@@ -246,35 +259,37 @@ export class GameService {
                 cell.entityId = undefined;
             }
         }
-        for (const npc of game.npc) {
-            const entityIndex = game.entities.findIndex(
-                (entity) => entity.entityId === npc.entityId
-            );
-            game.entities.splice(entityIndex, 1);
+        const mobsTeam = game.teams.find(
+            (team) => team.name === TeamName.MOBS
+        )!;
+        // Delete NPCs and Entities
+        for (const npcId of mobsTeam.npcIds) {
+            const npcIndex = game.npc.findIndex((npc) => npc.id === npcId);
+            game.entities.splice(npcIndex, 1);
         }
+        for (const npcId of mobsTeam.npcIds) {
+            const npcIndex = game.npc.findIndex((npc) => npc.id === npcId);
+            game.entities.splice(npcIndex, 1);
+        }
+        // Create new Mobs and Entities
         const [npcs, mobsEntities] = await this.getMobs(
             game.id,
             game.plateau,
             2,
             game.round,
-            game.players.length
+            game.players.length,
+            mobsTeam
         );
-        game.npc = npcs;
+        game.npc.push(...npcs);
         game.entities.push(...mobsEntities);
 
         for (const player of game.players) {
-            const entity = game.entities.find(
-                (e) => e.entityId === player.entityId
-            )!;
+            const entity = game.entities.find((e) => e.id === player.entityId)!;
             entity.effects = entity.effects.filter((e) => e.duration === null); // garde les effets permanents
             entity.stats.energy = entity.stats.totalEnergy;
             entity.stats.mouvement = entity.stats.totalMouvement;
 
-            const playerCell = await this.placeEntity(
-                entity.entityId,
-                game.plateau,
-                false
-            );
+            const playerCell = await this.placeEntity(entity.id, game.plateau);
             entity.position = { ...playerCell.position };
         }
 

@@ -30,11 +30,9 @@ export class PlayerService {
         }
         game.readyPlayers.push(playerId);
         await this.gameDataManager.set(gameId, game);
-        const player = game.players.find(
-            (player) => player.playerId === playerId
-        )!;
+        const player = game.players.find((player) => player.id === playerId)!;
         const entity = game.entities.find(
-            (entity) => entity.entityId === player.entityId
+            (entity) => entity.id === player.entityId
         )!;
         this.logger.debug(
             `Player ${playerId} has stats ${JSON.stringify(entity.stats)}`
@@ -59,11 +57,11 @@ export class PlayerService {
             return;
         }
         const playerIndex = game.players.findIndex(
-            (player) => player.playerId === playerId
+            (player) => player.id === playerId
         );
         const [player] = game.players.splice(playerIndex, 1);
         const entityIndex = game.entities.findIndex(
-            (entity) => entity.entityId === player.entityId
+            (entity) => entity.id === player.entityId
         );
         game.entities.splice(entityIndex, 1);
         game.playerTurns = game.playerTurns.filter(

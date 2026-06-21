@@ -2,16 +2,17 @@ import { Effect } from "../../Effect/data/Effect";
 import { Stats } from "../../Stat/data/Stats";
 
 export enum EntityType {
-    ALLY = "ALLY",
-    ENEMY = "ENEMY",
-    NEUTRAL = "NEUTRAL",
+    PLAYER = "PLAYER",
+    NPC = "NPC",
 }
 
 export class Entity {
+    id!: string;
     classId!: string;
-    entityId!: string;
+    teamId!: string;
+    controllerId!: string;
 
-    entityType!: EntityType;
+    type!: EntityType;
 
     name?: string;
 
@@ -21,6 +22,5 @@ export class Entity {
     stats!: Stats;
     effects!: Effect[];
 
-    side!: "player" | "mob";
     dead!: boolean;
 }

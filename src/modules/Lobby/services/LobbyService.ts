@@ -5,6 +5,7 @@ import { LobbyResponse } from "../../Menu/application/interfaces/UpdateLobbyList
 import { MenuWebSocketManager } from "../../Menu/web/MenuWebSocketManager";
 import { UserRepository } from "../../User/data/UserRepository";
 import { LobbyWebSocketManager } from "../web/LobbyWebSocketManager";
+import { GameMode } from "../../Game/data/Game";
 
 export class LobbyService {
     @Provide(LobbyDataManager)
@@ -22,12 +23,13 @@ export class LobbyService {
         const user = await this.userRepository.get(userId)!;
         const lobby = await this.lobbyDataManager.addLobby({
             creatorId: userId,
+            mode: GameMode.INFINITY,
             creatorName: user?.username ?? "NO_NAME",
-            name : `Partie de ${user?.username ?? "NO_NAME"}`,
+            name: `Partie de ${user?.username ?? "NO_NAME"}`,
             maxPlayers: 4,
-            playerReady : []
+            playerReady: [],
         });
-       
+
         lobby.players.push({
             userId,
             playerId: Id.get(),
@@ -59,7 +61,7 @@ export class LobbyService {
                     maxPlayers: lobby.maxPlayers,
                     creatorId: lobby.creatorId,
                     players: lobby.players,
-                    name : lobby.name
+                    name: lobby.name,
                 };
             })
         );

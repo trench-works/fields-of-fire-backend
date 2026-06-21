@@ -1,24 +1,36 @@
 import { AStar } from "../../../game-lib";
 import { Player } from "../../Player/data/Player";
 import { Entity } from "./Entity";
-import { Mob } from "./Mob";
+import { NPC } from "./NPC";
+import { Team } from "./Team";
 
 export type Cell = {
     entityId?: string;
+    position: { x: number; y: number };
+    // Terrain properties
     isWall: boolean;
     isHole: boolean;
-    isPlayerStart: boolean;
-    isMobStart: boolean;
-    position: { x: number; y: number };
+    // Start properties
+    isStart: boolean;
 };
+
+export enum GameMode {
+    INFINITY = "INFINITY",
+    PVP = "PVP",
+}
 
 export type Game = {
     id: string;
+    mode: GameMode;
     creatorId: string;
     plateau: Cell[][];
+
+    // Entities related things
     players: Player[];
-    npc: Mob[];
+    npc: NPC[];
     entities: Entity[];
+    teams: Team[];
+
     playerTurns: string[];
 
     //things relative to rounds
