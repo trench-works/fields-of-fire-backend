@@ -10,6 +10,7 @@ export class Action {
     description?: string;
     damage?: { min: number; max: number };
     effectList?: Effect[];
+    selfEffectList?: Effect[];
     range!: number;
     zoneType!: ActionZoneType[];
     zoneSize!: number;
@@ -29,6 +30,7 @@ export class ActionEntity {
     description?: string;
     damage?: { min: number; max: number };
     effectList?: string[];
+    selfEffectList?: string[];
     range!: number;
     zoneType!: ActionZoneType[];
     zoneSize!: number;
