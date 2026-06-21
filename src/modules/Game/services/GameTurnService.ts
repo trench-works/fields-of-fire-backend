@@ -8,6 +8,7 @@ import { Boost } from "../../Effect/data/Boost";
 import { BoostService } from "../../Player/services/BoostService";
 import { MobService } from "../../Player/services/MobService";
 import { GameEventAnimation } from "../application/interfaces/GameUpdateEvent";
+import { EntityType } from "../data/Entity";
 import { Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
 import { TeamName } from "../data/Team";
@@ -124,12 +125,12 @@ export class GameTurnService implements AsyncResolver {
         await this.gameDataManager.set(game.id, game);
 
         // If new playing entity is a mob, then launch playing actions for the mob
-        const newPlayingMob = game.npc.find(
-            (mob) => mob.entityId === game.playerTurns[0]
-        );
+        const newPlayingEntity = game.entities.find(
+            (entity) => entity.id === game.playerTurns[0]
+        )!;
 
         await this.socketManager.emitUpdate(game, []);
-        if (newPlayingMob) {
+        if (newPlayingEntity?.type === EntityType.NPC) {
             this.mobService.play(gameId);
         } else {
             // this.turnTimeoutRepository.newTimeout(gameId, () => //FIXME: player turn timeout system is shitty and creating issues

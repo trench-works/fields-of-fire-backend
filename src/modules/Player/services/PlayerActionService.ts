@@ -16,6 +16,7 @@ import { Player } from "../data/Player";
 import { PlayerOutputActions } from "../web/PlayerSocketActions";
 import { AttackService } from "./AttackService";
 import { BoostService } from "./BoostService";
+import { InvocationService } from "./InvocationService";
 
 export enum PlayerActionId {
     WALK = "walk",
@@ -47,6 +48,8 @@ export class PlayerActionService {
     private readonly attackService!: AttackService;
     @Provide(BoostService)
     private readonly boostService!: BoostService;
+    @Provide(InvocationService)
+    private readonly invocationService!: InvocationService;
 
     async finishTurn(
         gameId: string,
@@ -122,6 +125,8 @@ export class PlayerActionService {
                     action,
                     destination
                 );
+            // case PlayerActionId.INVOCATE:
+            //    return await this.invocationService.invocate(game, playerEntity, action, destination);
             default:
                 this.logger.error("Unknown action ID");
         }

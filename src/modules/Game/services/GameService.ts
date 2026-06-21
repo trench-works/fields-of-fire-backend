@@ -109,6 +109,7 @@ export class GameService {
                 entityId,
                 gameId,
                 name: user?.username ?? charClass.name,
+                invocations: [],
             });
             playersEntities.push({
                 id: entityId,

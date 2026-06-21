@@ -4,4 +4,5 @@ export type Player = {
     entityId: string;
     gameId: string;
     name: string;
+    invocations: string[];
 };
