@@ -34,6 +34,7 @@ export class InvocationService {
                 .find((team) => team.id === invoker.teamId)
                 ?.entitiesIds.push(entity.id);
             game.entities.push(entity);
+            game.playerTurns.splice(1, 0, entity.id);
         }
     }
 }
