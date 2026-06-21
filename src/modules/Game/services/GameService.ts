@@ -121,6 +121,8 @@ export class GameService {
                 effects: [],
                 dead: false,
             });
+            playersTeam.entitiesIds.push(entityId);
+            playersTeam.playerIds.push(lobbyPlayer.playerId);
         }
         const entities = [...playersEntities, ...mobsEntities];
         const game: Game = {

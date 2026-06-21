@@ -77,6 +77,7 @@ export class WsManager<
                         error: action,
                     });
                 }
+                console.log("SEND TO FRONT");
                 socket.send(message);
             } catch {
                 this.logger.error("CANT SEND PAYLOAD", JSON.stringify(action));

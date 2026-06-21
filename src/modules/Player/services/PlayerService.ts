@@ -42,7 +42,6 @@ export class PlayerService {
         this.logger.debug(
             `Player ${playerId} has stats ${JSON.stringify(entity.stats)} after booost`
         );
-        game.readyPlayers.push(playerId);
         await this.gameDataManager.set(gameId, game);
 
         this.logger.log(game.players.length, game.readyPlayers.length);

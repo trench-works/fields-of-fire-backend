@@ -36,17 +36,15 @@ export class LobbyService {
             classId: "entente_fantassin",
             name: user?.username ?? "Entente Fantassin",
         });
-        this.onLobbiesUpdate(lobby);
+        await this.onLobbiesUpdate(lobby);
         return lobby;
     }
 
     async onLobbiesUpdate(lobby: Lobby) {
         await this.lobbyDataManager.set(lobby.id, lobby);
-        this.menuWebSocketManager.emitLobbiesUpdate(await this.getLobbies());
-    }
-
-    async onLobbyUpdate(lobby: Lobby) {
-        this.lobbyWebSocketManager.emitLobbyUpdate(lobby);
+        await this.menuWebSocketManager.emitLobbiesUpdate(
+            await this.getLobbies()
+        );
     }
 
     async getLobbies(): Promise<LobbyResponse[]> {

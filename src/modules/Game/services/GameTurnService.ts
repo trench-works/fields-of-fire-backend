@@ -57,14 +57,14 @@ export class GameTurnService implements AsyncResolver {
     }
 
     public async detectGameEnd(game: Game): Promise<boolean> {
-        const aliveTeams = game.teams.filter((team) => {
+        const aliveTeams = game.teams.filter((team) =>
             team.entitiesIds.some(
                 (entityId) =>
                     game.entities.find((entity) => entity.id === entityId)!
                         .dead === false
-            );
-        });
-        if (aliveTeams.length === 1) {
+            )
+        );
+        if (aliveTeams.length <= 1) {
             const boostArray: Boost[][] = [];
             for (const player of game.players) {
                 const entity = game.entities.find(
@@ -82,7 +82,7 @@ export class GameTurnService implements AsyncResolver {
             }
             game.isStopped = true;
             await this.socketManager.emitGameEnd(game.id, (i) => ({
-                playerWin: aliveTeams[0].name === TeamName.PLAYERS,
+                playerWin: aliveTeams?.[0]?.name === TeamName.PLAYERS,
                 boosts: boostArray[i],
             }));
             await this.gameDataManager.set(game.id, game);
