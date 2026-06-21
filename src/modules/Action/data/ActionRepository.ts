@@ -25,7 +25,7 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
                 for (const key of entity.selfEffectList) {
                 const selfEffect = await this.effectRepository.get(key);
                     if (selfEffect && !(selfEffect instanceof DBError)) {
-                        effectList.push(selfEffect);
+                        selfEffectList.push(selfEffect);
                     }
                 }
             }

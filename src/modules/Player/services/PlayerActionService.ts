@@ -34,6 +34,7 @@ export enum PlayerActionId {
     BREAK = "break",
     PROVOK = "provok",
     SHIELD_RUSH = "shield_rush",
+    BARRICADE = "barricade",
 }
 
 export class PlayerActionService {
@@ -109,6 +110,8 @@ export class PlayerActionService {
             case PlayerActionId.SHOOT:
             case PlayerActionId.HEAL:
             case PlayerActionId.SABER:
+            case PlayerActionId.BREAK:
+            case PlayerActionId.SHIELD_RUSH:
                 return await this.attack(
                     game,
                     player,
@@ -116,6 +119,7 @@ export class PlayerActionService {
                     action,
                     destination
                 );
+            case PlayerActionId.PROVOK:
             case PlayerActionId.INTIMIDATION:
             case PlayerActionId.DOPAGE:
             case PlayerActionId.SNEAKY:
@@ -128,8 +132,8 @@ export class PlayerActionService {
                     action,
                     destination
                 );
-            // case PlayerActionId.INVOCATE:
-            //    return await this.invocationService.invocate(game, playerEntity, action, destination);
+            case PlayerActionId.BARRICADE:
+                return await this.invocationService.createInvocation(game, playerEntity, action, destination.position);
             default:
                 this.logger.error("Unknown action ID");
         }
@@ -221,6 +225,8 @@ export class PlayerActionService {
         this.checkIfAllowed(playerEntity, action, destination);
 
         const targetList = this.getAttackTarget(game, action, destination);
+            this.logger.debug(`action : ${JSON.stringify(action)}`)
+
 
         for (const target of targetList) {
             if (action.damage) {
@@ -232,7 +238,7 @@ export class PlayerActionService {
                 this.applyDamage(target, damage);
             }
             if (action.effectList) {
-                this.logger.debug(`action.effectList : ${action.effectList}`);
+                this.logger.debug(`action.effectList : ${JSON.stringify(action.effectList)}`);
                 for (const effect of action.effectList) {
                     this.applyEffect(player.name, target, effect);
                 }
@@ -281,12 +287,14 @@ export class PlayerActionService {
             this.logger.error("Target entity has no stats");
             return;
         }
+         this.logger.log(`target is ${JSON.stringify(target)}`)
         const effectCopy = { ...effect };
         if (caster) {
             effectCopy.author = caster;
         }
 
         target.effects.push(effectCopy);
+        this.logger.log("effet pushed on target : ", target.name)
     }
 
     getTarget(game: Game, action: Action, destination: Cell): Entity[] {
