@@ -303,11 +303,13 @@ export class GameService {
         // Delete NPCs and Entities
         for (const npcId of mobsTeam.npcIds) {
             const npcIndex = game.npc.findIndex((npc) => npc.id === npcId);
-            game.entities.splice(npcIndex, 1);
+            game.npc.splice(npcIndex, 1);
         }
-        for (const npcId of mobsTeam.npcIds) {
-            const npcIndex = game.npc.findIndex((npc) => npc.id === npcId);
-            game.entities.splice(npcIndex, 1);
+        for (const entityId of mobsTeam.entitiesIds) {
+            const entityIndex = game.entities.findIndex(
+                (entity) => entity.id === entityId
+            );
+            game.entities.splice(entityIndex, 1);
         }
         // Create new Mobs and Entities
         const [npcs, mobsEntities] = await this.getMobs(
@@ -318,6 +320,8 @@ export class GameService {
             game.players.length,
             mobsTeam
         );
+        mobsTeam.npcIds = npcs.map((npc) => npc.id);
+        mobsTeam.entitiesIds = mobsEntities.map((entity) => entity.id);
         game.npc.push(...npcs);
         game.entities.push(...mobsEntities);
 
