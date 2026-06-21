@@ -17,6 +17,7 @@ import { SingleClientOutputError } from "../../../core/types/Action";
 import { PlayerCancelAction } from "./interfaces/PlayerCancelAction";
 import { PlayerReady } from "./interfaces/PlayerReady";
 import { PlayerService } from "../services/PlayerService";
+import { GameSubscriptionManager } from "../../Game/services/GameSubscriptionManager";
 
 export class PlayerController extends WsController<
     PlayerKey,
@@ -28,7 +29,9 @@ export class PlayerController extends WsController<
         private readonly playerActionService: PlayerActionService,
         @Provide(PlayerService)
         private readonly playerService: PlayerService,
-        @Provide(PlayerWebSocketManager) socketManager: PlayerWebSocketManager
+        @Provide(PlayerWebSocketManager) socketManager: PlayerWebSocketManager,
+        @Provide(GameSubscriptionManager)
+        private readonly gameSubscribeAwaiters: GameSubscriptionManager
     ) {
         super({ topic: "game", key: PlayerKey, socketManager });
         this.on(PlayerInputActions.FINISH_TURN, this.finishTurn.bind(this));
@@ -39,6 +42,9 @@ export class PlayerController extends WsController<
             payloadType: PlayerReady,
         });
         this.on(PlayerInputActions.DISCONNECT, this.disconnect.bind(this));
+        this.onSubscribe(async ({ key: { gameId, playerId } }) => {
+            this.gameSubscribeAwaiters.onEvent(gameId, playerId);
+        });
     }
 
     async disconnect({ key }: WsListenerOptions<PlayerKey>) {

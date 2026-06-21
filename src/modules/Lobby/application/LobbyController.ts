@@ -16,7 +16,6 @@ import {
 } from "./interfaces/LobbyAction";
 import { ChangeClass } from "./interfaces/ChangeClass";
 import { SingleClientOutputError } from "../../../core/types/Action";
-import { Game } from "../../Game/data/Game";
 import { LobbyPlayerService } from "../services/LobbysPlayerService";
 import { PlayerReady } from "./interfaces/PlayerReady";
 
@@ -60,11 +59,6 @@ export class LobbyController extends WsController<
         if (game instanceof SocketError) {
             return game;
         }
-        this.emit<Game>({
-            actionId: LobbyOutputActions.START,
-            key: { lobbyId },
-            payload: game,
-        });
     }
 
     async handleLeave({

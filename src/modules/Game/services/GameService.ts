@@ -6,6 +6,7 @@ import {
     Id,
     LoggerService,
     Ran,
+    WsEventAwaiter,
 } from "../../../core";
 import { Cell, Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
@@ -21,6 +22,10 @@ import { GameWebSocketManager } from "../web/GameWebSocketManager";
 import { BoostService } from "../../Player/services/BoostService";
 import { Team, TeamColor, TeamName } from "../data/Team";
 import { NPC } from "../data/NPC";
+import { LobbyOutputActions } from "../../Lobby/application/interfaces/LobbyAction";
+import { LobbyWebSocketManager } from "../../Lobby/web/LobbyWebSocketManager";
+import { MobService } from "../../Player/services/MobService";
+import { GameSubscriptionManager } from "./GameSubscriptionManager";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -37,6 +42,12 @@ export class GameService {
     private readonly gameSocket!: GameWebSocketManager;
     @Provide(BoostService)
     private readonly boostService!: BoostService;
+    @Provide(LobbyWebSocketManager)
+    private readonly lobbySocket!: LobbyWebSocketManager;
+    @Provide("MobService")
+    private readonly mobService!: MobService;
+    @Provide(GameSubscriptionManager)
+    private readonly gameSubscribeAwaiters!: GameSubscriptionManager;
 
     async getPlayerCurrentGame(
         userId: string
@@ -57,7 +68,7 @@ export class GameService {
     async createGameFromLobby(
         lobbyId: string,
         userId: string
-    ): Promise<Game | SocketError> {
+    ): Promise<void | SocketError> {
         const lobby = await this.lobbyDataManager.getLobby(lobbyId);
         if (lobby instanceof NotFoundError) {
             return lobby;
@@ -157,7 +168,31 @@ export class GameService {
         //     )
         // );
 
-        return game;
+        const playersSubscribedAwaiter = new WsEventAwaiter(
+            game.players.map((player) => player.id)
+        );
+        this.gameSubscribeAwaiters.addAwaiter(
+            game.id,
+            playersSubscribedAwaiter
+        );
+        await this.lobbySocket.emit<Game>({
+            actionId: LobbyOutputActions.START,
+            key: { lobbyId },
+            payload: game,
+        });
+
+        // Wait for all players to be subscribed before doing anything else
+        const firstPlayingEntity = game.entities.find(
+            (entity) => entity.id === game.playerTurns[0]
+        )!;
+        if (firstPlayingEntity?.type === EntityType.NPC) {
+            console.log("ATTENDRE L4INSCRIPTION");
+            playersSubscribedAwaiter.promise.then(async () => {
+                new Promise((resolve) => setTimeout(resolve, 3000)).then(() =>
+                    this.mobService.play(gameId)
+                );
+            });
+        }
     }
 
     private async placeEntity(
