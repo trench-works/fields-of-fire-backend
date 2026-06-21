@@ -19,6 +19,7 @@ export class Action {
     cost!: number;
     isWalkAction?: boolean;
     targetRequired?: boolean;
+    invocateClass?: string;
 }
 
 export class ActionEntity {
@@ -37,6 +38,7 @@ export class ActionEntity {
     cost!: number;
     isWalkAction?: boolean;
     targetRequired?: boolean;
+    invocateClass?: string;
 }
 
 export enum ActionType {
