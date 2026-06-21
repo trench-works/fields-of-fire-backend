@@ -28,6 +28,8 @@ export class PlayerService {
         if (game.readyPlayers.includes(playerId)) {
             return;
         }
+        game.readyPlayers.push(playerId);
+        
         await this.gameDataManager.set(gameId, game);
         const player = game.players.find(
             (player) => player.playerId === playerId
@@ -43,7 +45,7 @@ export class PlayerService {
         this.logger.debug(
             `Player ${playerId} has stats ${JSON.stringify(entity.stats)} after booost`
         );
-        game.readyPlayers.push(playerId);
+        
         await this.gameDataManager.set(gameId, game);
 
         this.logger.log(` players : ${game.players.length}, readiz : ${game.readyPlayers.length}`);
