@@ -59,6 +59,23 @@ export class EffectRepository extends FolderRepository<Effect> {
                     energy: 2,
                 },
             },
+            provoked :{
+                id: "provoker",
+                name: "Provoqué",
+                duration: 2,
+                type: EffectType.APPLY,
+                modifier: {},
+            },
+            angered :{
+                id: "angered",
+                name: "Enervement",
+                duration: 3,
+                type: EffectType.APPLY,
+                modifier: {
+                    strength : 15,
+                    mouvement : -1,
+                },
+            },
             // LES BOOST
             vampire: {
                 id: "vampire",

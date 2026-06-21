@@ -31,6 +31,9 @@ export enum PlayerActionId {
     CHARGE = "charge",
     FIGHTING_DRUG = "fighting_drug",
     SABER = "saber",
+    BREAK = "break",
+    PROVOK = "provok",
+    SHIELD_RUSH = "shield_rush",
 }
 
 export class PlayerActionService {
@@ -233,6 +236,13 @@ export class PlayerActionService {
                 for (const effect of action.effectList) {
                     this.applyEffect(player.name, target, effect);
                 }
+            }
+        }
+
+        if (action.selfEffectList) {
+            this.logger.debug(`action.effectList : ${action.effectList}`);
+            for (const effect of action.selfEffectList) {
+                this.applyEffect(player.name, playerEntity, effect);
             }
         }
         //to finalize

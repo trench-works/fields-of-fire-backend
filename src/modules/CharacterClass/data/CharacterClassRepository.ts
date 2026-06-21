@@ -100,13 +100,40 @@ export class CharacterClassRepository extends FolderRepository<
                     totalMouvement: 2,
                 },
                 classDescription:
-                    "Un combattant intelligent et discipliné, le Caporal est équipé d'un sabre et d'une fusil, ce qui lui permet de mettre à distance les ennemies et de causer des dégâts importants à moyenne et logngue portée. Il excelle dans les combats en groupe, de pars sa capacité à booster ses alliés.",
+                    "Un combattant intelligent et discipliné, le Caporal est équipé d'un sabre et d'un fusil, ce qui lui permet de mettre à distance les ennemies et de causer des dégâts importants à moyenne et logngue portée. Il excel dans les combats en groupe, de pars sa capacité à booster ses alliés.",
                 actionList: [
                     "walk",
                     "shoot",
                     "artillery_support",
                     "intimidation",
                     "saber",
+                ],
+            },
+            entente_brise_barricade: {
+                id: "entente_brise_barricade",
+                name: "Brise-barricade de l'Entente",
+                playable: true,
+                stats: {
+                    life: 36,
+                    maxLife: 36,
+                    precision: 0,
+                    strength: 10,
+                    armor: 20,
+                    initiative: 85,
+                    dodging: 0,
+                    energy: 4,
+                    mouvement: 3,
+                    totalEnergy: 4,
+                    totalMouvement: 3,
+                },
+                classDescription:
+                    "Un combattant téméraire un intrépide, le Brise-barricade est équipé d'une hache et d'un bouclier, ce qui lui permet de mettre se protéger et de causer des dégâts à accrue sur la durée au corps à corps.",
+                actionList: [
+                    "walk",
+                    "break",
+                    "shield_rush",
+                    "provok",
+                    "barricade",
                 ],
             },
             alliance_fantassin: {

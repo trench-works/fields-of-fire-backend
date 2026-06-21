@@ -12,6 +12,7 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
             entity: ActionEntity
         ): Promise<Action> {
             const effectList: Effect[] = [];
+            const selfEffectList : Effect[] = [];
             if(entity.effectList) {
                 for (const key of entity.effectList) {
                 const effect = await this.effectRepository.get(key);
@@ -20,9 +21,18 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
                     }
                 }
             }
+            if(entity.selfEffectList) {
+                for (const key of entity.selfEffectList) {
+                const selfEffect = await this.effectRepository.get(key);
+                    if (selfEffect && !(selfEffect instanceof DBError)) {
+                        effectList.push(selfEffect);
+                    }
+                }
+            }
             return {
                 ...entity,
                 effectList,
+                selfEffectList
             };
         }
 
@@ -145,11 +155,55 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
                 description: "Frappe monocible",
                 cost: 2,
                 range: 1,
-                damage: { min: 1, max: 3 },
+                damage: { min: 1, max: 5 },
                 actionType: ActionType.MELEE,
                 zoneType: [ActionZoneType.DIAMOND],
                 zoneSize: 1,
             },
+            break :{
+                id: "break",
+                name: "Briser",
+                description: "Frappe monocible",
+                cost: 2,
+                range: 1,
+                damage: { min: 1, max: 3 },
+                actionType: ActionType.MELEE,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize: 1,
+                selfEffectList :["angered"]
+            },
+            provok: {
+                id: "provok",
+                name: "Provoquer",
+                description: "Debuff sur une cible",
+                cost : 2,
+                range : 3,
+                actionType: ActionType.OTHER,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize:1,
+                effectList :["provoked"]
+            },
+            shield_rush: {
+                id: "shield_rush",
+                name: "Charge de bouclier",
+                description: "rush sur une cible",
+                cost : 2,
+                range : 3,
+                actionType: ActionType.OTHER,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize:1,
+            },
+            barricade : {
+                id: "barricade",
+                name: "Barricade",
+                description: "construit un obstacle",
+                cost : 1,
+                range : 1,
+                actionType: ActionType.OTHER,
+                zoneType: [ActionZoneType.DIAMOND],
+                zoneSize:1,
+            },
+
         });
     }
 }
