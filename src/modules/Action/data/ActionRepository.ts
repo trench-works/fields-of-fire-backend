@@ -201,7 +201,7 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
                 name: "Charge de bouclier",
                 description: "rush sur une cible",
                 cost : 2,
-                range : {min: 1, max: 4},
+                range : {min: 1, max: 3},
                 rangeType : ActionZoneType.PLUS,
                 actionType: ActionType.OTHER,
                 zoneType: [ActionZoneType.DIAMOND],
