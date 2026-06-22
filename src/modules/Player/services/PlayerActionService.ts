@@ -1,7 +1,7 @@
 import { Logger, Provide, SocketError } from "../../../core";
 
 import { Position, PositionUtils } from "../../../game-lib/Utils";
-import { Action, ActionUtils } from "../../Action/data/Action";
+import { Action, ActionUtils, ActionZoneType } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Effect } from "../../Effect/data/Effect";
 import { GameEventAnimation } from "../../Game/application/interfaces/GameUpdateEvent";
@@ -345,9 +345,6 @@ export class PlayerActionService {
     }
 
     checkIfAllowed(playerEntity: Entity, action: Action, destination: Cell) {
-        this.logger.log(
-            "WHATS THE VALUE ?" + Stats.fromEntity(playerEntity).energy
-        );
         if (Stats.fromEntity(playerEntity).energy < action.cost) {
             return {
                 actionId: PlayerOutputActions.CANCEL_ACTION,
@@ -356,6 +353,9 @@ export class PlayerActionService {
                 },
             };
         }
+        
+        this.checkRange(playerEntity, action, destination);
+
         if (action.targetRequired && !destination?.entityId) {
             return {
                 actionId: PlayerOutputActions.CANCEL_ACTION,
@@ -363,6 +363,55 @@ export class PlayerActionService {
                     reason: "target-visible",
                 },
             };
+        }
+    }
+
+    checkRange(
+        playerEntity: Entity,
+        action: Action,
+        destination: Cell
+    ): PlayerCancelAction | void {
+        const distance = PositionUtils.distance(
+            playerEntity.position,
+            destination.position
+        );
+
+        // Vérification de la distance min/max
+        if (distance < action.range.min || distance > action.range.max) {
+            return {
+                actionId: PlayerOutputActions.CANCEL_ACTION,
+                payload: { reason: "range" },
+            };
+        }
+
+        // Vérification selon le type de zone
+        const dx = Math.abs(destination.position.x - playerEntity.position.x);
+        const dy = Math.abs(destination.position.y - playerEntity.position.y);
+
+        switch (action.rangeType) {
+            case ActionZoneType.PLUS:
+                // ligne droite uniquement
+                if (dx !== 0 && dy !== 0) {
+                    return {
+                        actionId: PlayerOutputActions.CANCEL_ACTION,
+                        payload: { reason: "range" },
+                    };
+                }
+                break;
+
+            case ActionZoneType.XCROSS:
+                // diagonale uniquement
+                if (dx !== dy) {
+                    return {
+                        actionId: PlayerOutputActions.CANCEL_ACTION,
+                        payload: { reason: "range" },
+                    };
+                }
+                break;
+
+            case ActionZoneType.DIAMOND:
+            case ActionZoneType.CIRCLE:
+                break;
         }
     }
 }
