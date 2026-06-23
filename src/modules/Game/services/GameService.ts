@@ -280,6 +280,8 @@ export class GameService {
                     mobCount++;
                 } else {
                     await this.boostService.applyBoost(entity, boost.id);
+                    entity.stats.energy = entity.stats.totalEnergy;
+                    entity.stats.mouvement = entity.stats.totalMouvement;
                 }
             }
             entities.push(entity);
