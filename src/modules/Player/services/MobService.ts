@@ -171,7 +171,7 @@ export class MobService implements AsyncResolver {
         const mostPowerfulInRangeAction = charClass.actionList
             .filter(
                 (action) =>
-                    action.range >= minRange &&
+                    action.range.max >= minRange &&
                     action.cost <= energy &&
                     (action.damage?.max ?? 0) > 0
             )

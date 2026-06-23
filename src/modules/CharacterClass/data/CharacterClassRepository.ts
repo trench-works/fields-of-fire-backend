@@ -39,8 +39,8 @@ export class CharacterClassRepository extends FolderRepository<
                 name: "Fantassin de l'Entente",
                 playable: true,
                 stats: {
-                    life: 28,
-                    maxLife: 32,
+                    life: 26,
+                    maxLife: 26,
                     precision: 10,
                     strength: 20,
                     armor: 0,
@@ -114,8 +114,8 @@ export class CharacterClassRepository extends FolderRepository<
                 name: "Brise-barricade de l'Entente",
                 playable: true,
                 stats: {
-                    life: 36,
-                    maxLife: 36,
+                    life: 30,
+                    maxLife: 30,
                     precision: 0,
                     strength: 10,
                     armor: 20,

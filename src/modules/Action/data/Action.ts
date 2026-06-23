@@ -11,7 +11,8 @@ export class Action {
     damage?: { min: number; max: number };
     effectList?: Effect[];
     selfEffectList?: Effect[];
-    range!: number;
+    rangeType!: ActionZoneType;
+    range!: { min: number; max: number };
     zoneType!: ActionZoneType[];
     zoneSize!: number;
     actionType?: ActionType;
@@ -31,7 +32,8 @@ export class ActionEntity {
     damage?: { min: number; max: number };
     effectList?: string[];
     selfEffectList?: string[];
-    range!: number;
+    rangeType!: ActionZoneType;
+    range!: { min: number; max: number };
     zoneType!: ActionZoneType[];
     zoneSize!: number;
     actionType?: ActionType;
