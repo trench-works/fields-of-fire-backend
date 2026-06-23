@@ -2,9 +2,7 @@ import {
     App,
     HttpResolver,
     WsResolver,
-    ColdConnectorProvider,
     HotConnectorProvider,
-    MongoConnector,
     RedisConnector,
 } from "./core";
 import { MenuModule } from "./modules/Menu/MenuModule";
@@ -18,6 +16,8 @@ import { EffectModule } from "./modules/Effect/EffectModule";
 import { ActionModule } from "./modules/Action/ActionModule";
 
 import * as dotenv from "dotenv";
+import { PostgresConnector } from "./core/app/Database/Postgres";
+import { UserEntity } from "./modules/User/data/UserEntity";
 
 if (process.env.ENV !== "PROD") {
     dotenv.config({ path: [__dirname + "/../env/.env.local"] });
@@ -31,9 +31,11 @@ const server = new App({
                 new RedisConnector(configService.getConfig().redis),
         },
         {
-            name: ColdConnectorProvider,
+            name: PostgresConnector,
             provider: (configService) =>
-                new MongoConnector(configService.getConfig().mongo),
+                new PostgresConnector(
+                    configService.getConfig().postgres
+                ).getClient([UserEntity]),
         },
     ],
     modules: [

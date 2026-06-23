@@ -1,14 +1,10 @@
-import {
-    AppConfig,
-    MongoConnectorProps,
-    RedisConnectorProps,
-    LogLevel,
-} from "../core";
+import { AppConfig, RedisConnectorProps, LogLevel } from "../core";
+import { PostgresConnectorProps } from "../core/app/Database/Postgres";
 
 export type FieldsOfFireConfig = {
     app: AppConfig;
     redis: RedisConnectorProps;
-    mongo: MongoConnectorProps;
+    postgres: PostgresConnectorProps;
 };
 
 export const ConfigMap = (): FieldsOfFireConfig => ({
@@ -20,10 +16,13 @@ export const ConfigMap = (): FieldsOfFireConfig => ({
     redis: {
         host: process.env.REDIS_HOST ?? "localhost",
         port: Number(process.env.REDIS_PORT ?? 6379),
+        password: process.env.POSTGRES_PASSWORD ?? "FieldsOfFire",
     },
-    mongo: {
-        host: process.env.MONGO_HOST ?? "localhost",
-        port: Number(process.env.MONGO_PORT ?? 27017),
-        name: process.env.MONGO_DB_NAME ?? "FieldsOfFire",
+    postgres: {
+        host: process.env.POSTGRES_HOST ?? "localhost",
+        port: Number(process.env.POSTGRES_PORT ?? 5432),
+        database: process.env.POSTGRES_DB ?? "FieldsOfFire",
+        username: process.env.POSTGRES_USER ?? "FieldsOfFire",
+        password: process.env.POSTGRES_PASSWORD ?? "FieldsOfFire",
     },
 });
