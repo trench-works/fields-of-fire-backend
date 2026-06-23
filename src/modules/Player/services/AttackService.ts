@@ -43,7 +43,6 @@ export class AttackService {
         }
 
         let brutTotal: number;
-        let reduction: number = 0;
         let finalDamage: number;
 
         if (action.damage!.min < 0) {
@@ -59,11 +58,11 @@ export class AttackService {
             }
         } else {
             brutTotal = randomDamage + statBonus;
-            reduction = Math.ceil(brutTotal * (targetStats.armor / 100));
-            finalDamage = Math.max(brutTotal - reduction, 0);
+            finalDamage = Math.ceil(brutTotal * (100 / (100 + target.stats.armor)));
+ 
         }
 
-        this.logger.log(`Calculated : ${brutTotal} - ${reduction}`);
+        this.logger.log(`Calculated : ${brutTotal}`);
 
         // Vampire : vol de vie par stack
         if (action.damage!.min >= 0) {
@@ -73,7 +72,7 @@ export class AttackService {
             ).length;
 
             if (vampireStacks > 0) {
-                const lifeSteal = Math.ceil(finalDamage / 2) * vampireStacks;
+                const lifeSteal = Math.ceil(finalDamage / 10) * vampireStacks;
                 attacker.stats.life = Math.min(
                     attacker.stats.life + lifeSteal,
                     Stats.fromEntity(attacker).maxLife

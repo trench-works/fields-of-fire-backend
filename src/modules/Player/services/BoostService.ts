@@ -49,6 +49,7 @@ export class BoostService {
             (boost) =>
                 (!boost.type || boost.type === boostType) &&
                 !bans.includes(boost.id)
+                && boost.probability > 0
         )) {
             total += boost.probability;
             probabilityMap.push([total, boost]);
