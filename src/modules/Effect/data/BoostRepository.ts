@@ -15,8 +15,8 @@ export class BoostRepository extends FolderRepository<Boost> {
                 effects: [],
                 boosts: [
                     {
-                        maxLife: 10,
-                        life: 10,
+                        maxLife: 15,
+                        life: 15,
                     },
                 ],
                 probability: 1,
@@ -25,7 +25,7 @@ export class BoostRepository extends FolderRepository<Boost> {
                 id: "precision",
                 name: "Précision",
                 effects: [],
-                boosts: [{ precision: 25 }],
+                boosts: [{ precision: 30 }],
                 probability: 1,
             },
             versatile: {
@@ -46,7 +46,7 @@ export class BoostRepository extends FolderRepository<Boost> {
                 effects: [],
                 boosts: [
                     {
-                        armor: 10,
+                        armor: 15,
                     },
                 ],
                 probability: 1,
@@ -55,7 +55,7 @@ export class BoostRepository extends FolderRepository<Boost> {
                 id: "strength",
                 name: "Force",
                 effects: [],
-                boosts: [{ strength: 25 }],
+                boosts: [{ strength: 30 }],
                 probability: 1,
             },
             heal: {
@@ -78,10 +78,11 @@ export class BoostRepository extends FolderRepository<Boost> {
                 effects: [],
                 boosts: [
                     {
-                        life: 5,
-                        maxLife: 5,
-                        strength: 3,
-                        precision: 3,
+                        life: 8,
+                        maxLife: 8,
+                        strength: 5,
+                        precision: 5,
+                        dodging : 1,
                         initiative: 15,
                     },
                 ],

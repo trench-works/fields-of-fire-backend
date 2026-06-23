@@ -280,6 +280,8 @@ export class GameService {
                     mobCount++;
                 } else {
                     await this.boostService.applyBoost(entity, boost.id);
+                    entity.stats.energy = entity.stats.totalEnergy;
+                    entity.stats.mouvement = entity.stats.totalMouvement;
                 }
             }
             entities.push(entity);
@@ -301,6 +303,7 @@ export class GameService {
             (team) => team.name === TeamName.MOBS
         )!;
         // Delete NPCs and Entities
+        const currentNpcLength = game.npc.length;
         for (const npcId of mobsTeam.npcIds) {
             const npcIndex = game.npc.findIndex((npc) => npc.id === npcId);
             game.npc.splice(npcIndex, 1);
@@ -315,7 +318,7 @@ export class GameService {
         const [npcs, mobsEntities] = await this.getMobs(
             game.id,
             game.plateau,
-            2,
+            currentNpcLength,
             game.round,
             game.players.length,
             mobsTeam
