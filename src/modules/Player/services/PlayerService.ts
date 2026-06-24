@@ -1,5 +1,6 @@
 import { Logger, Provide } from "../../../core";
 import { GameDataManager } from "../../Game/data/GameRepository";
+import { GameDataLocker } from "../../Game/services/GameDataLocker";
 import { GameService } from "../../Game/services/GameService";
 import { LobbyService } from "../../Lobby/services/LobbyService";
 import { BoostService } from "./BoostService";
@@ -14,12 +15,15 @@ export class PlayerService {
     private readonly lobbyService!: LobbyService;
     @Provide(BoostService)
     private readonly boostService!: BoostService;
+    @Provide(GameDataLocker)
+    private readonly gameDataLocker!: GameDataLocker;
 
     async setGamePlayerReady(
         playerId: string,
         gameId: string,
         boostId: string
     ) {
+        await this.gameDataLocker.waitLock(gameId); //WAIT FOR DATA IS UNLOCK
         this.logger.log(`Player ${playerId} chose boost ${boostId}`);
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
@@ -28,6 +32,7 @@ export class PlayerService {
         if (game.readyPlayers.includes(playerId)) {
             return;
         }
+        this.gameDataLocker.lock(gameId); //LOCK THE GAME ID
         game.readyPlayers.push(playerId);
 
         await this.gameDataManager.set(gameId, game);
@@ -48,6 +53,7 @@ export class PlayerService {
         this.logger.log(
             ` players : ${game.players.length}, readiz : ${game.readyPlayers.length}`
         );
+        this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
         if (game.players.length === game.readyPlayers.length) {
             this.gameService.newGameFromGame(game.id);
         }

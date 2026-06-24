@@ -7,3 +7,4 @@ export * from "./Providers";
 export * from "./Resolvers";
 export * from "./Database";
 export * from "./Controller";
+export * from "./Utils";
