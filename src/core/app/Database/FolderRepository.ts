@@ -7,22 +7,50 @@ export abstract class FolderRepository<
     private dataMap: Map<string, Entity> = new Map();
 
     constructor(ressourceName: string, ressources?: Record<string, Entity>) {
-        const data = JSON.parse(
-            String(
-                fs.readFileSync(
-                    `${globalThis.rootdir}/json-data/${ressourceName}.json`
-                )
-            )
-        );
-
-        for (const element of data) {
-            this.dataMap.set(element.id, element);
-        }
+        this.loadJSON(ressourceName);
         if (ressources) {
             for (const [key, element] of Object.entries(ressources)) {
                 this.dataMap.set(key, element);
             }
         }
+    }
+
+    private loadJSON(ressourceName: string) {
+        try {
+            const file = fs.lstatSync(
+                `${globalThis.rootdir}/json-data/${ressourceName}`
+            );
+            if (file.isDirectory()) {
+                this.loadJSONDirectory(
+                    `${globalThis.rootdir}/json-data/${ressourceName}`
+                );
+            }
+        } catch {}
+        this.loadJSONFile(
+            `${globalThis.rootdir}/json-data/${ressourceName}.json`
+        );
+    }
+
+    private loadJSONDirectory(path: string) {
+        const entries = fs.readdirSync(path, { withFileTypes: true });
+        for (const entry of entries) {
+            if (entry.isDirectory()) {
+                this.loadJSONDirectory(`${path}/${entry.name}`);
+            } else if (entry.isFile()) {
+                this.loadJSONFile(`${path}/${entry.name}`);
+            }
+        }
+    }
+
+    private async loadJSONFile(path: string) {
+        try {
+            if (fs.lstatSync(path).isFile()) {
+                const data = JSON.parse(String(fs.readFileSync(path)));
+                for (const element of data) {
+                    this.dataMap.set(element.id, element);
+                }
+            }
+        } catch {}
     }
 
     async list(): Promise<Ressource[]> {

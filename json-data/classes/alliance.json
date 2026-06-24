@@ -1,0 +1,62 @@
+[
+    {
+        "id": "alliance_fantassin",
+        "name": "Fantassin Coquin",
+        "playable": false,
+        "stats": {
+            "life": 24,
+            "maxLife": 24,
+            "precision": 10,
+            "strength": 20,
+            "armor": 0,
+            "initiative": 60,
+            "dodging": 0,
+            "energy": 2,
+            "mouvement": 3,
+            "totalEnergy": 2,
+            "totalMouvement": 3
+        },
+        "classDescription": "Un fantassin très vilain",
+        "actionList": ["walk", "shoot", "bayonet"]
+    },
+    {
+        "id": "alliance_medic",
+        "name": "Médecin Coquin",
+        "playable": false,
+        "stats": {
+            "life": 18,
+            "maxLife": 18,
+            "precision": 10,
+            "strength": 20,
+            "armor": 0,
+            "initiative": 60,
+            "dodging": 0,
+            "energy": 2,
+            "mouvement": 3,
+            "totalEnergy": 2,
+            "totalMouvement": 3
+        },
+        "classDescription": "Un médecin très très vilain",
+        "actionList": ["walk", "shoot", "heal"]
+    },
+    {
+        "id": "alliance_caporal",
+        "name": "Caporal Coquin",
+        "playable": false,
+        "stats": {
+            "life": 21,
+            "maxLife": 21,
+            "precision": 10,
+            "strength": 20,
+            "armor": 0,
+            "initiative": 60,
+            "dodging": 0,
+            "energy": 2,
+            "mouvement": 2,
+            "totalEnergy": 2,
+            "totalMouvement": 2
+        },
+        "classDescription": "Un Caporal très très très vilain",
+        "actionList": ["walk", "shoot", "artillery_support"]
+    }
+]
