@@ -1,10 +1,4 @@
-import {
-    App,
-    HttpResolver,
-    WsResolver,
-    HotConnectorProvider,
-    RedisConnector,
-} from "./core";
+import { App, HttpResolver, WsResolver, RedisConnector } from "./core";
 import { MenuModule } from "./modules/Menu/MenuModule";
 import { LobbyModule } from "./modules/Lobby/LobbyModule";
 import { GameModule } from "./modules/Game/GameModule";
@@ -32,9 +26,11 @@ globalThis.rootdir = `${__dirname}/..`;
 const server = new App({
     providers: [
         {
-            name: HotConnectorProvider,
+            name: RedisConnector,
             provider: (configService) =>
-                new RedisConnector(configService.getConfig().redis),
+                new RedisConnector(
+                    configService.getConfig().redis
+                ).initClient(),
         },
         {
             name: PostgresConnector,

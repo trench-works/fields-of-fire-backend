@@ -48,7 +48,7 @@ export class LobbyService {
     }
 
     async getLobbies(): Promise<LobbyResponse[]> {
-        const lobbies = await this.lobbyDataManager.getAll();
+        const lobbies = await this.lobbyDataManager.findAll();
         return await Promise.all(
             lobbies.map(async (lobby) => {
                 return {

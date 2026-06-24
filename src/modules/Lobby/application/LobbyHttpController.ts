@@ -18,7 +18,7 @@ export class LobbyHttpController extends HttpController {
     }
 
     async getLobbies(): Promise<Lobby[] | HttpError> {
-        const data = await this.repository.getAll();
+        const data = await this.repository.findAll();
         if (data instanceof DBError) {
             return new UnknownError();
         }

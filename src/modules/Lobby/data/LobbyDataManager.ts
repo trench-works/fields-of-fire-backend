@@ -1,7 +1,18 @@
-import { Id, MappedRepository, NotFoundError } from "../../../core";
+import { Id, NotFoundError, Provide } from "../../../core";
+import {
+    RedisConnector,
+    RedisRepository,
+} from "../../../core/app/Database/Redis";
 import { Lobby } from "./Lobby";
 
-export class LobbyDataManager extends MappedRepository<Lobby> {
+export class LobbyDataManager extends RedisRepository<Lobby> {
+    constructor(
+        @Provide(RedisConnector)
+        connector: RedisConnector
+    ) {
+        super("lobbies", connector);
+    }
+
     async getLobby(lobbyId: string): Promise<Lobby | NotFoundError> {
         const lobby = await this.get(lobbyId);
         if (!lobby) {
