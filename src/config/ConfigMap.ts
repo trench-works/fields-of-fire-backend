@@ -16,7 +16,7 @@ export const ConfigMap = (): FieldsOfFireConfig => ({
     redis: {
         host: process.env.REDIS_HOST ?? "localhost",
         port: Number(process.env.REDIS_PORT ?? 6379),
-        password: process.env.POSTGRES_PASSWORD ?? "FieldsOfFire",
+        password: process.env.REDIS_PASSWORD ?? "FieldsOfFire",
     },
     postgres: {
         host: process.env.POSTGRES_HOST ?? "localhost",

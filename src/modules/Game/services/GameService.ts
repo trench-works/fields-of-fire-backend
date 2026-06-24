@@ -52,7 +52,7 @@ export class GameService {
     async getPlayerCurrentGame(
         userId: string
     ): Promise<JoinGameResponse | null> {
-        const game = (await this.gameDataManager.getAll()).find((game) =>
+        const game = (await this.gameDataManager.findAll()).find((game) =>
             game.players.some((player) => player.userId === userId)
         );
         if (!game) {
