@@ -23,6 +23,12 @@ if (process.env.ENV !== "PROD") {
     dotenv.config({ path: [__dirname + "/../env/.env.local"] });
 }
 
+declare global {
+    var rootdir: string;
+}
+
+globalThis.rootdir = `${__dirname}/..`;
+
 const server = new App({
     providers: [
         {
