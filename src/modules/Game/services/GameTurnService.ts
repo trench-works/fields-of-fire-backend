@@ -7,6 +7,7 @@ import { CharacterClassRepository } from "../../CharacterClass/data/CharacterCla
 import { Boost } from "../../Effect/data/Boost";
 import { BoostService } from "../../Player/services/BoostService";
 import { MobService } from "../../Player/services/MobService";
+import { Stats } from "../../Stat/data/Stats";
 import { GameEventAnimation } from "../application/interfaces/GameUpdateEvent";
 import { EntityType } from "../data/Entity";
 import { Game } from "../data/Game";
@@ -119,8 +120,9 @@ export class GameTurnService implements AsyncResolver {
                 (effect) => effect.duration === null || effect.duration > 0
             );
 
-        playerEntity.stats.mouvement = playerEntity.stats.totalMouvement;
-        playerEntity.stats.energy = playerEntity.stats.totalEnergy;
+        playerEntity.stats.mouvement =
+            Stats.fromEntity(playerEntity).totalMouvement;
+        playerEntity.stats.energy = Stats.fromEntity(playerEntity).totalEnergy;
 
         await this.gameDataManager.set(game.id, game);
 

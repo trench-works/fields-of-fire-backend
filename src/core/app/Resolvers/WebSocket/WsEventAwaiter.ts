@@ -3,6 +3,8 @@ export class WsEventAwaiter {
     public promise: Promise<void>;
     protected registered: string[];
 
+    protected listeners: ((value: number) => void)[];
+
     constructor(private readonly expectedRegistration: string[]) {
         this.resolve = () => {
             console.log("FALSE RESOLVER !");
@@ -11,6 +13,11 @@ export class WsEventAwaiter {
             this.resolve = resolve;
         });
         this.registered = [];
+        this.listeners = [];
+    }
+
+    onUpdate(listener: (value: number) => void): void {
+        this.listeners.push(listener);
     }
 
     registerEvent(id: string): boolean {
@@ -20,6 +27,11 @@ export class WsEventAwaiter {
         ) {
             this.registered.push(id);
         }
+
+        const progress =
+            this.registered.length / this.expectedRegistration.length;
+        this.listeners.forEach((listener) => listener(progress));
+
         if (this.expectedRegistration.length === this.registered.length) {
             this.resolve();
             return true;
@@ -37,6 +49,18 @@ export class WsAwaiterManager {
 
     addAwaiter(key: string, awaiter: WsEventAwaiter) {
         this.awaiters.set(key, awaiter);
+    }
+
+    async onUpdate(
+        key: string,
+        listener: (value: number) => Promise<void>
+    ): Promise<void> {
+        const awaiter = this.awaiters.get(key);
+        if (!awaiter) {
+            await listener(1);
+            return;
+        }
+        awaiter.onUpdate(listener);
     }
 
     onEvent(key: string, value: string) {

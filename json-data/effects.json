@@ -52,7 +52,7 @@
         "modifier": {
             "strength": 10,
             "precision": 10,
-            "energy": 2
+            "totalEnergy": 2
         },
         "instant": {}
     },
