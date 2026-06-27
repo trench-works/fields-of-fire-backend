@@ -133,7 +133,12 @@ export class PlayerActionService {
                     destination
                 );
             case PlayerActionId.BARRICADE:
-                return await this.invocationService.createInvocation(game, playerEntity, action, destination.position);
+                return await this.invocationService.createInvocation(
+                    game,
+                    playerEntity,
+                    action,
+                    destination.position
+                );
             default:
                 this.logger.error("Unknown action ID");
         }
@@ -225,8 +230,7 @@ export class PlayerActionService {
         this.checkIfAllowed(playerEntity, action, destination);
 
         const targetList = this.getAttackTarget(game, action, destination);
-            this.logger.debug(`action : ${JSON.stringify(action)}`)
-
+        this.logger.debug(`action : ${JSON.stringify(action)}`);
 
         for (const target of targetList) {
             if (action.damage) {
@@ -238,7 +242,9 @@ export class PlayerActionService {
                 this.applyDamage(target, damage);
             }
             if (action.effectList) {
-                this.logger.debug(`action.effectList : ${JSON.stringify(action.effectList)}`);
+                this.logger.debug(
+                    `action.effectList : ${JSON.stringify(action.effectList)}`
+                );
                 for (const effect of action.effectList) {
                     this.applyEffect(player.name, target, effect);
                 }
@@ -287,14 +293,15 @@ export class PlayerActionService {
             this.logger.error("Target entity has no stats");
             return;
         }
-         this.logger.log(`target is ${JSON.stringify(target)}`)
+        this.logger.log(`target is ${JSON.stringify(target)}`);
         const effectCopy = { ...effect };
         if (caster) {
             effectCopy.author = caster;
         }
 
         target.effects.push(effectCopy);
-        this.logger.log("effet pushed on target : ", target.name)
+        target.stats = Stats.add(target.stats, effect.instant);
+        this.logger.log("effet pushed on target : ", target.name);
     }
 
     getTarget(game: Game, action: Action, destination: Cell): Entity[] {
@@ -353,7 +360,7 @@ export class PlayerActionService {
                 },
             };
         }
-        
+
         this.checkRange(playerEntity, action, destination);
 
         if (action.targetRequired && !destination?.entityId) {

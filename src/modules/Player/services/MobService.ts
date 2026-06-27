@@ -56,10 +56,10 @@ export class MobService implements AsyncResolver {
             return;
         }
         const stats = Stats.fromEntity(entity);
-        let lastPA = stats.totalEnergy;
-        let lastPM = stats.totalMouvement;
-        let PA = stats.totalEnergy;
-        let PM = stats.totalMouvement;
+        let lastPA = stats.energy;
+        let lastPM = stats.mouvement;
+        let PA = stats.energy;
+        let PM = stats.mouvement;
         let firstTry = true;
         while (firstTry || PM !== lastPM || PA !== lastPA) {
             this.logger.debug("Mob calculating a turn");
