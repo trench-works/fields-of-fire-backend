@@ -20,19 +20,22 @@ export class WsTopicManager<
     ) {}
 
     open(socket: WebSocket) {
-        socket.on("message", (rawData: string) => {
+        socket.on("message", async (rawData: string) => {
             const {
                 actionId,
                 payload,
             }: InputAction<SubcribePayload<RessourceKeyObject>> =
                 JSON.parse(rawData);
             if (actionId === "subscribe") {
-                this.subscribe(socket, payload);
+                await this.subscribe(socket, payload);
             }
         });
     }
 
-    subscribe(socket: WebSocket, payload: SubcribePayload<RessourceKeyObject>) {
+    async subscribe(
+        socket: WebSocket,
+        payload: SubcribePayload<RessourceKeyObject>
+    ) {
         const user = new UserInfos();
         Object.assign(user, payload.user);
         const validateUser = validateSync(user);
@@ -41,10 +44,12 @@ export class WsTopicManager<
             socket.close(0, JSON.stringify(validateUser));
         }
 
-        const validation = this.controllers
-            .map((controller) =>
-                controller.subscribe(socket, { key: payload.key, user })
-            )
+        const validations = this.controllers.map((controller) =>
+            controller.subscribe(socket, { key: payload.key, user })
+        );
+        const errors = await Promise.all(validations);
+
+        const validation = errors
             .filter((errors): errors is ValidationError[] =>
                 Boolean(errors?.length)
             )
