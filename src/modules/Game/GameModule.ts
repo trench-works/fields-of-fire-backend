@@ -3,7 +3,7 @@ import { GameController } from "./application/GameController";
 import { GameDataManager } from "./data/GameRepository";
 import { GameDataLocker } from "./services/GameDataLocker";
 import { GameService } from "./services/GameService";
-import { GameSubscriptionManager } from "./services/GameSubscriptionManager";
+import { GameSubscriptionManager } from "./web/GameSubscriptionManager";
 import { GameTurnService } from "./services/GameTurnService";
 import { GameWebSocketManager } from "./web/GameWebSocketManager";
 

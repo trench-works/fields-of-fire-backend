@@ -6,6 +6,7 @@ export enum GameOutputActions {
     UPDATE = "update",
     GAME_END = "game-end",
     GAME_RENEW = "game-renew",
+    CONNECTION_UPDATE = "connection-update",
 }
 
 export enum GameReturnActions {

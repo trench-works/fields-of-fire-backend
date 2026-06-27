@@ -25,7 +25,7 @@ import { NPC } from "../data/NPC";
 import { LobbyOutputActions } from "../../Lobby/application/interfaces/LobbyAction";
 import { LobbyWebSocketManager } from "../../Lobby/web/LobbyWebSocketManager";
 import { MobService } from "../../Player/services/MobService";
-import { GameSubscriptionManager } from "./GameSubscriptionManager";
+import { GameSubscriptionManager } from "../web/GameSubscriptionManager";
 
 export class GameService {
     @Provide(GameDataManager)

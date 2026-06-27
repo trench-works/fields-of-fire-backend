@@ -17,7 +17,7 @@ import { SingleClientOutputError } from "../../../core/types/Action";
 import { PlayerCancelAction } from "./interfaces/PlayerCancelAction";
 import { PlayerReady } from "./interfaces/PlayerReady";
 import { PlayerService } from "../services/PlayerService";
-import { GameSubscriptionManager } from "../../Game/services/GameSubscriptionManager";
+import { GameSubscriptionManager } from "../../Game/web/GameSubscriptionManager";
 
 export class PlayerController extends WsController<
     PlayerKey,
@@ -43,7 +43,7 @@ export class PlayerController extends WsController<
         });
         this.on(PlayerInputActions.DISCONNECT, this.disconnect.bind(this));
         this.onSubscribe(async ({ key: { gameId, playerId } }) => {
-            this.gameSubscribeAwaiters.onEvent(gameId, playerId);
+            await this.gameSubscribeAwaiters.onEvent(gameId, playerId);
         });
     }
 

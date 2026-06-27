@@ -17,6 +17,15 @@ export class GameWebSocketManager extends WsManager<
     GameOutputActions,
     GameReturnActions
 > {
+    async emitConnectionUpdate(gameId: string, progress: number) {
+        console.log(gameId, progress);
+        await this.emit<{ progress: number }>({
+            actionId: GameOutputActions.CONNECTION_UPDATE,
+            key: { gameId },
+            payload: { progress },
+        });
+    }
+
     async emitUpdate(game: Game, animations: GameEventAnimation[]) {
         await this.emit<GameUpdateEvent>({
             actionId: GameOutputActions.UPDATE,
