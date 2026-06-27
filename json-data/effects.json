@@ -5,6 +5,9 @@
         "duration": 2,
         "type": "APPLY",
         "modifier": {
+            "totalEnergy": -1
+        },
+        "instant": {
             "energy": -1
         }
     },
@@ -16,7 +19,8 @@
         "modifier": {
             "strength": -15,
             "precision": -15
-        }
+        },
+        "instant": {}
     },
     {
         "id": "doped",
@@ -27,7 +31,8 @@
             "strength": 10,
             "precision": 10,
             "armor": 10
-        }
+        },
+        "instant": {}
     },
     {
         "id": "charge",
@@ -36,7 +41,8 @@
         "type": "APPLY",
         "modifier": {
             "mouvement": 2
-        }
+        },
+        "instant": {}
     },
     {
         "id": "enhanced_drug",
@@ -47,14 +53,16 @@
             "strength": 10,
             "precision": 10,
             "energy": 2
-        }
+        },
+        "instant": {}
     },
     {
         "id": "provoker",
         "name": "Provoqué",
         "duration": 2,
         "type": "APPLY",
-        "modifier": {}
+        "modifier": {},
+        "instant": {}
     },
     {
         "id": "angered",
@@ -64,20 +72,23 @@
         "modifier": {
             "strength": 15,
             "mouvement": -1
-        }
+        },
+        "instant": {}
     },
     {
         "id": "vampire",
         "name": "Sanguinaire",
         "duration": null,
         "type": "APPLY",
-        "modifier": {}
+        "modifier": {},
+        "instant": {}
     },
     {
         "id": "range",
         "name": "Tir éloigné",
         "duration": null,
         "type": "APPLY",
-        "modifier": {}
+        "modifier": {},
+        "instant": {}
     }
 ]
