@@ -31,9 +31,7 @@ export class WsManager<
 
     set(userId: string, { socket, key }: RessourceClient<RessourceKeyObject>) {
         const existing = this.clients.get(userId);
-        if (existing && existing.socket.readyState === 1) {
-            return;
-        }
+        //existing?.socket?.close();
         this.clients.set(userId, { socket, key });
     }
 
@@ -77,7 +75,6 @@ export class WsManager<
                         error: action,
                     });
                 }
-                console.log("SEND TO FRONT");
                 socket.send(message);
             } catch {
                 this.logger.error("CANT SEND PAYLOAD", JSON.stringify(action));

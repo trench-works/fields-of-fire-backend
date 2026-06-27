@@ -299,13 +299,13 @@ export class WsController<
             socket,
             user,
         };
+        this.socketManager.set(user.id, { socket, key });
         socket.on("message", (data) =>
             this.handleMessage(socket, key, user, data.toString())
         );
         socket.on("close", (): void => {
             this.socketManager.unset(user.id);
         });
-        this.socketManager.set(user.id, { socket, key });
         await this.send(socket, { actionId: "subscribed" });
         const results = await Promise.all(
             this.onSubscribeWsHandlers.map((handler) =>

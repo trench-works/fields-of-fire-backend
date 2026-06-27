@@ -42,6 +42,8 @@ export class Stats {
         // Caper energy and mouvementà 0
         total.energy = Math.max(total.energy, 0);
         total.mouvement = Math.max(total.mouvement, 0);
+        total.totalEnergy = Math.max(total.totalEnergy, 0);
+        total.totalMouvement = Math.max(total.totalMouvement, 0);
         total.life = Math.max(total.life, 0);
         return total;
     }
