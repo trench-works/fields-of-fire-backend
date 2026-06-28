@@ -37,6 +37,12 @@ export enum PlayerActionId {
     BARRICADE = "barricade",
 }
 
+type AttackTarget = {
+    entity: Entity;
+    damage: number;
+    effects: Effect[];
+};
+
 export class PlayerActionService {
     @Provide(GameDataManager)
     private readonly gameDataManager!: GameDataManager;
@@ -153,22 +159,31 @@ export class PlayerActionService {
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
 
-        const targetList = this.getBoostTarget(
+        const targetEntities = this.getBoostTarget(
             game,
             playerEntity,
             action,
             destination
         );
 
-        for (const target of targetList) {
-            this.logger.debug(`action.effectList : ${action.effectList}`);
-            for (const effect of action.effectList!) {
-                this.applyEffect(player.name, target, effect);
+        const targets = targetEntities.map((entity) => {
+            const target: AttackTarget = {
+                entity,
+                damage: 0,
+                effects: [],
+            };
+            if (action.effectList) {
+                this.logger.debug(`action.effectList : ${action.effectList}`);
+                for (const effect of action.effectList) {
+                    this.applyEffect(player.name, entity, effect);
+                }
+                target.effects = action.effectList;
             }
-        }
+            return target;
+        });
 
         playerEntity.stats.energy -= action.cost;
-        this.animate(game, playerEntity, action, destination, targetList);
+        this.animate(game, playerEntity, action, destination, targets);
         await this.gameDataManager.set(game.id, game);
     }
 
@@ -229,27 +244,37 @@ export class PlayerActionService {
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
 
-        const targetList = this.getAttackTarget(game, action, destination);
+        const targetEntities = this.getAttackTarget(game, action, destination);
         this.logger.debug(`action : ${JSON.stringify(action)}`);
 
-        for (const target of targetList) {
-            if (action.damage) {
-                const damage = this.attackService.calculateDamage(
-                    action,
-                    playerEntity,
-                    target
-                );
-                this.applyDamage(target, damage);
-            }
-            if (action.effectList) {
-                this.logger.debug(
-                    `action.effectList : ${JSON.stringify(action.effectList)}`
-                );
-                for (const effect of action.effectList) {
-                    this.applyEffect(player.name, target, effect);
+        const targets: AttackTarget[] = targetEntities.map<AttackTarget>(
+            (entity) => {
+                const target: AttackTarget = {
+                    entity,
+                    damage: 0,
+                    effects: [],
+                };
+                if (action.damage) {
+                    const damage = this.attackService.calculateDamage(
+                        action,
+                        playerEntity,
+                        entity
+                    );
+                    this.applyDamage(entity, damage);
+                    target.damage = damage;
                 }
+                if (action.effectList) {
+                    this.logger.debug(
+                        `action.effectList : ${JSON.stringify(action.effectList)}`
+                    );
+                    for (const effect of action.effectList) {
+                        this.applyEffect(player.name, entity, effect);
+                    }
+                    target.effects = action.effectList;
+                }
+                return target;
             }
-        }
+        );
 
         if (action.selfEffectList) {
             this.logger.debug(`action.effectList : ${action.effectList}`);
@@ -263,7 +288,7 @@ export class PlayerActionService {
         this.logger.log(
             `Player ${playerEntity.id} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
         );
-        this.animate(game, playerEntity, action, destination, targetList);
+        this.animate(game, playerEntity, action, destination, targets);
 
         await this.gameDataManager.set(game.id, game);
 
@@ -333,7 +358,7 @@ export class PlayerActionService {
         playerEntity: Entity,
         action: Action,
         destination: Cell,
-        targetEntity: Entity[]
+        targets: AttackTarget[]
     ) {
         const animations: GameEventAnimation[] = [
             {
@@ -343,7 +368,10 @@ export class PlayerActionService {
                     actionId: action.id,
                     origin: playerEntity.position,
                     target: destination.position,
-                    hits: targetEntity.map((target) => target.position),
+                    hits: targets.map(({ entity, damage }) => ({
+                        ...entity.position,
+                        damage,
+                    })),
                 },
             },
         ];
