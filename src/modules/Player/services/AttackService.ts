@@ -86,10 +86,10 @@ export class AttackService {
                 (e) => e.id === "masochistic"
             ).length;
             if (masoStacks > 0) {
-                const masoDamage = finalDamage * (0.2 * masoStacks);
-                const selfDammage = masoDamage/2;
+                const masoDamage = Math.floor(finalDamage * (0.2 * masoStacks));
+                const selfDammage = Math.ceil((Math.floor(masoDamage/2)) * (100 / (100 + attacker.stats.armor)));
                 finalDamage += masoDamage;
-                attacker.stats.life = Math.min(
+                attacker.stats.life = Math.max(
                     attacker.stats.life - selfDammage,
                     0
                 );
