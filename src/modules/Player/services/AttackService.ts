@@ -12,12 +12,15 @@ export class AttackService {
         const targetStats = Stats.fromEntity(target);
 
         //dodging - à voir si on peut dire au front que l'action à été dodge
-        const diceRoll = Ran.int(100);
-        const isDodged = target.stats.dodging > diceRoll ? true : false;
+        if(action.damage?.min ?? -1 >= 0) {
+            const diceRoll = Ran.int(100);
+            const isDodged = target.stats.dodging > diceRoll ? true : false;
 
-        if (isDodged) {
-            return 0;
+            if (isDodged) {
+                return 0;
+            }
         }
+       
 
         const randomDamage = action.damage
             ? action.damage.min + Ran.int(action.damage.max - action.damage.min)
