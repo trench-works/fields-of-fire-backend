@@ -4,32 +4,48 @@ import { Entity } from "../../Game/data/Entity";
 export class Stats {
     life!: number;
     maxLife!: number;
+
+    energy!: number;
+    totalEnergy!: number;
+
+    mouvement!: number;
+    totalMouvement!: number;
+
     precision!: number;
     strength!: number;
     armor!: number;
     initiative!: number;
     dodging!: number;
-    energy!: number;
-    mouvement!: number;
 
-    static add(baseStats: Stats, ...stats: Partial<Stats>[]): Stats {
+    static add<BaseStat extends Partial<Stats>>(
+        baseStats: BaseStat,
+        ...stats: Partial<Stats>[]
+    ): BaseStat {
         const addedStats = { ...baseStats };
         for (const stat of stats) {
             for (const [key, value] of Object.entries(stat)) {
                 addedStats[key as keyof Stats] =
-                    addedStats[key as keyof Stats] + value;
+                    (addedStats[key as keyof Stats] ?? 0) + value;
             }
         }
         return addedStats;
     }
 
     static fromEntity(entity: Entity): Stats {
-        return Stats.add(
+        const total = Stats.add(
             entity.stats,
             ...entity.effects
                 .filter((effect) => effect.type === EffectType.APPLY)
                 .map((effect) => effect.modifier)
         );
+
+        // Caper energy and mouvementà 0
+        total.energy = Math.max(total.energy, 0);
+        total.mouvement = Math.max(total.mouvement, 0);
+        total.totalEnergy = Math.max(total.totalEnergy, 0);
+        total.totalMouvement = Math.max(total.totalMouvement, 0);
+        total.life = Math.max(total.life, 0);
+        return total;
     }
 
     static getEntityEffect(entity: Entity): Stats {
@@ -42,7 +58,9 @@ export class Stats {
             initiative: 0,
             dodging: 0,
             energy: 0,
+            totalEnergy: 0,
             mouvement: 0,
+            totalMouvement: 0,
         };
         return Stats.add(
             emptyStats,

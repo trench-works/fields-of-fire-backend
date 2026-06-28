@@ -11,6 +11,7 @@ export class Effect {
     type!: EffectType;
     duration!: number | null;
     modifier!: Partial<Stats>;
+    instant!: Partial<Stats>;
     author?: string;
     description?: string;
 }

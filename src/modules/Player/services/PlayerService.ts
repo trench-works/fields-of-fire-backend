@@ -1,5 +1,6 @@
 import { Logger, Provide } from "../../../core";
 import { GameDataManager } from "../../Game/data/GameRepository";
+import { GameDataLocker } from "../../Game/services/GameDataLocker";
 import { GameService } from "../../Game/services/GameService";
 import { LobbyService } from "../../Lobby/services/LobbyService";
 import { BoostService } from "./BoostService";
@@ -14,12 +15,15 @@ export class PlayerService {
     private readonly lobbyService!: LobbyService;
     @Provide(BoostService)
     private readonly boostService!: BoostService;
+    @Provide(GameDataLocker)
+    private readonly gameDataLocker!: GameDataLocker;
 
     async setGamePlayerReady(
         playerId: string,
         gameId: string,
         boostId: string
     ) {
+        await this.gameDataLocker.waitLock(gameId); //WAIT FOR DATA IS UNLOCK
         this.logger.log(`Player ${playerId} chose boost ${boostId}`);
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
@@ -28,11 +32,13 @@ export class PlayerService {
         if (game.readyPlayers.includes(playerId)) {
             return;
         }
-        const player = game.players.find(
-            (player) => player.playerId === playerId
-        )!;
+        this.gameDataLocker.lock(gameId); //LOCK THE GAME ID
+        game.readyPlayers.push(playerId);
+
+        await this.gameDataManager.set(gameId, game);
+        const player = game.players.find((player) => player.id === playerId)!;
         const entity = game.entities.find(
-            (entity) => entity.entityId === player.entityId
+            (entity) => entity.id === player.entityId
         )!;
         this.logger.debug(
             `Player ${playerId} has stats ${JSON.stringify(entity.stats)}`
@@ -42,9 +48,12 @@ export class PlayerService {
         this.logger.debug(
             `Player ${playerId} has stats ${JSON.stringify(entity.stats)} after booost`
         );
-        game.readyPlayers.push(playerId);
         await this.gameDataManager.set(gameId, game);
 
+        this.logger.log(
+            ` players : ${game.players.length}, readiz : ${game.readyPlayers.length}`
+        );
+        this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
         if (game.players.length === game.readyPlayers.length) {
             this.gameService.newGameFromGame(game.id);
         }
@@ -56,11 +65,11 @@ export class PlayerService {
             return;
         }
         const playerIndex = game.players.findIndex(
-            (player) => player.playerId === playerId
+            (player) => player.id === playerId
         );
         const [player] = game.players.splice(playerIndex, 1);
         const entityIndex = game.entities.findIndex(
-            (entity) => entity.entityId === player.entityId
+            (entity) => entity.id === player.entityId
         );
         game.entities.splice(entityIndex, 1);
         game.playerTurns = game.playerTurns.filter(

@@ -162,21 +162,21 @@ export class WsController<
         return this.config.topic;
     }
 
-    send<PayloadResponseObject extends object = object>(
+    async send<PayloadResponseObject extends object = object>(
         socket: WebSocket,
         action: SingleClientOutputAction<PayloadResponseObject, OutputActions>
     ) {
-        this.socketManager.send(socket, action);
+        await this.socketManager.send(socket, action);
     }
 
-    emit<T extends object>(
+    async emit<T extends object>(
         action: MultipleClientsOutputAction<
             RessourceKeyObject,
             OutputActions,
             T
         >
     ) {
-        this.socketManager.emit(action);
+        await this.socketManager.emit(action);
     }
 
     on<
@@ -281,10 +281,10 @@ export class WsController<
         }
     }
 
-    subscribe(
+    async subscribe(
         socket: WebSocket,
         { user, key }: { key: RessourceKeyObject; user: UserInfos }
-    ): void | ValidationError[] {
+    ): Promise<void | ValidationError[]> {
         if (key && Object.keys(key).length > 0 && this.config.key) {
             const keyDto = new this.config.key();
             Object.assign(keyDto, key);
@@ -299,20 +299,23 @@ export class WsController<
             socket,
             user,
         };
-        this.onSubscribeWsHandlers.forEach((handler) =>
-            handler.listener(listenerOptions).then((result) => {
-                if (result) {
-                    this.socketManager.send(socket, result);
-                }
-            })
-        );
+        this.socketManager.set(user.id, { socket, key });
         socket.on("message", (data) =>
             this.handleMessage(socket, key, user, data.toString())
         );
         socket.on("close", (): void => {
             this.socketManager.unset(user.id);
         });
-        this.socketManager.set(user.id, { socket, key });
-        this.send(socket, { actionId: "subscribed" });
+        await this.send(socket, { actionId: "subscribed" });
+        const results = await Promise.all(
+            this.onSubscribeWsHandlers.map((handler) =>
+                handler.listener(listenerOptions)
+            )
+        );
+        for (const result of results) {
+            if (result) {
+                await this.socketManager.send(socket, result);
+            }
+        }
     }
 }

@@ -9,6 +9,7 @@ import {
 import { JoinGameResponse } from "../../Game/application/interfaces/JoinGameResponse";
 import { GameService } from "../../Game/services/GameService";
 import { LobbyService } from "../../Lobby/services/LobbyService";
+import { LobbyPlayerService } from "../../Lobby/services/LobbysPlayerService";
 import { MenuWebSocketManager } from "../web/MenuWebSocketManager";
 import { JoinLobby } from "./interfaces/JoinLobby";
 import { JoinLobbyResponse } from "./interfaces/JoinLobbyResponse";
@@ -28,6 +29,8 @@ export class MenuController extends WsController<
 > {
     @Provide(LobbyService)
     private readonly lobbyService!: LobbyService;
+    @Provide(LobbyPlayerService)
+    private readonly lobbyPlayerService!: LobbyPlayerService;
     @Provide(GameService)
     private readonly gameService!: GameService;
 
@@ -72,29 +75,24 @@ export class MenuController extends WsController<
         return {
             actionId: MenuReturnActions.JOIN,
             payload: {
-                lobbyId: lobby.id,
-                playerId: lobby.players.find((player) => player.userId === id)!
-                    .playerId,
+                    lobby: lobby,
             },
         };
     }
-
     async joinLobby({
         user: { id },
         payload: { lobbyId },
     }: WsListenerOptions<MenuKey, JoinLobby>): Promise<
         SingleClientOutputAction<JoinLobbyResponse, MenuReturnActions>
     > {
-        const lobby = await this.lobbyService.addPlayerToLobby(lobbyId, id);
+        const lobby = await this.lobbyPlayerService.addPlayerToLobby(lobbyId, id);
         if (lobby instanceof SocketError) {
             return lobby;
         }
         return {
             actionId: MenuReturnActions.JOIN,
             payload: {
-                lobbyId: lobby.id,
-                playerId: lobby.players.find((player) => player.userId === id)!
-                    .playerId,
+                lobby: lobby,
             },
         };
     }

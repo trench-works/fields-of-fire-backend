@@ -1,7 +1,7 @@
 import { Logger, Provide, SocketError } from "../../../core";
 
 import { Position, PositionUtils } from "../../../game-lib/Utils";
-import { Action, ActionUtils } from "../../Action/data/Action";
+import { Action, ActionUtils, ActionZoneType } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Effect } from "../../Effect/data/Effect";
 import { GameEventAnimation } from "../../Game/application/interfaces/GameUpdateEvent";
@@ -16,6 +16,7 @@ import { Player } from "../data/Player";
 import { PlayerOutputActions } from "../web/PlayerSocketActions";
 import { AttackService } from "./AttackService";
 import { BoostService } from "./BoostService";
+import { InvocationService } from "./InvocationService";
 
 export enum PlayerActionId {
     WALK = "walk",
@@ -30,7 +31,17 @@ export enum PlayerActionId {
     CHARGE = "charge",
     FIGHTING_DRUG = "fighting_drug",
     SABER = "saber",
+    BREAK = "break",
+    PROVOK = "provok",
+    SHIELD_RUSH = "shield_rush",
+    BARRICADE = "barricade",
 }
+
+type AttackTarget = {
+    entity: Entity;
+    damage: number;
+    effects: Effect[];
+};
 
 export class PlayerActionService {
     @Provide(GameDataManager)
@@ -47,6 +58,8 @@ export class PlayerActionService {
     private readonly attackService!: AttackService;
     @Provide(BoostService)
     private readonly boostService!: BoostService;
+    @Provide(InvocationService)
+    private readonly invocationService!: InvocationService;
 
     async finishTurn(
         gameId: string,
@@ -59,9 +72,7 @@ export class PlayerActionService {
 
         // Determinate if it is player's turn
         const playingEntityId = game.playerTurns[0];
-        const player = game.players.find(
-            (player) => player.playerId === playerId
-        );
+        const player = game.players.find((player) => player.id === playerId);
         if (playingEntityId !== player?.entityId) {
             return new SocketError("It is not the player's turn");
         }
@@ -82,11 +93,9 @@ export class PlayerActionService {
             return new SocketError("Game not found");
         }
         const destination = game.plateau[target.x][target.y];
-        const player = game.players.find(
-            (player) => player.playerId === playerId
-        )!;
+        const player = game.players.find((player) => player.id === playerId)!;
         const playerEntity = game.entities.find(
-            (e) => e.entityId === player!.entityId
+            (e) => e.id === player!.entityId
         );
         if (!playerEntity) {
             return new SocketError("Entity not found");
@@ -107,6 +116,8 @@ export class PlayerActionService {
             case PlayerActionId.SHOOT:
             case PlayerActionId.HEAL:
             case PlayerActionId.SABER:
+            case PlayerActionId.BREAK:
+            case PlayerActionId.SHIELD_RUSH:
                 return await this.attack(
                     game,
                     player,
@@ -114,6 +125,7 @@ export class PlayerActionService {
                     action,
                     destination
                 );
+            case PlayerActionId.PROVOK:
             case PlayerActionId.INTIMIDATION:
             case PlayerActionId.DOPAGE:
             case PlayerActionId.SNEAKY:
@@ -125,6 +137,13 @@ export class PlayerActionService {
                     playerEntity,
                     action,
                     destination
+                );
+            case PlayerActionId.BARRICADE:
+                return await this.invocationService.createInvocation(
+                    game,
+                    playerEntity,
+                    action,
+                    destination.position
                 );
             default:
                 this.logger.error("Unknown action ID");
@@ -140,22 +159,31 @@ export class PlayerActionService {
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
 
-        const targetList = this.getTarget(
+        const targetEntities = this.getBoostTarget(
             game,
             playerEntity,
             action,
             destination
         );
 
-        for (const target of targetList) {
-            this.logger.debug(`action.effectList : ${action.effectList}`);
-            for (const effect of action.effectList!) {
-                this.applyEffect(player.name, target, effect);
+        const targets = targetEntities.map((entity) => {
+            const target: AttackTarget = {
+                entity,
+                damage: 0,
+                effects: [],
+            };
+            if (action.effectList) {
+                this.logger.debug(`action.effectList : ${action.effectList}`);
+                for (const effect of action.effectList) {
+                    this.applyEffect(player.name, entity, effect);
+                }
+                target.effects = action.effectList;
             }
-        }
+            return target;
+        });
 
         playerEntity.stats.energy -= action.cost;
-        this.animate(game, playerEntity, action, destination, targetList);
+        this.animate(game, playerEntity, action, destination, targets);
         await this.gameDataManager.set(game.id, game);
     }
 
@@ -184,11 +212,12 @@ export class PlayerActionService {
             destination.position,
             game.plateau
         );
+
         const currentCase =
             game.plateau[playerEntity.position.x][playerEntity.position.y];
         // Occupe la nouvelle case
         currentCase.entityId = undefined;
-        destination.entityId = playerEntity.entityId;
+        destination.entityId = playerEntity.id;
         // Met à jour la position
         playerEntity.position = destination.position;
         playerEntity.stats.mouvement -= range;
@@ -199,7 +228,7 @@ export class PlayerActionService {
             {
                 key: "move",
                 data: {
-                    entityId: playerEntity.entityId,
+                    entityId: playerEntity.id,
                     path: movePath,
                 },
             },
@@ -215,39 +244,55 @@ export class PlayerActionService {
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
 
-        const targetList = this.getTarget(
-            game,
-            playerEntity,
-            action,
-            destination
+        const targetEntities = this.getAttackTarget(game, action, destination);
+        this.logger.debug(`action : ${JSON.stringify(action)}`);
+
+        const targets: AttackTarget[] = targetEntities.map<AttackTarget>(
+            (entity) => {
+                const target: AttackTarget = {
+                    entity,
+                    damage: 0,
+                    effects: [],
+                };
+                if (action.damage) {
+                    const damage = this.attackService.calculateDamage(
+                        action,
+                        playerEntity,
+                        entity
+                    );
+                    this.applyDamage(entity, damage);
+                    target.damage = damage;
+                }
+                if (action.effectList) {
+                    this.logger.debug(
+                        `action.effectList : ${JSON.stringify(action.effectList)}`
+                    );
+                    for (const effect of action.effectList) {
+                        this.applyEffect(player.name, entity, effect);
+                    }
+                    target.effects = action.effectList;
+                }
+                return target;
+            }
         );
 
-        for (const target of targetList) {
-            if (action.damage) {
-                const damage = this.attackService.calculateDamage(
-                    action,
-                    playerEntity,
-                    target
-                );
-                this.applyDamage(target, damage);
-            }
-            if (action.effectList && target.stats.life > 0) {
-                this.logger.debug(`action.effectList : ${action.effectList}`);
-                for (const effect of action.effectList) {
-                    this.applyEffect(player.name, target, effect);
-                }
+        if (action.selfEffectList) {
+            this.logger.debug(`action.effectList : ${action.effectList}`);
+            for (const effect of action.selfEffectList) {
+                this.applyEffect(player.name, playerEntity, effect);
             }
         }
         //to finalize
         playerEntity.stats.energy -= action.cost;
 
         this.logger.log(
-            `Player ${playerEntity.entityId} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
+            `Player ${playerEntity.id} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
         );
-        this.animate(game, playerEntity, action, destination, targetList);
+        this.animate(game, playerEntity, action, destination, targets);
+
+        await this.gameDataManager.set(game.id, game);
 
         await this.gameTurnService.detectGameEnd(game);
-        await this.gameDataManager.set(game.id, game);
     }
 
     checkMoveDestination(cell: Cell): boolean {
@@ -261,13 +306,11 @@ export class PlayerActionService {
         }
         target.stats.life -= damage;
         this.logger.log(
-            `Applied ${damage} damage to entity ${target.entityId}, remaining life: ${target.stats.life}`
+            `Applied ${damage} damage to entity ${target.id}, remaining life: ${target.stats.life}`
         );
         if (target.stats.life < 0) {
             target.stats.life = 0;
         }
-
-        return target.stats.life;
     }
 
     applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
@@ -275,26 +318,39 @@ export class PlayerActionService {
             this.logger.error("Target entity has no stats");
             return;
         }
+        this.logger.log(`target is ${JSON.stringify(target)}`);
         const effectCopy = { ...effect };
         if (caster) {
             effectCopy.author = caster;
         }
 
         target.effects.push(effectCopy);
+        target.stats = Stats.add(target.stats, effect.instant);
+        this.logger.log("effet pushed on target : ", target.name);
     }
 
-    getTarget(
-        game: Game,
-        playerEntity: Entity,
-        action: Action,
-        destination: Cell
-    ): Entity[] {
+    getTarget(game: Game, action: Action, destination: Cell): Entity[] {
         const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
             action,
             game,
             destination.position
-        ).filter((entity) => entity.entityType === playerEntity.entityType);
+        );
         return targetEntity;
+    }
+
+    getAttackTarget(game: Game, action: Action, destination: Cell) {
+        return this.getTarget(game, action, destination);
+    }
+
+    getBoostTarget(
+        game: Game,
+        playerEntity: Entity,
+        action: Action,
+        destination: Cell
+    ) {
+        return this.getTarget(game, action, destination).filter(
+            (entity) => entity.teamId === playerEntity.teamId
+        );
     }
 
     async animate(
@@ -302,17 +358,20 @@ export class PlayerActionService {
         playerEntity: Entity,
         action: Action,
         destination: Cell,
-        targetEntity: Entity[]
+        targets: AttackTarget[]
     ) {
         const animations: GameEventAnimation[] = [
             {
                 key: "attack",
                 data: {
-                    entityId: playerEntity.entityId,
+                    entityId: playerEntity.id,
                     actionId: action.id,
                     origin: playerEntity.position,
                     target: destination.position,
-                    hits: targetEntity.map((target) => target.position),
+                    hits: targets.map(({ entity, damage }) => ({
+                        ...entity.position,
+                        damage,
+                    })),
                 },
             },
         ];
@@ -321,9 +380,6 @@ export class PlayerActionService {
     }
 
     checkIfAllowed(playerEntity: Entity, action: Action, destination: Cell) {
-        this.logger.log(
-            "WHATS THE VALUE ?" + Stats.fromEntity(playerEntity).energy
-        );
         if (Stats.fromEntity(playerEntity).energy < action.cost) {
             return {
                 actionId: PlayerOutputActions.CANCEL_ACTION,
@@ -332,6 +388,9 @@ export class PlayerActionService {
                 },
             };
         }
+
+        this.checkRange(playerEntity, action, destination);
+
         if (action.targetRequired && !destination?.entityId) {
             return {
                 actionId: PlayerOutputActions.CANCEL_ACTION,
@@ -339,6 +398,55 @@ export class PlayerActionService {
                     reason: "target-visible",
                 },
             };
+        }
+    }
+
+    checkRange(
+        playerEntity: Entity,
+        action: Action,
+        destination: Cell
+    ): PlayerCancelAction | void {
+        const distance = PositionUtils.distance(
+            playerEntity.position,
+            destination.position
+        );
+
+        // Vérification de la distance min/max
+        if (distance < action.range.min || distance > action.range.max) {
+            return {
+                actionId: PlayerOutputActions.CANCEL_ACTION,
+                payload: { reason: "range" },
+            };
+        }
+
+        // Vérification selon le type de zone
+        const dx = Math.abs(destination.position.x - playerEntity.position.x);
+        const dy = Math.abs(destination.position.y - playerEntity.position.y);
+
+        switch (action.rangeType) {
+            case ActionZoneType.PLUS:
+                // ligne droite uniquement
+                if (dx !== 0 && dy !== 0) {
+                    return {
+                        actionId: PlayerOutputActions.CANCEL_ACTION,
+                        payload: { reason: "range" },
+                    };
+                }
+                break;
+
+            case ActionZoneType.XCROSS:
+                // diagonale uniquement
+                if (dx !== dy) {
+                    return {
+                        actionId: PlayerOutputActions.CANCEL_ACTION,
+                        payload: { reason: "range" },
+                    };
+                }
+                break;
+
+            case ActionZoneType.DIAMOND:
+            case ActionZoneType.CIRCLE:
+                break;
         }
     }
 }

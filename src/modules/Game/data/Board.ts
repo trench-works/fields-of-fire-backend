@@ -4,8 +4,7 @@ import { Ran } from "../../../core";
 
 type PremadeBoard = {
     board: {
-        isPlayerStart?: boolean;
-        isMobStart?: boolean;
+        isStart?: boolean;
         isWall?: boolean;
         isHole?: boolean;
     }[][];
@@ -24,8 +23,7 @@ export class Board {
                 (cell, y): Cell => ({
                     isWall: cell.isWall ?? false,
                     isHole: cell.isHole ?? false,
-                    isPlayerStart: cell.isPlayerStart ?? false,
-                    isMobStart: cell.isMobStart ?? false,
+                    isStart: cell.isStart ?? false,
                     entityId: undefined,
                     position: {
                         x,

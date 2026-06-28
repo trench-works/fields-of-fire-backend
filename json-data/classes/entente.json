@@ -1,0 +1,68 @@
+[
+    {
+        "id": "entente_fantassin",
+        "name": "Fantassin de l'Entente",
+        "playable": true,
+        "stats": {
+            "life": 50,
+            "maxLife": 50,
+            "precision": 10,
+            "strength": 20,
+            "armor": 0,
+            "initiative": 80,
+            "dodging": 0,
+            "energy": 4,
+            "mouvement": 3,
+            "totalEnergy": 4,
+            "totalMouvement": 3
+        },
+        "classDescription": "Un soldat polyvalent, capable de s'adapter à différentes situations sur le champ de bataille. Il est équipé d'un fusil avec baïonnette, ce qui lui permet d'attaquer efficacement à mi-distance et en mélée. Le Fantassin est également capable de se booster lui-même en s'injectant des produits dopants",
+        "actionList": ["walk", "shoot", "bayonet", "dopage", "charge"]
+    },
+    {
+        "id": "entente_medic",
+        "name": "Médecin de l'Entente",
+        "playable": true,
+        "stats": {
+            "life": 35,
+            "maxLife": 35,
+            "precision": 10,
+            "strength": 10,
+            "armor": 0,
+            "initiative": 70,
+            "dodging": 5,
+            "energy": 4,
+            "mouvement": 3,
+            "totalEnergy": 4,
+            "totalMouvement": 3
+        },
+        "classDescription": "Un soigneur spécialisé dans le soutien de ses alliés. Le Medic est équipé d'un fusil et d'un hachoir, ce qui lui permet d'attaquer à distance et en mélée. Sa principale force réside dans sa capacité à soigner les blessures de ses alliés mais également infliger des malus au ennemies.",
+        "actionList": ["walk", "shoot", "heal", "amputate", "fighting_drug"]
+    },
+    {
+        "id": "entente_caporal",
+        "name": "Caporal de l'Entente",
+        "playable": true,
+        "stats": {
+            "life": 42,
+            "maxLife": 42,
+            "precision": 20,
+            "strength": 10,
+            "armor": 0,
+            "initiative": 90,
+            "dodging": 5,
+            "energy": 4,
+            "mouvement": 2,
+            "totalEnergy": 4,
+            "totalMouvement": 2
+        },
+        "classDescription": "Un combattant intelligent et discipliné, le Caporal est équipé d'un sabre et d'un fusil, ce qui lui permet de mettre à distance les ennemies et de causer des dégâts importants à moyenne et logngue portée. Il excel dans les combats en groupe, de pars sa capacité à booster ses alliés.",
+        "actionList": [
+            "walk",
+            "shoot",
+            "artillery_support",
+            "intimidation",
+            "saber"
+        ]
+    }
+]

@@ -1,5 +1,6 @@
 export { MongoConnector, MongoConnectorProps } from "./Mongo";
 export { RedisConnector, RedisConnectorProps } from "./Redis";
+export { PostgresConnector, PostgresConnectorProps } from "./Postgres";
 export { HotConnectorProvider, HotRessource } from "./HotDB";
 export { ColdConnectorProvider, ColdRessource } from "./ColdDB";
 export { FolderRepository } from "./FolderRepository";

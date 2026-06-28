@@ -10,7 +10,9 @@ export class Action {
     description?: string;
     damage?: { min: number; max: number };
     effectList?: Effect[];
-    range!: number;
+    selfEffectList?: Effect[];
+    rangeType!: ActionZoneType;
+    range!: { min: number; max: number };
     zoneType!: ActionZoneType[];
     zoneSize!: number;
     actionType?: ActionType;
@@ -19,6 +21,7 @@ export class Action {
     cost!: number;
     isWalkAction?: boolean;
     targetRequired?: boolean;
+    invocateClass?: string;
 }
 
 export class ActionEntity {
@@ -28,7 +31,9 @@ export class ActionEntity {
     description?: string;
     damage?: { min: number; max: number };
     effectList?: string[];
-    range!: number;
+    selfEffectList?: string[];
+    rangeType!: ActionZoneType;
+    range!: { min: number; max: number };
     zoneType!: ActionZoneType[];
     zoneSize!: number;
     actionType?: ActionType;
@@ -37,12 +42,13 @@ export class ActionEntity {
     cost!: number;
     isWalkAction?: boolean;
     targetRequired?: boolean;
+    invocateClass?: string;
 }
 
 export enum ActionType {
     RANGED = "ranged",
     MELEE = "melee",
-    OTHER = "other"
+    OTHER = "other",
 }
 
 export enum ActionZoneType {
@@ -101,9 +107,7 @@ export class ActionUtils {
                 )
             ) {
                 entities.push(
-                    game.entities.find(
-                        (entity) => entity.entityId === cell.entityId
-                    )!
+                    game.entities.find((entity) => entity.id === cell.entityId)!
                 );
             }
         }

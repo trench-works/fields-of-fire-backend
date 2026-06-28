@@ -1,16 +1,15 @@
-import { HttpError, Provide } from "../../../core";
+import { HttpError, Id, Provide } from "../../../core";
 import { User } from "../data/User";
 import { UserRepository } from "../data/UserRepository";
-import { randomUUID } from 'crypto';
 
 export class UserService {
     @Provide(UserRepository)
     private readonly userRepository!: UserRepository;
 
     async authenticate(userName: string): Promise<User | HttpError> {
-        const user = (await this.userRepository.list()).find(
-            (user) => user.username === userName
-        );
+        const user = await this.userRepository.repository.findOne({
+            where: { username: userName },
+        });
         if (!user) {
             return new HttpError(400, "User doesnt exist");
         }
@@ -25,12 +24,14 @@ export class UserService {
             return new HttpError(400, "User already exists");
         }
 
-        const newUser: User = {
-            id: randomUUID(),
+        const newUser = await this.userRepository.save({
+            id: Id.get(),
             username,
-        };
-
-        await this.userRepository.set(newUser.id, newUser);
+            password: username,
+        });
+        if (!newUser) {
+            return new HttpError(400, "Couldnt create User");
+        }
         return newUser;
     }
 }

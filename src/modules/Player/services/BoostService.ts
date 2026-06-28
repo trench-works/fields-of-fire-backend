@@ -31,11 +31,6 @@ export class BoostService {
                     }
                 }
                 this.logger.log("will apply boosts", boost.boosts);
-                // Stocke dans permanentBoosts au lieu de stats
-                entity.permanentBoosts = Stats.add(
-                    (entity.permanentBoosts as Stats) ?? {},
-                    ...boost.boosts
-                );
                 // Applique immédiatement sur stats pour ce combat
                 entity.stats = Stats.add(entity.stats, ...boost.boosts);
 
@@ -54,6 +49,7 @@ export class BoostService {
             (boost) =>
                 (!boost.type || boost.type === boostType) &&
                 !bans.includes(boost.id)
+                && boost.probability > 0
         )) {
             total += boost.probability;
             probabilityMap.push([total, boost]);
