@@ -8,7 +8,7 @@
             "maxLife": 50,
             "precision": 10,
             "strength": 20,
-            "armor": 0,
+            "armor": 10,
             "initiative": 80,
             "dodging": 0,
             "energy": 4,
@@ -50,11 +50,11 @@
             "strength": 10,
             "armor": 0,
             "initiative": 90,
-            "dodging": 5,
+            "dodging": 3,
             "energy": 4,
-            "mouvement": 2,
+            "mouvement": 3,
             "totalEnergy": 4,
-            "totalMouvement": 2
+            "totalMouvement": 3
         },
         "classDescription": "Un combattant intelligent et discipliné, le Caporal est équipé d'un sabre et d'un fusil, ce qui lui permet de mettre à distance les ennemies et de causer des dégâts importants à moyenne et logngue portée. Il excel dans les combats en groupe, de pars sa capacité à booster ses alliés.",
         "actionList": [

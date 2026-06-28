@@ -41,7 +41,8 @@ export class WsTopicManager<
         const validateUser = validateSync(user);
         //TODO: verify as well that user is authenticated and authorized
         if (validateUser?.length) {
-            socket.close(0, JSON.stringify(validateUser));
+            socket.close(4000, JSON.stringify(validateUser));
+            return;
         }
 
         const validations = this.controllers.map((controller) =>
@@ -60,6 +61,7 @@ export class WsTopicManager<
                 "ERROR ON IN EVENT, NO MATCHING ENTRYPOINT FOR KEY"
             );
             socket.close(1008, "WRONG DATA"); //TODO: custom error message when no key matching
+            return;
         }
     }
 }

@@ -12,12 +12,15 @@ export class AttackService {
         const targetStats = Stats.fromEntity(target);
 
         //dodging - à voir si on peut dire au front que l'action à été dodge
-        const diceRoll = Ran.int(100);
-        const isDodged = target.stats.dodging > diceRoll ? true : false;
+        if(action.damage?.min ?? -1 >= 0) {
+            const diceRoll = Ran.int(100);
+            const isDodged = target.stats.dodging > diceRoll ? true : false;
 
-        if (isDodged) {
-            return 0;
+            if (isDodged) {
+                return 0;
+            }
         }
+       
 
         const randomDamage = action.damage
             ? action.damage.min + Ran.int(action.damage.max - action.damage.min)
@@ -65,12 +68,12 @@ export class AttackService {
         this.logger.log(`Calculated : ${brutTotal}`);
 
         // Vampire : vol de vie par stack
+        //Masochiste: self-dammage
         if (action.damage!.min >= 0) {
             // seulement sur les dégâts positifs, pas les heals
             const vampireStacks = attacker.effects.filter(
                 (e) => e.id === "vampire"
             ).length;
-
             if (vampireStacks > 0) {
                 const lifeSteal = Math.ceil(finalDamage / 10) * vampireStacks;
                 attacker.stats.life = Math.min(
@@ -78,10 +81,52 @@ export class AttackService {
                     Stats.fromEntity(attacker).maxLife
                 );
             }
+
+            const masoStacks = attacker.effects.filter(
+                (e) => e.id === "masochistic"
+            ).length;
+            if (masoStacks > 0) {
+                const masoDamage = finalDamage * (0.2 * masoStacks);
+                const selfDammage = masoDamage/2;
+                finalDamage += masoDamage;
+                attacker.stats.life = Math.min(
+                    attacker.stats.life - selfDammage,
+                    0
+                );
+            }
         }
 
         return finalDamage;
 
         //TODO: ajouter les effets de l'attaque, et ajout de chances d'échecs
+    }
+
+    calculateAverageDammage(action: Action, stats: Stats,){
+
+        const averageDamage = action.damage
+            ? (action.damage.max - action.damage.min) / 2 +
+            action.damage.min
+            : 0;
+
+        let statBonus: number = 0;
+
+        switch (action.actionType) {
+            case ActionType.MELEE:
+                {
+                    statBonus = Math.ceil(stats.strength / 10);
+                }
+                break;
+            case ActionType.RANGED:
+                {
+                    statBonus = Math.ceil(stats.precision / 10);
+                }
+                break;
+        }
+
+        if (action.damage!.min < 0) {
+            return averageDamage - statBonus;
+        } else {
+            return averageDamage + statBonus;
+        }
     }
 }
