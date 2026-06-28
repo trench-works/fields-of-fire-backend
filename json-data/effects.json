@@ -96,5 +96,13 @@
         "type": "APPLY",
         "modifier": {},
         "instant": {}
+    },
+    {
+        "id": "masochistic",
+        "name": "Masochiste",
+        "duration": null,
+        "type": "APPLY",
+        "modifier": {},
+        "instant": {}
     }
 ]

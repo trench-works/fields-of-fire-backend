@@ -65,17 +65,30 @@ export class AttackService {
         this.logger.log(`Calculated : ${brutTotal}`);
 
         // Vampire : vol de vie par stack
+        //Masochiste: self-dammage
         if (action.damage!.min >= 0) {
             // seulement sur les dégâts positifs, pas les heals
             const vampireStacks = attacker.effects.filter(
                 (e) => e.id === "vampire"
             ).length;
-
             if (vampireStacks > 0) {
                 const lifeSteal = Math.ceil(finalDamage / 10) * vampireStacks;
                 attacker.stats.life = Math.min(
                     attacker.stats.life + lifeSteal,
                     Stats.fromEntity(attacker).maxLife
+                );
+            }
+
+            const masoStacks = attacker.effects.filter(
+                (e) => e.id === "masochistic"
+            ).length;
+            if (masoStacks > 0) {
+                const masoDamage = finalDamage * (0.2 * masoStacks);
+                const selfDammage = masoDamage/2;
+                finalDamage += masoDamage;
+                attacker.stats.life = Math.min(
+                    attacker.stats.life - selfDammage,
+                    0
                 );
             }
         }
