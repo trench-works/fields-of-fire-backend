@@ -11,7 +11,7 @@
             "armor": 10,
             "initiative": 60,
             "dodging": 0,
-            "energy": 2,
+            "energy": 3,
             "mouvement": 3,
             "totalEnergy": 3,
             "totalMouvement": 3
@@ -27,17 +27,17 @@
             "life": 30,
             "maxLife": 30,
             "precision": 10,
-            "strength": 20,
+            "strength": 10,
             "armor": 0,
             "initiative": 60,
-            "dodging": 0,
-            "energy": 2,
+            "dodging": 5,
+            "energy": 3,
             "mouvement": 3,
             "totalEnergy": 3,
             "totalMouvement": 3
         },
         "classDescription": "Un médecin très très vilain",
-        "actionList": ["walk", "shoot", "heal"]
+        "actionList": ["walk", "shoot", "heal", "saber"]
     },
     {
         "id": "alliance_caporal",
@@ -46,17 +46,17 @@
         "stats": {
             "life": 34,
             "maxLife": 34,
-            "precision": 10,
-            "strength": 20,
+            "precision": 20,
+            "strength": 10,
             "armor": 0,
             "initiative": 60,
-            "dodging": 0,
+            "dodging": 3,
             "energy": 3,
             "mouvement": 3,
-            "totalEnergy": 2,
-            "totalMouvement": 2
+            "totalEnergy": 3,
+            "totalMouvement": 3
         },
         "classDescription": "Un Caporal très très très vilain",
-        "actionList": ["walk", "shoot", "artillery_support"]
+        "actionList": ["walk", "shoot", "artillery_support","saber"]
     }
 ]

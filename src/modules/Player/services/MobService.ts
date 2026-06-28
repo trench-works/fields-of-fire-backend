@@ -71,10 +71,10 @@ export class MobService implements AsyncResolver {
             const nearestPlayer = this.getNearestPlayer(game, entity);
             let playerRange = this.getDistance(entity, nearestPlayer);
 
-            const action = this.getAttack(charClass, playerRange, PA);
+            const action = this.getAttack(charClass, playerRange, PA, stats);
             if (PA) {
                 if (action) {
-                    this.logger.log("will attack");
+                    this.logger.log("will attack with action : ", action.id);
                     // do damages
                     const damage = this.attackService.calculateDamage(
                         action,
@@ -165,7 +165,8 @@ export class MobService implements AsyncResolver {
     private getAttack(
         charClass: CharacterClass,
         minRange: number,
-        energy: number
+        energy: number,
+        stats: Stats
     ): Action | undefined {
         //TODO: apply transformer on damages based on target and action launcher
         const mostPowerfulInRangeAction = charClass.actionList
@@ -176,16 +177,13 @@ export class MobService implements AsyncResolver {
                     (action.damage?.max ?? 0) > 0
             )
             .sort((actionA, actionB) => {
-                const midDamageA = actionA.damage
-                    ? (actionA.damage.max - actionA.damage.min) / 2 +
-                      actionA.damage.min
-                    : 0;
-                const midDamageB = actionB.damage
-                    ? (actionB.damage.max - actionB.damage.min) / 2 +
-                      actionB.damage.min
-                    : 0;
-                return midDamageA > midDamageB ? 1 : -1;
+                const midDamageA = this.attackService.calculateAverageDammage(actionA, stats);
+                this.logger.log(actionA.id," : deals aon average -> ", midDamageA)
+                const midDamageB = this.attackService.calculateAverageDammage(actionB, stats);
+                this.logger.log(actionB.id," : deals aon average -> ", midDamageB)
+                return midDamageA > midDamageB ? -1 : 1;
             })?.[0];
+        this.logger.log(" Best action is then -> ", `${JSON.stringify(mostPowerfulInRangeAction)}`)
         return mostPowerfulInRangeAction;
     }
 

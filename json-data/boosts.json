@@ -24,8 +24,8 @@
         "effects": [],
         "boosts": [
             {
-                "strength": 10,
-                "precision": 10
+                "strength": 15,
+                "precision": 15
             }
         ],
         "probability": 1
@@ -72,8 +72,9 @@
                 "maxLife": 8,
                 "strength": 5,
                 "precision": 5,
-                "dodging": 1,
-                "initiative": 15
+                "dodging": 2,
+                "initiative": 15,
+                "armor": 5
             }
         ],
         "probability": 1
@@ -101,6 +102,66 @@
                 "dodging": 3
             }
         ],
+        "probability": 1
+    },
+    {
+        "id": "heavy_gun",
+        "name": "Canon lourd",
+        "effects": [],
+        "boosts": [
+            {
+                "precision" : 50,
+                "dodging": -3,
+                "mouvement":-1
+            }
+        ],
+        "probability": 1
+    },
+    {
+        "id": "stabilisation",
+        "name": "Stabilisation",
+        "effects": [],
+        "boosts": [
+            {
+                "energy" : 1,
+                "mouvement":-1,
+                "strength": 5,
+                "precision": 5
+            }
+        ],
+        "probability": 1
+    },
+    {
+        "id": "sprint",
+        "name": "Sprint",
+        "effects": [],
+        "boosts": [
+            {
+                "energy" : -1,
+                "mouvement":1,
+                "strength": 5,
+                "precision": 5
+            }
+        ],
+        "probability": 1
+    },
+    {
+        "id": "alleviate",
+        "name": "Alléger",
+        "effects": [],
+        "boosts": [
+            {
+                "armor" : -30,
+                "strength": 40
+            }
+        ],
+        "probability": 1
+    },
+    {
+        "id": "masochistic",
+        "name": "Masochiste",
+        "effects": ["masochistic"],
+        "boosts": [],
         "probability": 1
     },
     {

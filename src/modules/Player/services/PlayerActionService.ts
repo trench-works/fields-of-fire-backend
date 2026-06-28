@@ -87,7 +87,7 @@ export class PlayerActionService {
         target: { x: number; y: number }
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.logger.log("PlayerActionService action method called");
-
+        
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
             return new SocketError("Game not found");
@@ -100,7 +100,7 @@ export class PlayerActionService {
         if (!playerEntity) {
             return new SocketError("Entity not found");
         }
-
+        
         const listActions = await this.actionRepository.list();
         const action = listActions.find((a) => a.id === actionId);
         if (!action) {
@@ -118,6 +118,7 @@ export class PlayerActionService {
             case PlayerActionId.SABER:
             case PlayerActionId.BREAK:
             case PlayerActionId.SHIELD_RUSH:
+            case PlayerActionId.INTIMIDATION:
                 return await this.attack(
                     game,
                     player,
@@ -126,7 +127,6 @@ export class PlayerActionService {
                     destination
                 );
             case PlayerActionId.PROVOK:
-            case PlayerActionId.INTIMIDATION:
             case PlayerActionId.DOPAGE:
             case PlayerActionId.SNEAKY:
             case PlayerActionId.FIGHTING_DRUG:
@@ -173,7 +173,6 @@ export class PlayerActionService {
                 effects: [],
             };
             if (action.effectList) {
-                this.logger.debug(`action.effectList : ${action.effectList}`);
                 for (const effect of action.effectList) {
                     this.applyEffect(player.name, entity, effect);
                 }
@@ -326,7 +325,6 @@ export class PlayerActionService {
 
         target.effects.push(effectCopy);
         target.stats = Stats.add(target.stats, effect.instant);
-        this.logger.log("effet pushed on target : ", target.name);
     }
 
     getTarget(game: Game, action: Action, destination: Cell): Entity[] {
