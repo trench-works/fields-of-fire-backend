@@ -17,7 +17,7 @@
         "cost": 2,
         "range": { "min": 0, "max": 3 },
         "rangeType": "diamond",
-        "damage": { "min": 3, "max": 8 },
+        "damage": { "min": 3, "max": 7 },
         "actionType": "ranged",
         "zoneType": ["diamond"],
         "zoneSize": 1
@@ -54,7 +54,7 @@
         "cost": 4,
         "range": { "min": 3, "max": 6 },
         "rangeType": "diamond",
-        "damage": { "min": 5, "max": 9 },
+        "damage": { "min": 5, "max": 11 },
         "actionType": "ranged",
         "zoneType": ["diamond"],
         "zoneSize": 2

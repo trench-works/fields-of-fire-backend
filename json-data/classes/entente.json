@@ -4,8 +4,8 @@
         "name": "Fantassin de l'Entente",
         "playable": true,
         "stats": {
-            "life": 26,
-            "maxLife": 26,
+            "life": 50,
+            "maxLife": 50,
             "precision": 10,
             "strength": 20,
             "armor": 0,
@@ -24,8 +24,8 @@
         "name": "Médecin de l'Entente",
         "playable": true,
         "stats": {
-            "life": 20,
-            "maxLife": 20,
+            "life": 35,
+            "maxLife": 35,
             "precision": 10,
             "strength": 10,
             "armor": 0,
@@ -44,8 +44,8 @@
         "name": "Caporal de l'Entente",
         "playable": true,
         "stats": {
-            "life": 24,
-            "maxLife": 24,
+            "life": 42,
+            "maxLife": 42,
             "precision": 20,
             "strength": 10,
             "armor": 0,
