@@ -121,6 +121,7 @@ export class GameService {
                 gameId,
                 name: user?.username ?? charClass.name,
                 invocations: [],
+                randomBoost : [],
             });
             playersEntities.push({
                 id: entityId,
@@ -154,6 +155,7 @@ export class GameService {
             readyPlayers: [],
             round: 1,
             isStopped: false,
+            playerWin: false,
         };
         await this.lobbyDataManager.delete(lobbyId);
         await this.gameDataManager.set(gameId, game);

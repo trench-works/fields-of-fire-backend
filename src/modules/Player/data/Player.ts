@@ -1,3 +1,5 @@
+import { Boost } from "../../Effect/data/Boost";
+
 export type Player = {
     id: string;
     userId: string;
@@ -5,4 +7,5 @@ export type Player = {
     gameId: string;
     name: string;
     invocations: string[];
+    randomBoost: Boost[];
 };

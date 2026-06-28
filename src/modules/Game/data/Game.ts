@@ -37,6 +37,7 @@ export type Game = {
     readyPlayers: string[];
     round: number;
     isStopped: boolean;
+    playerWin: boolean;
 };
 
 export class CellAStar extends AStar<Cell> {
