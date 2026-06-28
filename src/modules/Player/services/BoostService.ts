@@ -48,8 +48,8 @@ export class BoostService {
         for (const boost of (await this.boostRepository.list()).filter(
             (boost) =>
                 (!boost.type || boost.type === boostType) &&
-                !bans.includes(boost.id)
-                && boost.probability > 0
+                !bans.includes(boost.id) &&
+                boost.probability > 0
         )) {
             total += boost.probability;
             probabilityMap.push([total, boost]);
@@ -68,7 +68,7 @@ export class BoostService {
             bans
         );
         for (let i = 0; i < count; i++) {
-            const random = Ran.int(total);
+            const random = Ran.int(total + 1);
             boosts.push(
                 probabilityMap.filter((entry) => entry[0] >= random)[0][1]
             );

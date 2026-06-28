@@ -40,9 +40,11 @@
         "duration": 1,
         "type": "APPLY",
         "modifier": {
-            "mouvement": 2
+            "totalMouvement": 2
         },
-        "instant": {}
+        "instant": {
+            "mouvement": 2
+        }
     },
     {
         "id": "enhanced_drug",
@@ -54,7 +56,9 @@
             "precision": 10,
             "totalEnergy": 2
         },
-        "instant": {}
+        "instant": {
+            "energy": 2
+        }
     },
     {
         "id": "provoker",
@@ -71,9 +75,11 @@
         "type": "APPLY",
         "modifier": {
             "strength": 15,
-            "mouvement": -1
+            "totalMouvement": -1
         },
-        "instant": {}
+        "instant": {
+            "mouvement": -1
+        }
     },
     {
         "id": "vampire",
