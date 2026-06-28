@@ -84,4 +84,33 @@ export class AttackService {
 
         //TODO: ajouter les effets de l'attaque, et ajout de chances d'échecs
     }
+
+    calculateAverageDammage(action: Action, stats: Stats,){
+
+        const averageDamage = action.damage
+            ? (action.damage.max - action.damage.min) / 2 +
+            action.damage.min
+            : 0;
+
+        let statBonus: number = 0;
+
+        switch (action.actionType) {
+            case ActionType.MELEE:
+                {
+                    statBonus = Math.ceil(stats.strength / 10);
+                }
+                break;
+            case ActionType.RANGED:
+                {
+                    statBonus = Math.ceil(stats.precision / 10);
+                }
+                break;
+        }
+
+        if (action.damage!.min < 0) {
+            return averageDamage - statBonus;
+        } else {
+            return averageDamage + statBonus;
+        }
+    }
 }

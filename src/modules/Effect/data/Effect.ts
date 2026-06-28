@@ -1,8 +1,8 @@
 import { Stats } from "../../Stat/data/Stats";
 
 export enum EffectType {
-    DEBUFF = "DEBUFF",
-    APPLY = "apply",
+    POSON = "POISON",
+    APPLY = "APPLY",
 }
 
 export class Effect {
