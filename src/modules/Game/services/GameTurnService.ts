@@ -80,11 +80,14 @@ export class GameTurnService implements AsyncResolver {
                     const boosts =
                         await this.boostService.getPlayerBoostSelection();
                     boostArray.push(boosts);
+                    player.randomBoost = boosts;
                 }
             }
+            const playerWin = aliveTeams?.[0]?.name === TeamName.PLAYERS;
             game.isStopped = true;
+            game.playerWin = playerWin;
             await this.socketManager.emitGameEnd(game.id, (i) => ({
-                playerWin: aliveTeams?.[0]?.name === TeamName.PLAYERS,
+                playerWin: playerWin,
                 boosts: boostArray[i],
             }));
             await this.gameDataManager.set(game.id, game);
