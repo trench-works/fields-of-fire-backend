@@ -83,7 +83,7 @@ export class GameTurnService implements AsyncResolver {
                     player.randomBoost = boosts;
                 }
             }
-            const playerWin = aliveTeams?.[0]?.name === TeamName.PLAYERS
+            const playerWin = aliveTeams?.[0]?.name === TeamName.PLAYERS;
             game.isStopped = true;
             game.playerWin = playerWin;
             await this.socketManager.emitGameEnd(game.id, (i) => ({
