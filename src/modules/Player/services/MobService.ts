@@ -93,7 +93,7 @@ export class MobService implements AsyncResolver {
                             actionId: action.id,
                             origin: entity.position,
                             target: nearestPlayer.position,
-                            hits: [nearestPlayer.position],
+                            hits: [{ ...nearestPlayer.position, damage }],
                         },
                     });
                     animations.push(
