@@ -348,6 +348,9 @@ export class GameService {
         game.round++;
         game.isStopped = false;
 
+        game.entities = game.entities.sort((entityA, entityB) => {
+            return entityA.stats.initiative < entityB.stats.initiative ? 1 : -1;
+        });
         await this.gameDataManager.set(gameId, game);
         await this.gameSocket.emitGameRenew(game);
     }
