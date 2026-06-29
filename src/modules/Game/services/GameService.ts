@@ -12,7 +12,6 @@ import { Cell, Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
 import { LobbyDataManager } from "../../Lobby/data/LobbyDataManager";
 import { JoinGameResponse } from "../application/interfaces/JoinGameResponse";
-import { Board } from "../data/Board";
 import { Entity, EntityType } from "../data/Entity";
 import { Player } from "../../Player/data/Player";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
@@ -26,6 +25,7 @@ import { LobbyOutputActions } from "../../Lobby/application/interfaces/LobbyActi
 import { LobbyWebSocketManager } from "../../Lobby/web/LobbyWebSocketManager";
 import { MobService } from "../../Player/services/MobService";
 import { GameSubscriptionManager } from "../web/GameSubscriptionManager";
+import { MapService } from "./MapService";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -48,6 +48,8 @@ export class GameService {
     private readonly mobService!: MobService;
     @Provide(GameSubscriptionManager)
     private readonly gameSubscribeAwaiters!: GameSubscriptionManager;
+    @Provide(MapService)
+    private readonly mapService!: MapService;
 
     async getPlayerCurrentGame(
         userId: string
@@ -77,7 +79,10 @@ export class GameService {
             return new AccessRefused();
         }
         const gameId = Id.get();
-        const plateau: Cell[][] = Board.getRandomPremade();
+        const plateau: Cell[][] = this.mapService.generateRandomMap({
+            width: 10,
+            height: 10,
+        });
         const classes = await this.classRepository.list();
 
         const playersTeam: Team = {
@@ -121,7 +126,7 @@ export class GameService {
                 gameId,
                 name: user?.username ?? charClass.name,
                 invocations: [],
-                randomBoost : [],
+                randomBoost: [],
             });
             playersEntities.push({
                 id: entityId,
@@ -296,11 +301,10 @@ export class GameService {
         const game = (await this.gameDataManager.get(gameId))!;
 
         game.readyPlayers = [];
-        for (const line of game.plateau) {
-            for (const cell of line) {
-                cell.entityId = undefined;
-            }
-        }
+        game.plateau = this.mapService.generateRandomMap({
+            width: 10,
+            height: 10,
+        });
         const mobsTeam = game.teams.find(
             (team) => team.name === TeamName.MOBS
         )!;
