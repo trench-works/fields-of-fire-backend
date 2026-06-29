@@ -1,3 +1,4 @@
+import { scrypt } from "crypto";
 import { HttpError, Id, Provide } from "../../../core";
 import { User } from "../data/User";
 import { UserRepository } from "../data/UserRepository";
@@ -27,7 +28,11 @@ export class UserService {
         const newUser = await this.userRepository.save({
             id: Id.get(),
             username,
-            password: username,
+            password: await new Promise<string>((resolve) => {
+                scrypt(username, "test", 32, (_, value) =>
+                    resolve(String(value))
+                );
+            }),
         });
         if (!newUser) {
             return new HttpError(400, "Couldnt create User");
