@@ -13,7 +13,7 @@ export class UserService {
         if (!user) {
             return new HttpError(400, "User doesnt exist");
         }
-        return user;
+        return this.userRepository.entityToRessource(user.dataValues);
     }
 
     async register(username: string): Promise<User | HttpError> {
