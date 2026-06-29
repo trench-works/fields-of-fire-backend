@@ -174,7 +174,7 @@ export class PlayerActionService {
             };
             if (action.effectList) {
                 for (const effect of action.effectList) {
-                    this.applyEffect(player.name, entity, effect);
+                    this.attackService.applyEffect(player.name, entity, effect);
                 }
                 target.effects = action.effectList;
             }
@@ -253,34 +253,21 @@ export class PlayerActionService {
                     damage: 0,
                     effects: [],
                 };
-                if (action.damage) {
-                    const damage = this.attackService.calculateDamage(
-                        action,
-                        playerEntity,
-                        entity
-                    );
-                    this.applyDamage(entity, damage);
-                    target.damage = damage;
-                }
-                if (action.effectList) {
-                    this.logger.debug(
-                        `action.effectList : ${JSON.stringify(action.effectList)}`
-                    );
-                    for (const effect of action.effectList) {
-                        this.applyEffect(player.name, entity, effect);
-                    }
-                    target.effects = action.effectList;
-                }
+                
+                const damage = this.attackService.calculateDamage(
+                    action,
+                    playerEntity,
+                    entity,
+                    player
+                );
+                this.applyDamage(entity, damage);
+                target.damage = damage;
+                
                 return target;
             }
         );
 
-        if (action.selfEffectList) {
-            this.logger.debug(`action.effectList : ${action.effectList}`);
-            for (const effect of action.selfEffectList) {
-                this.applyEffect(player.name, playerEntity, effect);
-            }
-        }
+       
         //to finalize
         playerEntity.stats.energy -= action.cost;
 
@@ -310,21 +297,6 @@ export class PlayerActionService {
         if (target.stats.life < 0) {
             target.stats.life = 0;
         }
-    }
-
-    applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
-        if (!target.stats) {
-            this.logger.error("Target entity has no stats");
-            return;
-        }
-        this.logger.log(`target is ${JSON.stringify(target)}`);
-        const effectCopy = { ...effect };
-        if (caster) {
-            effectCopy.author = caster;
-        }
-
-        target.effects.push(effectCopy);
-        target.stats = Stats.add(target.stats, effect.instant);
     }
 
     getTarget(game: Game, action: Action, destination: Cell): Entity[] {
