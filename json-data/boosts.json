@@ -151,8 +151,8 @@
         "effects": [],
         "boosts": [
             {
-                "armor" : -30,
-                "strength": 40
+                "armor" : -20,
+                "strength": 50
             }
         ],
         "probability": 1

@@ -37,6 +37,12 @@ export enum PlayerActionId {
     BARRICADE = "barricade",
 }
 
+export enum DashType {
+    GAPCLOSE = "GAPCLOSE",
+    IN = "IN",
+    OUT = "OUT"
+}
+
 type AttackTarget = {
     entity: Entity;
     damage: number;
@@ -117,7 +123,6 @@ export class PlayerActionService {
             case PlayerActionId.HEAL:
             case PlayerActionId.SABER:
             case PlayerActionId.BREAK:
-            case PlayerActionId.SHIELD_RUSH:
             case PlayerActionId.INTIMIDATION:
                 return await this.attack(
                     game,
@@ -144,6 +149,14 @@ export class PlayerActionService {
                     playerEntity,
                     action,
                     destination.position
+                );
+            case PlayerActionId.SHIELD_RUSH:
+                return await this.attackAndDash(
+                    game,
+                    player,
+                    playerEntity,
+                    action,
+                    destination
                 );
             default:
                 this.logger.error("Unknown action ID");
@@ -242,45 +255,13 @@ export class PlayerActionService {
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
-
-        const targetEntities = this.getAttackTarget(game, action, destination);
-        this.logger.debug(`action : ${JSON.stringify(action)}`);
-
-        const targets: AttackTarget[] = targetEntities.map<AttackTarget>(
-            (entity) => {
-                const target: AttackTarget = {
-                    entity,
-                    damage: 0,
-                    effects: [],
-                };
-                if (action.damage) {
-                    const damage = this.attackService.calculateDamage(
-                        action,
-                        playerEntity,
-                        entity
-                    );
-                    this.applyDamage(entity, damage);
-                    target.damage = damage;
-                }
-                if (action.effectList) {
-                    this.logger.debug(
-                        `action.effectList : ${JSON.stringify(action.effectList)}`
-                    );
-                    for (const effect of action.effectList) {
-                        this.applyEffect(player.name, entity, effect);
-                    }
-                    target.effects = action.effectList;
-                }
-                return target;
-            }
-        );
-
-        if (action.selfEffectList) {
-            this.logger.debug(`action.effectList : ${action.effectList}`);
-            for (const effect of action.selfEffectList) {
-                this.applyEffect(player.name, playerEntity, effect);
-            }
-        }
+        const targets = this.dammageTargets(
+            game,
+            player,
+            playerEntity,
+            action,
+            destination
+        )
         //to finalize
         playerEntity.stats.energy -= action.cost;
 
@@ -293,6 +274,47 @@ export class PlayerActionService {
 
         await this.gameTurnService.detectGameEnd(game);
     }
+
+    async attackAndDash(
+        game: Game,
+        player: Player,
+        playerEntity: Entity,
+        action: Action,
+        destination: Cell,
+    ): Promise<void | SocketError | PlayerCancelAction> {
+        const targets = this.dammageTargets(
+            game,
+            player,
+            playerEntity,
+            action,
+            destination
+        )
+        const newCell = this.findGapClosePosition(game, playerEntity, destination);
+        if (newCell) {
+            const movePath: Position[] = new CellAStar().findPathPositions(
+                playerEntity.position,
+                newCell.position,
+                game.plateau
+            );
+            game.plateau[playerEntity.position.x][playerEntity.position.y].entityId = undefined;
+            newCell.entityId = playerEntity.id;
+            playerEntity.position = { ...newCell.position };
+            await this.socketManager.emitUpdate(game, [
+            {
+                key: "move",
+                data: {
+                    entityId: playerEntity.id,
+                    path: movePath,
+                },
+            },
+        ]);
+        }
+
+        playerEntity.stats.energy -= action.cost;
+        this.animate(game, playerEntity, action, destination, targets);
+        await this.gameDataManager.set(game.id, game);
+        await this.gameTurnService.detectGameEnd(game);
+     }
 
     checkMoveDestination(cell: Cell): boolean {
         return Boolean(!cell.entityId && !cell.isHole && !cell.isWall);
@@ -446,5 +468,61 @@ export class PlayerActionService {
             case ActionZoneType.CIRCLE:
                 break;
         }
+    }
+
+    dammageTargets(game : Game, player : Player, playerEntity : Entity, action : Action, destination : Cell){
+        const targetEntities = this.getAttackTarget(game, action, destination);
+        this.logger.debug(`action : ${JSON.stringify(action)}`);
+
+        const targets: AttackTarget[] = targetEntities.map<AttackTarget>(
+            (entity) => {
+                const target: AttackTarget = {
+                    entity,
+                    damage: 0,
+                    effects: [],
+                };
+                
+                const damage = this.attackService.calculateDamage(
+                    action,
+                    playerEntity,
+                    entity,
+                    player
+                );
+                this.applyDamage(entity, damage);
+                target.damage = damage;
+
+                
+                return target;
+            }
+        );
+        return targets
+    }
+    private findGapClosePosition(
+        game: Game,
+        attacker: Entity,
+        destination: Cell
+    ): Cell | null {
+        const dx = destination.position.x - attacker.position.x;
+        const dy = destination.position.y - attacker.position.y;
+
+        // Direction normalisée vers la cible
+        const stepX = dx === 0 ? 0 : dx > 0 ? 1 : -1;
+        const stepY = dy === 0 ? 0 : dy > 0 ? 1 : -1;
+
+        // Cherche la case juste avant la cible (côté attaquant)
+        // en remontant depuis la cible vers l'attaquant
+        let checkX = destination.position.x - stepX;
+        let checkY = destination.position.y - stepY;
+
+        while (checkX !== attacker.position.x || checkY !== attacker.position.y) {
+            const cell = game.plateau[checkX]?.[checkY];
+            if (cell && this.checkMoveDestination(cell)) {
+                return cell; // première case libre adjacente à la cible
+            }
+            checkX -= stepX;
+            checkY -= stepY;
+        }
+
+        return null; // pas de case libre trouvée
     }
 }
