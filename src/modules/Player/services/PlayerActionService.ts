@@ -307,7 +307,7 @@ export class PlayerActionService {
             playerEntity,
             action,
             destination
-        )
+        );
         const newCell = this.findGapClosePosition(game, playerEntity, destination);
         if (newCell) {
             const movePath: Position[] = new CellAStar().findPathPositions(
