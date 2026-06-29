@@ -187,7 +187,7 @@ export class PlayerActionService {
             };
             if (action.effectList) {
                 for (const effect of action.effectList) {
-                    this.applyEffect(player.name, entity, effect);
+                    this.attackService.applyEffect(player.name, entity, effect);
                 }
                 target.effects = action.effectList;
             }
@@ -255,13 +255,32 @@ export class PlayerActionService {
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
-        const targets = this.dammageTargets(
-            game,
-            player,
-            playerEntity,
-            action,
-            destination
-        )
+
+        const targetEntities = this.getAttackTarget(game, action, destination);
+        this.logger.debug(`action : ${JSON.stringify(action)}`);
+
+        const targets: AttackTarget[] = targetEntities.map<AttackTarget>(
+            (entity) => {
+                const target: AttackTarget = {
+                    entity,
+                    damage: 0,
+                    effects: [],
+                };
+                
+                const damage = this.attackService.calculateDamage(
+                    action,
+                    playerEntity,
+                    entity,
+                    player
+                );
+                this.applyDamage(entity, damage);
+                target.damage = damage;
+                
+                return target;
+            }
+        );
+
+       
         //to finalize
         playerEntity.stats.energy -= action.cost;
 
@@ -332,21 +351,6 @@ export class PlayerActionService {
         if (target.stats.life < 0) {
             target.stats.life = 0;
         }
-    }
-
-    applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
-        if (!target.stats) {
-            this.logger.error("Target entity has no stats");
-            return;
-        }
-        this.logger.log(`target is ${JSON.stringify(target)}`);
-        const effectCopy = { ...effect };
-        if (caster) {
-            effectCopy.author = caster;
-        }
-
-        target.effects.push(effectCopy);
-        target.stats = Stats.add(target.stats, effect.instant);
     }
 
     getTarget(game: Game, action: Action, destination: Cell): Entity[] {
