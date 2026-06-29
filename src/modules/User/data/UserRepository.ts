@@ -12,8 +12,8 @@ export class UserRepository
 {
     entityToRessource(entity: UserEntity): User {
         return {
-            ...entity,
-            password: undefined,
+            id: entity.id,
+            username: entity.username,
         };
     }
 
