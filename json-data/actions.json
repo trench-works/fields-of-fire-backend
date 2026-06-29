@@ -5,7 +5,7 @@
         "description": "Se déplacer vers une position ciblée",
         "cost": 0,
         "range": { "min": 0, "max": 0 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "isWalkAction": true,
         "zoneType": [],
         "zoneSize": 0
@@ -16,10 +16,10 @@
         "description": "Attaquer un ennemi à portée",
         "cost": 2,
         "range": { "min": 0, "max": 3 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "damage": { "min": 3, "max": 7 },
         "actionType": "ranged",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 1
     },
     {
@@ -28,11 +28,11 @@
         "description": "buff un allié",
         "cost": 1,
         "range": { "min": 0, "max": 1 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "damage": { "min": -6, "max": -1 },
         "actionType": "melee",
         "targetRequired": true,
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 1
     },
     {
@@ -41,10 +41,10 @@
         "description": "Attaque de mêlée",
         "cost": 2,
         "range": { "min": 0, "max": 1 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "damage": { "min": 4, "max": 8 },
         "actionType": "melee",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 1
     },
     {
@@ -53,10 +53,10 @@
         "description": "Attaque à distance sur une zone",
         "cost": 4,
         "range": { "min": 3, "max": 6 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "damage": { "min": 5, "max": 11 },
         "actionType": "ranged",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 2
     },
     {
@@ -65,9 +65,9 @@
         "description": "Debuff sur une cible",
         "cost": 2,
         "range": { "min": 1, "max": 4 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "actionType": "other",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 1,
         "effectList": ["intimidated"]
     },
@@ -77,9 +77,9 @@
         "description": "Buff sur soi",
         "cost": 1,
         "range": { "min": 0, "max": 0 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "actionType": "other",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 1,
         "effectList": ["doped"]
     },
@@ -89,10 +89,10 @@
         "description": "Attaque de mêlée",
         "cost": 2,
         "range": { "min": 1, "max": 1 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "damage": { "min": 1, "max": 4 },
         "actionType": "melee",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 1,
         "effectList": ["amputated"]
     },
@@ -102,9 +102,9 @@
         "description": "boost en zone",
         "cost": 2,
         "range": { "min": 0, "max": 0 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "actionType": "other",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 3,
         "effectList": ["charge"]
     },
@@ -114,9 +114,9 @@
         "description": "Boost monocible",
         "cost": 4,
         "range": { "min": 0, "max": 1 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "actionType": "other",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 1,
         "effectList": ["enhanced_drug"]
     },
@@ -126,10 +126,10 @@
         "description": "Frappe monocible",
         "cost": 2,
         "range": { "min": 0, "max": 1 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "damage": { "min": 1, "max": 7 },
         "actionType": "melee",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 1
     },
     {
@@ -138,10 +138,10 @@
         "description": "Frappe monocible",
         "cost": 2,
         "range": { "min": 0, "max": 1 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "damage": { "min": 2, "max": 6 },
         "actionType": "melee",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 1,
         "selfEffectList": ["angered"]
     },
@@ -151,9 +151,9 @@
         "description": "Debuff sur une cible",
         "cost": 2,
         "range": { "min": 1, "max": 3 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "actionType": "other",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 1,
         "effectList": ["provoked"]
     },
@@ -162,11 +162,11 @@
         "name": "Charge de bouclier",
         "description": "rush sur une cible",
         "cost": 2,
-        "range": { "min": 1, "max": 3 },
+        "range": { "min": 1, "max": 4 },
         "damage": { "min": 1, "max": 8 },
         "rangeType": "PLUS",
         "actionType": "other",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 1
     },
     {
@@ -175,9 +175,9 @@
         "description": "construit un obstacle",
         "cost": 1,
         "range": { "min": 1, "max": 1 },
-        "rangeType": "diamond",
+        "rangeType": "DIAMOND",
         "actionType": "other",
-        "zoneType": ["diamond"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 1
     }
 ]
