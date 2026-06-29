@@ -1,13 +1,15 @@
 import { Logger, Provide, Ran } from "../../../core";
 import { Action, ActionType } from "../../Action/data/Action";
+import { Effect } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
 import { Stats } from "../../Stat/data/Stats";
+import { Player } from "../data/Player";
 
 export class AttackService {
     @Provide("Logger")
     private readonly logger!: Logger;
 
-    calculateDamage(action: Action, attacker: Entity, target: Entity): number {
+    calculateDamage(action: Action, attacker: Entity, target: Entity, player? : Player): number {
         const attackerStats = Stats.fromEntity(attacker);
         const targetStats = Stats.fromEntity(target);
 
@@ -96,6 +98,24 @@ export class AttackService {
             }
         }
 
+        //manage effect 
+        if (action.effectList) {
+            this.logger.debug(
+                `action.effectList : ${JSON.stringify(action.effectList)}`
+            );
+            for (const effect of action.effectList) {
+                this.applyEffect(player?.name ?? attacker.classId, target, effect);
+            }
+            target.effects = action.effectList;
+        }
+
+         if (action.selfEffectList) {
+            this.logger.debug(`action.effectList : ${action.effectList}`);
+            for (const effect of action.selfEffectList) {
+                this.applyEffect(player?.name ?? attacker.classId, attacker, effect);
+            }
+        }
+
         return finalDamage;
 
         //TODO: ajouter les effets de l'attaque, et ajout de chances d'échecs
@@ -128,5 +148,20 @@ export class AttackService {
         } else {
             return averageDamage + statBonus;
         }
+    }
+
+    applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
+        if (!target.stats) {
+            this.logger.error("Target entity has no stats");
+            return;
+        }
+        this.logger.log(`target is ${JSON.stringify(target)}`);
+        const effectCopy = { ...effect };
+        if (caster) {
+            effectCopy.author = caster;
+        }
+
+        target.effects.push(effectCopy);
+        target.stats = Stats.add(target.stats, effect.instant);
     }
 }
