@@ -91,10 +91,17 @@ export class GameTurnService implements AsyncResolver {
             game.isStopped = true;
             game.playerWin = playerWin;
             await this.gameDataManager.set(game.id, game);
-            await this.playerSocketManager.emitGameEnd(game.id, (playerId) => ({
-                playerWin: playerWin,
-                boosts: boostMap.get(playerId) ?? [],
-            }));
+            if (game.readyPlayers.length === game.players.length) {
+                this.gameService.newGameFromGame(game.id);
+            } else {
+                await this.playerSocketManager.emitGameEnd(
+                    game.id,
+                    (playerId) => ({
+                        playerWin: playerWin,
+                        boosts: boostMap.get(playerId) ?? [],
+                    })
+                );
+            }
             return true;
         }
         return false;
