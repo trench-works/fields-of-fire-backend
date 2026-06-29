@@ -52,10 +52,10 @@ export enum ActionType {
 }
 
 export enum ActionZoneType {
-    DIAMOND = "diamond",
-    CIRCLE = "circle",
-    PLUS = "plus",
-    XCROSS = "xcross",
+    DIAMOND = "DIAMOND",
+    CIRCLE = "CIRCLE",
+    PLUS = "PLUS",
+    XCROSS = "XCROSS",
 }
 
 export class ActionUtils {
