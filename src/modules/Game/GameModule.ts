@@ -6,6 +6,7 @@ import { GameService } from "./services/GameService";
 import { GameSubscriptionManager } from "./web/GameSubscriptionManager";
 import { GameTurnService } from "./services/GameTurnService";
 import { GameWebSocketManager } from "./web/GameWebSocketManager";
+import { MapService } from "./services/MapService";
 
 export class GameModule extends Module {
     constructor() {
@@ -18,6 +19,7 @@ export class GameModule extends Module {
                 GameTurnService,
                 GameSubscriptionManager,
                 GameDataLocker,
+                MapService,
             ],
         });
     }
