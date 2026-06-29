@@ -3,7 +3,6 @@ import {
     GameOutputActions,
     GameReturnActions,
 } from "../application/interfaces/GameAction";
-import { GameEndEvent } from "../application/interfaces/GameEndEvent";
 import { GameKey } from "../application/interfaces/GameKey";
 import { GameRenew } from "../application/interfaces/GameRenew";
 import {
@@ -39,16 +38,5 @@ export class GameWebSocketManager extends WsManager<
             key: { gameId: game.id },
             payload: { data: game },
         });
-    }
-
-    async emitGameEnd(
-        gameId: string,
-        getPayload: (index: number) => GameEndEvent
-    ) {
-        await this.emitMap<GameEndEvent>(
-            GameOutputActions.GAME_END,
-            { gameId },
-            (_, i) => getPayload(i)
-        );
     }
 }
