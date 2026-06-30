@@ -9,14 +9,14 @@
                 "life": 15
             }
         ],
-        "probability": 1
+        "probability":0
     },
     {
         "id": "precision",
         "name": "Précision",
         "effects": [],
         "boosts": [{ "precision": 30 }],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "versatile",
@@ -28,7 +28,7 @@
                 "precision": 15
             }
         ],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "armor",
@@ -39,28 +39,28 @@
                 "armor": 15
             }
         ],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "strength",
         "name": "Force",
         "effects": [],
         "boosts": [{ "strength": 30 }],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "heal",
         "name": "Soin",
         "effects": [],
         "boosts": [],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "vampire",
         "name": "Vampirisme",
         "effects": ["vampire"],
         "boosts": [],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "reaction",
@@ -77,21 +77,21 @@
                 "armor": 5
             }
         ],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "energy",
         "name": "Energie",
         "effects": [],
         "boosts": [{ "totalEnergy": 1 }],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "acceleration",
         "name": "Acceleration",
         "effects": [],
         "boosts": [{ "totalMouvement": 1 }],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "dodge",
@@ -102,7 +102,7 @@
                 "dodging": 4
             }
         ],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "heavy_gun",
@@ -115,7 +115,7 @@
                 "mouvement":-1
             }
         ],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "stabilisation",
@@ -129,7 +129,7 @@
                 "precision": 5
             }
         ],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "sprint",
@@ -143,7 +143,7 @@
                 "precision": 5
             }
         ],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "alleviate",
@@ -155,26 +155,26 @@
                 "strength": 50
             }
         ],
-        "probability": 1
+        "probability": 0
     },
     {
         "id": "masochistic",
         "name": "Masochiste",
         "effects": ["masochistic"],
         "boosts": [],
-        "probability": 1
+        "probability": 0
     },
     {
-        "id": "critDammage",
+        "id": "crit_dammage",
         "name": "Frappe Fatal",
-        "effects": ["critDammage"],
+        "effects": ["crit_dammage"],
         "boosts": [],
         "probability": 1
     },
     {
-        "id": "critChance",
+        "id": "crit_chance",
         "name": "Frappe Précise",
-        "effects": ["critChance"],
+        "effects": ["crit_chance"],
         "boosts": [],
         "probability": 1
     },
