@@ -21,8 +21,7 @@ export class AttackService {
             if (isDodged) {
                 return 0;
             }
-        }
-       
+        }  
 
         const randomDamage = action.damage
             ? action.damage.min + Ran.int(action.damage.max - action.damage.min)
@@ -49,8 +48,7 @@ export class AttackService {
 
         let brutTotal: number;
         let finalDamage: number;
-
-        if (action.damage!.min < 0) {
+        if((action.damage?.min ?? 0) < 0) {
             brutTotal = randomDamage - statBonus;
             finalDamage = brutTotal;
             if (
@@ -64,14 +62,26 @@ export class AttackService {
         } else {
             brutTotal = randomDamage + statBonus;
             finalDamage = Math.ceil(brutTotal * (100 / (100 + target.stats.armor)));
- 
+
+            //Crit Logik
+            const critRoll = Ran.int(100);
+            const critChanceBuff = attacker.effects.filter(
+                    (e) => e.id === "crit_chance"
+                ).length;
+            const critDammageBuff = attacker.effects.filter(
+                    (e) => e.id === "crit_dammage"
+                ).length;
+            const critChance = 1 + critChanceBuff * 3;
+            if(critRoll < critChance ){
+                finalDamage = Math.ceil(finalDamage * (2 + (0.25 * critDammageBuff)));
+            } 
         }
 
         this.logger.log(`Calculated : ${brutTotal}`);
 
         // Vampire : vol de vie par stack
         //Masochiste: self-dammage
-        if (action.damage!.min >= 0) {
+        if ((action.damage?.min ?? -1) >= 0) {
             // seulement sur les dégâts positifs, pas les heals
             const vampireStacks = attacker.effects.filter(
                 (e) => e.id === "vampire"
@@ -99,14 +109,14 @@ export class AttackService {
         }
 
         //manage effect 
-        if (action.effectList) {
+        if ((action.effectList?.length ?? 0) > 0) {
             this.logger.debug(
                 `action.effectList : ${JSON.stringify(action.effectList)}`
             );
-            for (const effect of action.effectList) {
+            for (const effect of action.effectList!) {
                 this.applyEffect(player?.name ?? attacker.classId, target, effect);
             }
-            target.effects = action.effectList;
+            target.effects = action.effectList!;
         }
 
          if (action.selfEffectList) {

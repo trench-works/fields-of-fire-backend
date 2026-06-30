@@ -104,5 +104,21 @@
         "type": "APPLY",
         "modifier": {},
         "instant": {}
+    },
+    {
+        "id": "crit_dammage",
+        "name": "crit_dammage",
+        "duration": null,
+        "type": "APPLY",
+        "modifier": {},
+        "instant": {}
+    },
+     {
+        "id": "crit_chance",
+        "name": "crit_chance",
+        "duration": null,
+        "type": "APPLY",
+        "modifier": {},
+        "instant": {}
     }
 ]

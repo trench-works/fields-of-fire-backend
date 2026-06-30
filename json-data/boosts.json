@@ -165,6 +165,20 @@
         "probability": 1
     },
     {
+        "id": "crit_dammage",
+        "name": "Frappe Fatal",
+        "effects": ["crit_dammage"],
+        "boosts": [],
+        "probability": 1
+    },
+    {
+        "id": "crit_chance",
+        "name": "Frappe Précise",
+        "effects": ["crit_chance"],
+        "boosts": [],
+        "probability": 1
+    },
+    {
         "id": "reinforcement",
         "name": "Renforcement",
         "effects": [],
