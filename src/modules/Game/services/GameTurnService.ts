@@ -3,7 +3,6 @@ import {
     AsyncDependencyResolver,
     AsyncResolver,
 } from "../../../core/app/Controller/DependencyResolver";
-import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { Boost } from "../../Effect/data/Boost";
 import { BoostService } from "../../Player/services/BoostService";
 import { MobService } from "../../Player/services/MobService";
@@ -15,19 +14,14 @@ import { Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
 import { TeamName } from "../data/Team";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
-import { GameService } from "./GameService";
 
 export class GameTurnService implements AsyncResolver {
     @Provide(GameDataManager)
     private readonly gameDataManager!: GameDataManager;
-    @Provide(CharacterClassRepository)
-    private readonly classRepository!: CharacterClassRepository;
     @Provide(GameWebSocketManager)
     private readonly socketManager!: GameWebSocketManager;
     @Provide(PlayerWebSocketManager)
     private readonly playerSocketManager!: PlayerWebSocketManager;
-    @Provide(GameService)
-    private readonly gameService!: GameService;
     @Provide(BoostService)
     private readonly boostService!: BoostService;
 
@@ -78,12 +72,11 @@ export class GameTurnService implements AsyncResolver {
                 if (entity.dead) {
                     entity.dead = false;
                     entity.stats.life = entity.stats.maxLife;
-                    game.readyPlayers.push(player.id);
                     boostMap.set(player.id, []);
                 } else {
                     const boosts =
                         await this.boostService.getPlayerBoostSelection();
-                    boostMap.set(player.id, []);
+                    boostMap.set(player.id, boosts);
                     player.randomBoost = boosts;
                 }
             }
@@ -91,17 +84,11 @@ export class GameTurnService implements AsyncResolver {
             game.isStopped = true;
             game.playerWin = playerWin;
             await this.gameDataManager.set(game.id, game);
-            if (game.readyPlayers.length === game.players.length) {
-                this.gameService.newGameFromGame(game.id);
-            } else {
-                await this.playerSocketManager.emitGameEnd(
-                    game.id,
-                    (playerId) => ({
-                        playerWin: playerWin,
-                        boosts: boostMap.get(playerId) ?? [],
-                    })
-                );
-            }
+            await this.playerSocketManager.emitGameEnd(game.id, (playerId) => ({
+                playerWin: playerWin,
+                boosts: boostMap.get(playerId) ?? [],
+            }));
+
             return true;
         }
         return false;
