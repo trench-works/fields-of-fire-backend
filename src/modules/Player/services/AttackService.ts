@@ -48,9 +48,7 @@ export class AttackService {
 
         let brutTotal: number;
         let finalDamage: number;
-        console.log(action.damage?.min)
         if((action.damage?.min ?? 0) < 0) {
-            console.log(randomDamage, statBonus)
             brutTotal = randomDamage - statBonus;
             finalDamage = brutTotal;
             if (
