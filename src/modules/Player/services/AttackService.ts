@@ -10,7 +10,6 @@ export class AttackService {
     private readonly logger!: Logger;
 
     calculateDamage(action: Action, attacker: Entity, target: Entity, player? : Player): number {
-        this.logger.log("calculate dmmage started")
         const attackerStats = Stats.fromEntity(attacker);
         const targetStats = Stats.fromEntity(target);
 
