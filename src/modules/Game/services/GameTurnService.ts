@@ -3,10 +3,10 @@ import {
     AsyncDependencyResolver,
     AsyncResolver,
 } from "../../../core/app/Controller/DependencyResolver";
-import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { Boost } from "../../Effect/data/Boost";
 import { BoostService } from "../../Player/services/BoostService";
 import { MobService } from "../../Player/services/MobService";
+import { PlayerWebSocketManager } from "../../Player/web/PlayerWebSocketManager";
 import { Stats } from "../../Stat/data/Stats";
 import { GameEventAnimation } from "../application/interfaces/GameUpdateEvent";
 import { EntityType } from "../data/Entity";
@@ -14,17 +14,14 @@ import { Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
 import { TeamName } from "../data/Team";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
-import { GameService } from "./GameService";
 
 export class GameTurnService implements AsyncResolver {
     @Provide(GameDataManager)
     private readonly gameDataManager!: GameDataManager;
-    @Provide(CharacterClassRepository)
-    private readonly classRepository!: CharacterClassRepository;
     @Provide(GameWebSocketManager)
     private readonly socketManager!: GameWebSocketManager;
-    @Provide(GameService)
-    private readonly gameService!: GameService;
+    @Provide(PlayerWebSocketManager)
+    private readonly playerSocketManager!: PlayerWebSocketManager;
     @Provide(BoostService)
     private readonly boostService!: BoostService;
 
@@ -67,7 +64,7 @@ export class GameTurnService implements AsyncResolver {
             )
         );
         if (aliveTeams.length <= 1) {
-            const boostArray: Boost[][] = [];
+            const boostMap: Map<string, Boost[]> = new Map();
             for (const player of game.players) {
                 const entity = game.entities.find(
                     (entity) => entity.id === player.entityId
@@ -75,22 +72,23 @@ export class GameTurnService implements AsyncResolver {
                 if (entity.dead) {
                     entity.dead = false;
                     entity.stats.life = entity.stats.maxLife;
-                    boostArray.push([]);
+                    boostMap.set(player.id, []);
                 } else {
                     const boosts =
                         await this.boostService.getPlayerBoostSelection();
-                    boostArray.push(boosts);
+                    boostMap.set(player.id, boosts);
                     player.randomBoost = boosts;
                 }
             }
             const playerWin = aliveTeams?.[0]?.name === TeamName.PLAYERS;
             game.isStopped = true;
             game.playerWin = playerWin;
-            await this.socketManager.emitGameEnd(game.id, (i) => ({
-                playerWin: playerWin,
-                boosts: boostArray[i],
-            }));
             await this.gameDataManager.set(game.id, game);
+            await this.playerSocketManager.emitGameEnd(game.id, (playerId) => ({
+                playerWin: playerWin,
+                boosts: boostMap.get(playerId) ?? [],
+            }));
+
             return true;
         }
         return false;
