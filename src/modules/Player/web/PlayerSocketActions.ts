@@ -7,4 +7,5 @@ export enum PlayerInputActions {
 
 export enum PlayerOutputActions {
     CANCEL_ACTION = "cancel-action",
+    GAME_END = "game-end",
 }
