@@ -21,8 +21,7 @@ export class AttackService {
             if (isDodged) {
                 return 0;
             }
-        }
-       
+        }  
 
         const randomDamage = action.damage
             ? action.damage.min + Ran.int(action.damage.max - action.damage.min)
@@ -64,7 +63,6 @@ export class AttackService {
         } else {
             brutTotal = randomDamage + statBonus;
             finalDamage = Math.ceil(brutTotal * (100 / (100 + target.stats.armor)));
- 
         }
 
         this.logger.log(`Calculated : ${brutTotal}`);
@@ -97,6 +95,19 @@ export class AttackService {
                 );
             }
         }
+
+        //Crit Logik
+        const critRoll = Ran.int(100);
+        const critChanceBuff = attacker.effects.filter(
+                (e) => e.id === "critChance"
+            ).length;
+         const critDammageBuff = attacker.effects.filter(
+                (e) => e.id === "critDammage"
+            ).length;
+        const critChance = 1 + critChanceBuff;
+        if(critRoll < critChance ){
+            finalDamage = finalDamage * (1.5 + (0.25 * critDammageBuff));
+        } 
 
         //manage effect 
         if (action.effectList) {
