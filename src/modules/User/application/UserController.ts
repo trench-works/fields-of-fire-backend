@@ -3,6 +3,7 @@ import { PostListenerOptions } from "../../../core/app/Controller/HttpController
 import { User } from "../data/User";
 import { UserService } from "../services/UserService";
 import { Authenticate } from "./interfaces/Authenticate";
+import { Register } from "./interfaces/Register";
 
 export class UserController extends HttpController {
     @Provide(UserService)
@@ -15,14 +16,14 @@ export class UserController extends HttpController {
     }
 
     async authenticate({
-        body: { username },
+        body,
     }: PostListenerOptions<object, Authenticate>): Promise<User | HttpError> {
-        return await this.userService.authenticate(username);
+        return await this.userService.authenticate(body);
     }
 
     async register({
-        body: { username },
-    }: PostListenerOptions<object, Authenticate>): Promise<User | HttpError> {
-        return await this.userService.register(username);
+        body,
+    }: PostListenerOptions<object, Register>): Promise<User | HttpError> {
+        return await this.userService.register(body);
     }
 }
