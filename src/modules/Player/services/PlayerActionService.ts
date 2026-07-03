@@ -40,7 +40,7 @@ export enum PlayerActionId {
 export enum DashType {
     GAPCLOSE = "GAPCLOSE",
     IN = "IN",
-    OUT = "OUT"
+    OUT = "OUT",
 }
 
 type AttackTarget = {
@@ -93,7 +93,7 @@ export class PlayerActionService {
         target: { x: number; y: number }
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.logger.log("PlayerActionService action method called");
-        
+
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
             return new SocketError("Game not found");
@@ -106,7 +106,7 @@ export class PlayerActionService {
         if (!playerEntity) {
             return new SocketError("Entity not found");
         }
-        
+
         const listActions = await this.actionRepository.list();
         const action = listActions.find((a) => a.id === actionId);
         if (!action) {
@@ -266,21 +266,19 @@ export class PlayerActionService {
                     damage: 0,
                     effects: [],
                 };
-                
-                const damage = this.attackService.calculateDamage(
+
+                const damage = this.attackService.applyDamage(
                     action,
                     playerEntity,
                     entity,
                     player
                 );
-                this.applyDamage(entity, damage);
                 target.damage = damage;
-                
+
                 return target;
             }
         );
 
-       
         //to finalize
         playerEntity.stats.energy -= action.cost;
 
@@ -299,7 +297,7 @@ export class PlayerActionService {
         player: Player,
         playerEntity: Entity,
         action: Action,
-        destination: Cell,
+        destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
         const targets = this.dammageTargets(
             game,
@@ -308,49 +306,41 @@ export class PlayerActionService {
             action,
             destination
         );
-        const newCell = this.findGapClosePosition(game, playerEntity, destination);
+        const newCell = this.findGapClosePosition(
+            game,
+            playerEntity,
+            destination
+        );
         if (newCell) {
             const movePath: Position[] = new CellAStar().findPathPositions(
                 playerEntity.position,
                 newCell.position,
                 game.plateau
             );
-            game.plateau[playerEntity.position.x][playerEntity.position.y].entityId = undefined;
+            game.plateau[playerEntity.position.x][
+                playerEntity.position.y
+            ].entityId = undefined;
             newCell.entityId = playerEntity.id;
             playerEntity.position = { ...newCell.position };
             await this.socketManager.emitUpdate(game, [
-            {
-                key: "move",
-                data: {
-                    entityId: playerEntity.id,
-                    path: movePath,
+                {
+                    key: "move",
+                    data: {
+                        entityId: playerEntity.id,
+                        path: movePath,
+                    },
                 },
-            },
-        ]);
+            ]);
         }
 
         playerEntity.stats.energy -= action.cost;
         this.animate(game, playerEntity, action, destination, targets);
         await this.gameDataManager.set(game.id, game);
         await this.gameTurnService.detectGameEnd(game);
-     }
+    }
 
     checkMoveDestination(cell: Cell): boolean {
         return Boolean(!cell.entityId && !cell.isHole && !cell.isWall);
-    }
-
-    applyDamage(target: Entity, damage: number) {
-        if (!target.stats) {
-            this.logger.error("Target entity has no stats");
-            return;
-        }
-        target.stats.life -= damage;
-        this.logger.log(
-            `Applied ${damage} damage to entity ${target.id}, remaining life: ${target.stats.life}`
-        );
-        if (target.stats.life < 0) {
-            target.stats.life = 0;
-        }
     }
 
     getTarget(game: Game, action: Action, destination: Cell): Entity[] {
@@ -474,7 +464,13 @@ export class PlayerActionService {
         }
     }
 
-    dammageTargets(game : Game, player : Player, playerEntity : Entity, action : Action, destination : Cell){
+    dammageTargets(
+        game: Game,
+        player: Player,
+        playerEntity: Entity,
+        action: Action,
+        destination: Cell
+    ) {
         const targetEntities = this.getAttackTarget(game, action, destination);
         this.logger.debug(`action : ${JSON.stringify(action)}`);
 
@@ -485,21 +481,19 @@ export class PlayerActionService {
                     damage: 0,
                     effects: [],
                 };
-                
-                const damage = this.attackService.calculateDamage(
+
+                const damage = this.attackService.applyDamage(
                     action,
                     playerEntity,
                     entity,
                     player
                 );
-                this.applyDamage(entity, damage);
                 target.damage = damage;
 
-                
                 return target;
             }
         );
-        return targets
+        return targets;
     }
     private findGapClosePosition(
         game: Game,
@@ -518,7 +512,10 @@ export class PlayerActionService {
         let checkX = destination.position.x - stepX;
         let checkY = destination.position.y - stepY;
 
-        while (checkX !== attacker.position.x || checkY !== attacker.position.y) {
+        while (
+            checkX !== attacker.position.x ||
+            checkY !== attacker.position.y
+        ) {
             const cell = game.plateau[checkX]?.[checkY];
             if (cell && this.checkMoveDestination(cell)) {
                 return cell; // première case libre adjacente à la cible

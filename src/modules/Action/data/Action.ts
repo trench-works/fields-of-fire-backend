@@ -3,6 +3,12 @@ import { Effect } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
 import { Game } from "../../Game/data/Game";
 
+export enum ActionLevel {
+    UNDERGROUND = "UNDERGROUND",
+    GROUND = "GROUND",
+    OVERGROUND = "OVERGROUND",
+}
+
 export class Action {
     id!: string;
     key?: string;
@@ -15,13 +21,14 @@ export class Action {
     range!: { min: number; max: number };
     zoneType!: ActionZoneType[];
     zoneSize!: number;
-    actionType?: ActionType;
+    actionType!: ActionType;
     mooveToTarget?: { x: number; y: number };
     pushValue?: number;
     cost!: number;
     isWalkAction?: boolean;
     targetRequired?: boolean;
     invocateClass?: string;
+    level!: ActionLevel;
 }
 
 export class ActionEntity {
@@ -36,19 +43,21 @@ export class ActionEntity {
     range!: { min: number; max: number };
     zoneType!: ActionZoneType[];
     zoneSize!: number;
-    actionType?: ActionType;
+    actionType!: ActionType;
     mooveToTarget?: { x: number; y: number };
     pushValue?: number;
     cost!: number;
     isWalkAction?: boolean;
     targetRequired?: boolean;
     invocateClass?: string;
+    level!: ActionLevel;
 }
 
 export enum ActionType {
-    RANGED = "ranged",
-    MELEE = "melee",
-    OTHER = "other",
+    RANGED = "RANGED",
+    MELEE = "MELEE",
+    MOUVEMENT = "MOUVEMENT",
+    OTHER = "OTHER",
 }
 
 export enum ActionZoneType {
