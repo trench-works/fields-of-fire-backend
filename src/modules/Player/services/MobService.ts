@@ -4,8 +4,7 @@ import {
     AsyncResolver,
 } from "../../../core/app/Controller/DependencyResolver";
 import { Position, PositionUtils } from "../../../game-lib";
-import { Action } from "../../Action/data/Action";
-import { CharacterClass } from "../../CharacterClass/data/CharacterClass";
+import { ActionType } from "../../Action/data/Action";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { GameEventAnimation } from "../../Game/application/interfaces/GameUpdateEvent";
 import { Entity } from "../../Game/data/Entity";
@@ -13,8 +12,9 @@ import { CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
-import { Stats } from "../../Stat/data/Stats";
+import { ActionEvaluator } from "../utils/ActionEvaluator";
 import { AttackService } from "./AttackService";
+import { MoveService } from "./MoveService";
 
 export class MobService implements AsyncResolver {
     @Provide(GameDataManager)
@@ -27,6 +27,8 @@ export class MobService implements AsyncResolver {
     private readonly classRepository!: CharacterClassRepository;
     @Provide(AttackService)
     private readonly attackService!: AttackService;
+    @Provide(MoveService)
+    private readonly moveService!: MoveService;
 
     private gameTurnService!: GameTurnService;
 
@@ -55,100 +57,93 @@ export class MobService implements AsyncResolver {
         if (!charClass) {
             return;
         }
-        const stats = Stats.fromEntity(entity);
-        let lastPA = stats.energy;
-        let lastPM = stats.mouvement;
-        let PA = stats.energy;
-        let PM = stats.mouvement;
-        let firstTry = true;
-        while (firstTry || PM !== lastPM || PA !== lastPA) {
+        let didAction = true;
+        while (didAction) {
             this.logger.debug("Mob calculating a turn");
             const animations: GameEventAnimation[] = [];
-            firstTry = false;
-            lastPA = PA;
-            lastPM = PM;
+            didAction = false;
 
-            const nearestPlayer = this.getNearestPlayer(game, entity);
-            let playerRange = this.getDistance(entity, nearestPlayer);
+            const evaluator = new ActionEvaluator(
+                entity,
+                charClass.actionList,
+                game,
+                this.attackService,
+                this.moveService
+            ).evaluate();
+            // evaluator.evaluations.forEach((evaluation) =>
+            //     console.log(
+            //         `${evaluation.evaluated.action.id} : ${JSON.stringify(evaluation.evaluated.position)} : ${evaluation.note}`
+            //     )
+            // );
 
-            const action = this.getAttack(charClass, playerRange, PA, stats);
-            if (PA) {
-                if (action) {
-                    this.logger.log("will attack with action : ", action.id);
-                    // do damages
-                    const damage = this.attackService.calculateDamage(
-                        action,
-                        entity,
-                        nearestPlayer
+            const action = evaluator.getBest();
+            if (action) {
+                didAction = true;
+                if (action.action.actionType === ActionType.MOUVEMENT) {
+                    const moves = new CellAStar().findPath(
+                        entity.position,
+                        action.position,
+                        game.plateau
                     );
-
-                    nearestPlayer.stats.life -= damage; //TODO: apply defense and dodge
-                    //TODO: do zone damages
-                    // remove energy points
-                    PA -= action.cost;
-                    animations.push({
-                        key: "attack",
-                        data: {
-                            entityId: entity.id,
-                            actionId: action.id,
-                            origin: entity.position,
-                            target: nearestPlayer.position,
-                            hits: [{ ...nearestPlayer.position, damage }],
-                        },
-                    });
-                    animations.push(
-                        ...this.gameTurnService.detectEntityDeath(game)
-                    );
-                }
-            }
-            if (PM) {
-                if (!action) {
-                    this.logger.log("will move");
-                    let hasMoved = true;
-                    while (playerRange > 0 && PM > 0 && hasMoved) {
-                        hasMoved = false;
-                        playerRange = this.getDistance(entity, nearestPlayer);
-
-                        const moves = new CellAStar().findPath(
+                    const originalPosition = { ...entity.position };
+                    const movePath: Position[] = [{ ...entity.position }];
+                    while (entity.stats.mouvement > 0 && moves.length > 0) {
+                        game.plateau[entity.position.x][
+                            entity.position.y
+                        ].entityId = undefined;
+                        entity.position = PositionUtils.add(
                             entity.position,
-                            nearestPlayer.position,
-                            game.plateau
+                            moves[0]
                         );
-                        const originalPosition = { ...entity.position };
-                        const movePath: Position[] = [{ ...entity.position }];
-                        while (PM > 0 && moves.length > 1) {
-                            game.plateau[entity.position.x][
-                                entity.position.y
-                            ].entityId = undefined;
-                            entity.position = PositionUtils.add(
-                                entity.position,
-                                moves[0]
+                        movePath.push({ ...entity.position });
+                        game.plateau[entity.position.x][
+                            entity.position.y
+                        ].entityId = entity.id;
+                        entity.stats.mouvement--;
+                        moves.shift();
+                    }
+                    if (
+                        !PositionUtils.equal(originalPosition, entity.position)
+                    ) {
+                        animations.push({
+                            key: "move",
+                            data: {
+                                entityId: entity.id,
+                                path: movePath,
+                            },
+                        });
+                    }
+                } else {
+                    entity.stats.energy -= action.action.cost;
+                    if (action?.targets) {
+                        const hits: (Position & {
+                            damage: number;
+                        })[] = [];
+                        for (const target of action?.targets ?? []) {
+                            const damage = this.attackService.applyDamage(
+                                action.action,
+                                entity,
+                                target
                             );
-                            movePath.push({ ...entity.position });
-                            game.plateau[entity.position.x][
-                                entity.position.y
-                            ].entityId = entity.id;
-                            PM--;
-                            moves.shift();
+                            hits.push({ ...action.position, damage });
                         }
-                        if (
-                            !PositionUtils.equal(
-                                originalPosition,
-                                entity.position
-                            )
-                        ) {
-                            hasMoved = true;
-                            animations.push({
-                                key: "move",
-                                data: {
-                                    entityId: entity.id,
-                                    path: movePath,
-                                },
-                            });
-                        }
+                        animations.push({
+                            key: "attack",
+                            data: {
+                                entityId: entity.id,
+                                actionId: action.action.id,
+                                origin: entity.position,
+                                target: action.position,
+                                hits,
+                            },
+                        });
+                        animations.push(
+                            ...this.gameTurnService.detectEntityDeath(game)
+                        );
                     }
                 }
             }
+
             // Update users display
             await this.socketManager.emitUpdate(game, animations);
             if (await this.gameTurnService.detectGameEnd(game)) {
@@ -160,31 +155,6 @@ export class MobService implements AsyncResolver {
 
     private getDistance(entityA: Entity, entityB: Entity): number {
         return PositionUtils.distance(entityA.position, entityB.position);
-    }
-
-    private getAttack(
-        charClass: CharacterClass,
-        minRange: number,
-        energy: number,
-        stats: Stats
-    ): Action | undefined {
-        //TODO: apply transformer on damages based on target and action launcher
-        const mostPowerfulInRangeAction = charClass.actionList
-            .filter(
-                (action) =>
-                    action.range.max >= minRange &&
-                    action.cost <= energy &&
-                    (action.damage?.max ?? 0) > 0
-            )
-            .sort((actionA, actionB) => {
-                const midDamageA = this.attackService.calculateAverageDammage(actionA, stats);
-                this.logger.log(actionA.id," : deals aon average -> ", midDamageA)
-                const midDamageB = this.attackService.calculateAverageDammage(actionB, stats);
-                this.logger.log(actionB.id," : deals aon average -> ", midDamageB)
-                return midDamageA > midDamageB ? -1 : 1;
-            })?.[0];
-        this.logger.log(" Best action is then -> ", `${JSON.stringify(mostPowerfulInRangeAction)}`)
-        return mostPowerfulInRangeAction;
     }
 
     private getNearestPlayer(game: Game, mob: Entity): Entity {

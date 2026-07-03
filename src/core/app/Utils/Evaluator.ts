@@ -1,75 +1,37 @@
-export abstract class Evaluator<T = object> {
-    values: Map<string, T>;
-    evaluations: Map<string, number>;
+export type Evaluation<Evaluated extends object> = {
+    note: number;
+    evaluated: Evaluated;
+};
 
-    constructor(values: T[]) {
-        this.values = new Map();
-        this.evaluations = new Map();
+export abstract class Evaluator<T extends object, Evaluated extends object> {
+    evaluations: Evaluation<Evaluated>[];
 
-        for (const value of values) {
-            const key = this.getKey(value);
-            this.values.set(key, value);
-        }
+    constructor(public readonly values: T[]) {
+        this.evaluations = [];
     }
 
     evaluate(): this {
-        for (const [key, value] of this.values.entries()) {
-            const evaluation = this.getEvaluation(value);
-            this.evaluations.set(key, evaluation);
+        this.evaluations = [];
+        for (const value of this.values) {
+            this.evaluateValue(value, (evaluation) =>
+                this.evaluations.push(evaluation)
+            );
         }
         return this;
     }
 
-    getBest(): T | null {
-        let bestKey = null;
-        let best = 0;
-        for (const [key, value] of this.evaluations.entries()) {
-            if (value > best) {
+    getBest(): Evaluated | null {
+        let best = null;
+        for (const value of this.evaluations) {
+            if (!best || value.note > best.note) {
                 best = value;
-                bestKey = key;
             }
         }
-        if (bestKey) {
-            return this.values.get(bestKey) ?? null;
-        }
-        return null;
+        return best?.evaluated ?? null;
     }
 
-    protected abstract getKey(value: T): string;
-    protected abstract getEvaluation(value: T): number;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type EvaluatedArray = [...any];
-
-export abstract class EvaluationsJoiner<T extends EvaluatedArray> {
-    protected readonly evaluators: Evaluator[];
-
-    constructor(...evaluators: Evaluator[]) {
-        this.evaluators = evaluators;
-    }
-
-    protected resolveEvaluationCase(evaluated: T, evaluators: Evaluator[]) {
-        if (this.evaluators.length) {
-            const evaluator = evaluators[0];
-            for (const [key, value] of evaluator.values.entries()) {
-                this.resolveEvaluationCase(
-                    [...evaluated, value] as unknown as T,
-                    evaluators.slice(1)
-                );
-            }
-        } else {
-            const evaluation = this.getEvaluation(evaluated);
-        }
-    }
-
-    evaluate(): this {
-        if (!this.evaluators.length) {
-            return this;
-        }
-        this.resolveEvaluationCase([] as unknown as T, this.evaluators);
-        return this;
-    }
-
-    abstract getEvaluation(evaluated: T): number;
+    protected abstract evaluateValue(
+        value: T,
+        pushEvaluation: (evaluation: Evaluation<Evaluated>) => void
+    ): void;
 }
