@@ -193,6 +193,7 @@
         "actionType": "OTHER",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "level": "GROUND"
+        "level": "GROUND",
+        "invocateClass": "entente_barricade"
     }
 ]
