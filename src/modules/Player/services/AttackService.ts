@@ -10,7 +10,7 @@ import {
     ActionType,
     ActionZoneType,
 } from "../../Action/data/Action";
-import { Effect, EffectAction } from "../../Effect/data/Effect";
+import { Effect, EffectAction, EffectType } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
 import { Cell } from "../../Game/data/Game";
 import { Stats } from "../../Stat/data/Stats";
@@ -111,9 +111,6 @@ export class AttackService {
                 (e) => e.id === EffectAction.WEAKNESS
             ).length;
             if (weaknessStacks > 0) {
-                attacker.effects = attacker.effects.filter(
-                    (e) => e.id !== EffectAction.WEAKNESS
-                );
                 const weaknessDamage = Math.floor(
                     defenserDamage * (0.2 * weaknessStacks)
                 );
@@ -150,6 +147,14 @@ export class AttackService {
             action,
             attacker,
             target
+        );
+
+        target.effects = target.effects.filter(
+            (effect) =>
+                !(
+                    effect.type === EffectType.CONSUMABLE &&
+                    [EffectAction.WEAKNESS].includes(effect.action)
+                )
         );
 
         attacker.stats.life -= attackerDamage;

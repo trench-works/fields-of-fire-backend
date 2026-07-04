@@ -12,6 +12,7 @@ export enum EffectAction {
     CRIT_CHANCE = "CRIT_CHANCE",
     MASOCHISTIC = "MASOCHISTIC",
     WEAKNESS = "WEAKNESS",
+    LUCKY_STRIKE = "LUCKY_STRIKE",
     NONE = "NONE",
 }
 
