@@ -8,15 +8,21 @@ export class RedisRepository<Ressource extends object> {
         public readonly connector: RedisConnector
     ) {}
 
-    async set(key: string, value: Ressource): Promise<Ressource> {
-        await this.connector
-            .getClient()
-            .set(`${this.ressourceName}:${key}`, JSON.stringify(value));
+    async set(key: string, value: Ressource): Promise<Ressource | null> {
+        const client = this.connector.getClient();
+        if (!client) {
+            return null;
+        }
+        await client.set(`${this.ressourceName}:${key}`, JSON.stringify(value));
         return value;
     }
 
     async list(): Promise<string[]> {
-        return await this.connector.getClient().keys(`${this.ressourceName}:*`);
+        const client = this.connector.getClient();
+        if (!client) {
+            return [];
+        }
+        return await client.keys(`${this.ressourceName}:*`);
     }
 
     async findAll(): Promise<Ressource[]> {
@@ -36,9 +42,11 @@ export class RedisRepository<Ressource extends object> {
     }
 
     async get(key: string): Promise<Ressource | null> {
-        const value = await this.connector
-            .getClient()
-            .get(`${this.ressourceName}:${key}`);
+        const client = this.connector.getClient();
+        if (!client) {
+            return null;
+        }
+        const value = await client.get(`${this.ressourceName}:${key}`);
         if (!value) {
             return null;
         }
@@ -46,9 +54,11 @@ export class RedisRepository<Ressource extends object> {
     }
 
     async delete(key: string): Promise<boolean> {
-        const deleted = await this.connector
-            .getClient()
-            .del(`${this.ressourceName}:${key}`);
+        const client = this.connector.getClient();
+        if (!client) {
+            return false;
+        }
+        const deleted = await client.del(`${this.ressourceName}:${key}`);
         return deleted === 1;
     }
 }
@@ -77,7 +87,7 @@ export class RedisConnector {
         return this;
     }
 
-    public getClient(): RedisClientType {
+    public getClient(): RedisClientType | null {
         return this.client;
     }
 }

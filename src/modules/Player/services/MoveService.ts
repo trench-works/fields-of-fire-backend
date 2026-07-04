@@ -14,10 +14,7 @@ export class MoveService {
         const cells: Position[] = [];
         for (let x = pos.x - 1; x <= pos.x + 1; x++) {
             for (let y = pos.y - 1; y <= pos.y + 1; y++) {
-                if (
-                    x === pos.x ||
-                    (y === pos.y && !(x === pos.x && y === pos.y))
-                ) {
+                if (x === pos.x || y === pos.y) {
                     const cell = board[x]?.[y];
                     if (
                         cell &&
