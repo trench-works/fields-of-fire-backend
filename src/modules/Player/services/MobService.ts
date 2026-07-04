@@ -78,8 +78,11 @@ export class MobService implements AsyncResolver {
 
             const action = evaluator.getBest();
             if (action) {
-                didAction = true;
-                if (action.action.actionType === ActionType.MOUVEMENT) {
+                if (
+                    action.action.actionType === ActionType.MOUVEMENT &&
+                    !PositionUtils.equal(entity.position, action.position)
+                ) {
+                    didAction = true;
                     const moves = new CellAStar().findPath(
                         entity.position,
                         action.position,
@@ -114,11 +117,12 @@ export class MobService implements AsyncResolver {
                         });
                     }
                 } else {
+                    didAction = true;
                     entity.stats.energy -= action.action.cost;
+                    const hits: (Position & {
+                        damage: number;
+                    })[] = [];
                     if (action?.targets) {
-                        const hits: (Position & {
-                            damage: number;
-                        })[] = [];
                         for (const target of action?.targets ?? []) {
                             const damage = this.attackService.applyDamage(
                                 action.action,
@@ -127,20 +131,20 @@ export class MobService implements AsyncResolver {
                             );
                             hits.push({ ...action.position, damage });
                         }
-                        animations.push({
-                            key: "attack",
-                            data: {
-                                entityId: entity.id,
-                                actionId: action.action.id,
-                                origin: entity.position,
-                                target: action.position,
-                                hits,
-                            },
-                        });
-                        animations.push(
-                            ...this.gameTurnService.detectEntityDeath(game)
-                        );
                     }
+                    animations.push({
+                        key: "attack",
+                        data: {
+                            entityId: entity.id,
+                            actionId: action.action.id,
+                            origin: entity.position,
+                            target: action.position,
+                            hits,
+                        },
+                    });
+                    animations.push(
+                        ...this.gameTurnService.detectEntityDeath(game)
+                    );
                 }
             }
 
