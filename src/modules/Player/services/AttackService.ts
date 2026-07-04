@@ -10,7 +10,7 @@ import {
     ActionType,
     ActionZoneType,
 } from "../../Action/data/Action";
-import { Effect } from "../../Effect/data/Effect";
+import { Effect, EffectAction } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
 import { Cell } from "../../Game/data/Game";
 import { Stats } from "../../Stat/data/Stats";
@@ -33,10 +33,11 @@ export class AttackService {
         let defenserDamage: number;
 
         let statBonus: number = 0;
+        // calculate stats bonus
         switch (action.actionType) {
             case ActionType.MELEE:
                 {
-                    statBonus = Math.ceil(attackerStats.strength / 10);
+                    statBonus += Math.ceil(attackerStats.strength / 10);
                     this.logger.debug(
                         `Calculated : ${statBonus} because strength = ${attacker.stats!.strength}`
                     );
@@ -44,14 +45,14 @@ export class AttackService {
                 break;
             case ActionType.RANGED:
                 {
-                    statBonus = Math.ceil(attackerStats.precision / 10);
+                    statBonus += Math.ceil(attackerStats.precision / 10);
                     this.logger.debug("range : ", statBonus);
                 }
                 break;
         }
 
         let brutTotal: number;
-        if ((action.damage?.min ?? 0) < 0) {
+        if (damage < 0) {
             brutTotal = damage - statBonus;
             defenserDamage = brutTotal;
             if (defenserStats.life - defenserDamage > defenserStats.maxLife) {
@@ -66,10 +67,10 @@ export class AttackService {
             //Crit Logik
             const critRoll = Ran.int(100);
             const critChanceBuff = attacker.effects.filter(
-                (e) => e.id === "crit_chance"
+                (e) => e.id === EffectAction.CRIT_CHANCE
             ).length;
             const critDammageBuff = attacker.effects.filter(
-                (e) => e.id === "crit_dammage"
+                (e) => e.action === EffectAction.CRIT_DAMMAGE
             ).length;
             const critChance = 1 + critChanceBuff * 3;
             if (critRoll < critChance) {
@@ -84,7 +85,7 @@ export class AttackService {
         if ((action.damage?.min ?? -1) >= 0) {
             // seulement sur les dégâts positifs, pas les heals
             const vampireStacks = attacker.effects.filter(
-                (e) => e.id === "vampire"
+                (e) => e.id === EffectAction.VAMPIRISM
             ).length;
             if (vampireStacks > 0) {
                 const lifeSteal =
@@ -93,7 +94,7 @@ export class AttackService {
             }
 
             const masoStacks = attacker.effects.filter(
-                (e) => e.id === "masochistic"
+                (e) => e.id === EffectAction.MASOCHISTIC
             ).length;
             if (masoStacks > 0) {
                 const masoDamage = Math.floor(
@@ -104,6 +105,19 @@ export class AttackService {
                         (100 / (100 + attackerStats.armor))
                 );
                 defenserDamage += masoDamage;
+            }
+
+            const weaknessStacks = attacker.effects.filter(
+                (e) => e.id === EffectAction.WEAKNESS
+            ).length;
+            if (weaknessStacks > 0) {
+                attacker.effects = attacker.effects.filter(
+                    (e) => e.id !== EffectAction.WEAKNESS
+                );
+                const weaknessDamage = Math.floor(
+                    defenserDamage * (0.2 * weaknessStacks)
+                );
+                defenserDamage += weaknessDamage;
             }
         }
 

@@ -32,7 +32,7 @@
         "cost": 1,
         "range": { "min": 0, "max": 1 },
         "rangeType": "DIAMOND",
-        "damage": { "min": -4, "max": -1 },
+        "damage": { "min": -7, "max": -3 },
         "actionType": "SUPPORT",
         "targetRequired": true,
         "zoneType": ["DIAMOND"],
