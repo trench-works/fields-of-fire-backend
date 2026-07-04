@@ -67,7 +67,7 @@ export class AttackService {
             //Crit Logik
             const critRoll = Ran.int(100);
             const critChanceBuff = attacker.effects.filter(
-                (e) => e.id === EffectAction.CRIT_CHANCE
+                (e) => e.action === EffectAction.CRIT_CHANCE
             ).length;
             const critDammageBuff = attacker.effects.filter(
                 (e) => e.action === EffectAction.CRIT_DAMMAGE
@@ -85,7 +85,7 @@ export class AttackService {
         if ((action.damage?.min ?? -1) >= 0) {
             // seulement sur les dégâts positifs, pas les heals
             const vampireStacks = attacker.effects.filter(
-                (e) => e.id === EffectAction.VAMPIRISM
+                (e) => e.action === EffectAction.VAMPIRISM
             ).length;
             if (vampireStacks > 0) {
                 const lifeSteal =
@@ -94,7 +94,7 @@ export class AttackService {
             }
 
             const masoStacks = attacker.effects.filter(
-                (e) => e.id === EffectAction.MASOCHISTIC
+                (e) => e.action === EffectAction.MASOCHISTIC
             ).length;
             if (masoStacks > 0) {
                 const masoDamage = Math.floor(
@@ -108,7 +108,7 @@ export class AttackService {
             }
 
             const weaknessStacks = attacker.effects.filter(
-                (e) => e.id === EffectAction.WEAKNESS
+                (e) => e.action === EffectAction.WEAKNESS
             ).length;
             if (weaknessStacks > 0) {
                 const weaknessDamage = Math.floor(
