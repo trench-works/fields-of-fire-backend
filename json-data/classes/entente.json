@@ -86,7 +86,13 @@
             "totalMouvement": 3
         },
         "classDescription": "Un combattant téméraire un intrépide, le Brise-barricade est équipé d'une hache et d'un bouclier, ce qui lui permet de mettre se protéger et de causer des dégâts à accrue sur la durée au corps à corps.",
-        "actionList": ["walk", "break", "shield_rush", "provok", "barricade"],
+        "actionList": [
+            "walk",
+            "break",
+            "shield_rush",
+            "intimidation",
+            "barricade"
+        ],
         "isPlaying": true
     }
 ]
