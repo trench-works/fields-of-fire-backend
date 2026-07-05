@@ -242,7 +242,6 @@ export class GameService {
         playersCount: number,
         team: Team
     ): Promise<[NPC[], Entity[]]> {
-        //TODO: appliquer des boosts
         const classes = await this.classRepository.list();
 
         const npcs: NPC[] = [];
@@ -253,7 +252,8 @@ export class GameService {
             const mobCell = await this.placeEntity(entityId, plateau);
             // get a random mob class
             const mobClasses = classes.filter(
-                (charClass) => !charClass.playable
+                (charClass) =>
+                    !charClass.playable && !(charClass.id === "barricade") //TODO: ajouter un autre booléen pour gérer ce cas
             );
             const charClass = mobClasses[Ran.int(mobClasses.length)];
             const npc: NPC = {

@@ -22,7 +22,6 @@ export class InvocationService {
         position: Position
     ) {
         if (action.invocateClass) {
-            console.log("WILL INVOKATE BARRICADE");
             const charClass = (await this.characterClassRepository.get(
                 action.invocateClass
             ))!;
@@ -41,14 +40,10 @@ export class InvocationService {
                 .find((team) => team.id === invoker.teamId)
                 ?.entitiesIds.push(entity.id);
             game.entities.push(entity);
-            game.playerTurns.splice(1, 0, entity.id);
-            this.animationService.animate(
-                game,
-                invoker,
-                action,
-                game.plateau[position.x][position.y],
-                []
-            );
+            //game.playerTurns.splice(1, 0, entity.id);
+            const cell = game.plateau[position.x][position.y];
+            cell.entityId = entity.id;
+            this.animationService.animate(game, invoker, action, cell, []);
             await this.gameDataManager.set(game.id, game);
         }
     }
