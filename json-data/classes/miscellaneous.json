@@ -1,7 +1,7 @@
 [
     {
         "id": "barricade",
-        "name": "barricade",
+        "name": "Barricade",
         "playable": false,
         "stats": {
             "life": 8,
