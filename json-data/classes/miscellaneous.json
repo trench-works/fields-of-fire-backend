@@ -17,6 +17,7 @@
             "totalMouvement": 0
         },
         "classDescription": "Une Barricade obstruant le chemin et la ligne de vue.",
-        "actionList": []
+        "actionList": [],
+        "isPlaying": false
     }
 ]

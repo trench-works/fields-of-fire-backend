@@ -154,7 +154,7 @@
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "selfEffectList": ["angered"],
+        "effectList": ["weakness"],
         "level": "GROUND"
     },
     {

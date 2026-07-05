@@ -23,4 +23,6 @@ export class Entity {
     effects!: Effect[];
 
     dead!: boolean;
+    isInvocation!: boolean;
+    isPlaying!: boolean;
 }

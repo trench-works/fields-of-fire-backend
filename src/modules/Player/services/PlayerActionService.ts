@@ -500,8 +500,12 @@ export class PlayerActionService {
 
         // Cherche la case juste avant la cible (côté attaquant)
         // en remontant depuis la cible vers l'attaquant
-        let checkX = destination.position.x - stepX;
-        let checkY = destination.position.y - stepY;
+        let checkX = destination.position.x;
+        let checkY = destination.position.y;
+        if (destination.entityId) {
+            checkX -= stepX;
+            checkY -= stepY;
+        }
 
         while (
             checkX !== attacker.position.x ||

@@ -35,6 +35,8 @@ export class InvocationService {
                 stats: charClass.stats,
                 effects: [],
                 dead: false,
+                isInvocation: true,
+                isPlaying: charClass.isPlaying,
             };
             game.teams
                 .find((team) => team.id === invoker.teamId)

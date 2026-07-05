@@ -138,6 +138,8 @@ export class GameService {
                 stats: charClass.stats,
                 effects: [],
                 dead: false,
+                isInvocation: false,
+                isPlaying: charClass.isPlaying,
             });
             playersTeam.entitiesIds.push(entityId);
             playersTeam.playerIds.push(lobbyPlayer.playerId);
@@ -220,6 +222,7 @@ export class GameService {
     private async getTurns(entities: Entity[]): Promise<string[]> {
         const classes = await this.classRepository.list();
         return entities
+            .filter((entity) => entity.isPlaying)
             .sort((entityA, entityB) => {
                 const classA = classes.find(
                     (charClass) => charClass.id === entityA.classId
@@ -252,8 +255,7 @@ export class GameService {
             const mobCell = await this.placeEntity(entityId, plateau);
             // get a random mob class
             const mobClasses = classes.filter(
-                (charClass) =>
-                    !charClass.playable && !(charClass.id === "barricade") //TODO: ajouter un autre booléen pour gérer ce cas
+                (charClass) => !charClass.playable && charClass.isPlaying
             );
             const charClass = mobClasses[Ran.int(mobClasses.length)];
             const npc: NPC = {
@@ -274,6 +276,8 @@ export class GameService {
                 stats: charClass.stats,
                 effects: [],
                 dead: false,
+                isInvocation: false,
+                isPlaying: charClass.isPlaying,
             };
             team.entitiesIds.push(entity.id);
 
@@ -301,6 +305,7 @@ export class GameService {
         const game = (await this.gameDataManager.get(gameId))!;
 
         game.readyPlayers = [];
+        game.entities = game.entities.filter((entity) => !entity.isInvocation);
         game.plateau = this.mapService.generateRandomMap({
             width: 10,
             height: 10,
@@ -353,5 +358,13 @@ export class GameService {
         });
         await this.gameDataManager.set(gameId, game);
         await this.gameSocket.emitGameRenew(game);
+
+        // Wait for all players to be subscribed before doing anything else
+        const firstPlayingEntity = game.entities.find(
+            (entity) => entity.id === game.playerTurns[0]
+        )!;
+        if (firstPlayingEntity?.type === EntityType.NPC) {
+            this.mobService.play(gameId);
+        }
     }
 }
