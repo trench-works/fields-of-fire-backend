@@ -160,10 +160,10 @@ export class AttackService {
 
         attacker.stats.life -= player
             ? attackerDamage
-            : Math.ceil(attackerDamage * 1.2);
+            : Math.ceil(attackerDamage * 1.5);
         target.stats.life -= player
             ? defenserDamage
-            : Math.ceil(defenserDamage * 0.8);
+            : Math.ceil(defenserDamage * 0.5);
 
         //manage effect
         if ((action.effectList?.length ?? 0) > 0) {
