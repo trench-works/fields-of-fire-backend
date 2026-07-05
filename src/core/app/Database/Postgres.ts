@@ -86,6 +86,6 @@ export abstract class PostgresRepository<
         if (!user) {
             return undefined;
         }
-        return await this.entityToRessource(user);
+        return await this.entityToRessource(user.dataValues);
     }
 }

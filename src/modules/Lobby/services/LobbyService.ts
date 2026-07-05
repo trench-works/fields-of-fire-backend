@@ -30,6 +30,9 @@ export class LobbyService {
             playerReady: [],
         });
 
+        if (!lobby) {
+            return;
+        }
         lobby.players.push({
             userId,
             playerId: Id.get(),

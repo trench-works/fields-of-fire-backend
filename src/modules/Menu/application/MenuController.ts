@@ -72,10 +72,13 @@ export class MenuController extends WsController<
         SingleClientOutputAction<JoinLobbyResponse, MenuReturnActions>
     > {
         const lobby = await this.lobbyService.createLobby(id);
+        if (!lobby) {
+            return;
+        }
         return {
             actionId: MenuReturnActions.JOIN,
             payload: {
-                    lobby: lobby,
+                lobby,
             },
         };
     }
@@ -85,7 +88,10 @@ export class MenuController extends WsController<
     }: WsListenerOptions<MenuKey, JoinLobby>): Promise<
         SingleClientOutputAction<JoinLobbyResponse, MenuReturnActions>
     > {
-        const lobby = await this.lobbyPlayerService.addPlayerToLobby(lobbyId, id);
+        const lobby = await this.lobbyPlayerService.addPlayerToLobby(
+            lobbyId,
+            id
+        );
         if (lobby instanceof SocketError) {
             return lobby;
         }

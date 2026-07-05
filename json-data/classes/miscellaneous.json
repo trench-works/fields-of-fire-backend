@@ -1,0 +1,23 @@
+[
+    {
+        "id": "barricade",
+        "name": "Barricade",
+        "playable": false,
+        "stats": {
+            "life": 8,
+            "maxLife": 8,
+            "precision": 0,
+            "strength": 0,
+            "armor": 0,
+            "initiative": 0,
+            "dodging": 0,
+            "energy": 0,
+            "mouvement": 0,
+            "totalEnergy": 0,
+            "totalMouvement": 0
+        },
+        "classDescription": "Une Barricade obstruant le chemin et la ligne de vue.",
+        "actionList": [],
+        "isPlaying": false
+    }
+]

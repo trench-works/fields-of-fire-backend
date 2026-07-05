@@ -70,9 +70,9 @@
             {
                 "life": 8,
                 "maxLife": 8,
-                "strength": 5,
-                "precision": 5,
-                "dodging": 2,
+                "strength": 10,
+                "precision": 10,
+                "dodging": 3,
                 "initiative": 15,
                 "armor": 5
             }
@@ -112,7 +112,7 @@
             {
                 "precision" : 50,
                 "dodging": -3,
-                "mouvement":-1
+                "totalMouvement":-1
             }
         ],
         "probability": 1
@@ -123,8 +123,8 @@
         "effects": [],
         "boosts": [
             {
-                "energy" : 1,
-                "mouvement":-1,
+                "totalEnergy" : 1,
+                "totalMouvement":-1,
                 "strength": 5,
                 "precision": 5
             }
@@ -137,8 +137,8 @@
         "effects": [],
         "boosts": [
             {
-                "energy" : -1,
-                "mouvement":1,
+                "totalEnergy" : -1,
+                "totalMouvement":1,
                 "strength": 5,
                 "precision": 5
             }
@@ -151,8 +151,8 @@
         "effects": [],
         "boosts": [
             {
-                "armor" : -30,
-                "strength": 40
+                "armor" : -20,
+                "strength": 50
             }
         ],
         "probability": 1
@@ -161,6 +161,20 @@
         "id": "masochistic",
         "name": "Masochiste",
         "effects": ["masochistic"],
+        "boosts": [],
+        "probability": 1
+    },
+    {
+        "id": "crit_dammage",
+        "name": "Frappe Fatal",
+        "effects": ["crit_dammage"],
+        "boosts": [],
+        "probability": 1
+    },
+    {
+        "id": "crit_chance",
+        "name": "Frappe Précise",
+        "effects": ["crit_chance"],
         "boosts": [],
         "probability": 1
     },

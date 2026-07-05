@@ -12,7 +12,6 @@ import { Cell, Game } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
 import { LobbyDataManager } from "../../Lobby/data/LobbyDataManager";
 import { JoinGameResponse } from "../application/interfaces/JoinGameResponse";
-import { Board } from "../data/Board";
 import { Entity, EntityType } from "../data/Entity";
 import { Player } from "../../Player/data/Player";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
@@ -26,6 +25,7 @@ import { LobbyOutputActions } from "../../Lobby/application/interfaces/LobbyActi
 import { LobbyWebSocketManager } from "../../Lobby/web/LobbyWebSocketManager";
 import { MobService } from "../../Player/services/MobService";
 import { GameSubscriptionManager } from "../web/GameSubscriptionManager";
+import { MapService } from "./MapService";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -48,6 +48,8 @@ export class GameService {
     private readonly mobService!: MobService;
     @Provide(GameSubscriptionManager)
     private readonly gameSubscribeAwaiters!: GameSubscriptionManager;
+    @Provide(MapService)
+    private readonly mapService!: MapService;
 
     async getPlayerCurrentGame(
         userId: string
@@ -77,7 +79,10 @@ export class GameService {
             return new AccessRefused();
         }
         const gameId = Id.get();
-        const plateau: Cell[][] = Board.getRandomPremade();
+        const plateau: Cell[][] = this.mapService.generateRandomMap({
+            width: 10,
+            height: 10,
+        });
         const classes = await this.classRepository.list();
 
         const playersTeam: Team = {
@@ -121,7 +126,7 @@ export class GameService {
                 gameId,
                 name: user?.username ?? charClass.name,
                 invocations: [],
-                randomBoost : [],
+                randomBoost: [],
             });
             playersEntities.push({
                 id: entityId,
@@ -133,6 +138,8 @@ export class GameService {
                 stats: charClass.stats,
                 effects: [],
                 dead: false,
+                isInvocation: false,
+                isPlaying: charClass.isPlaying,
             });
             playersTeam.entitiesIds.push(entityId);
             playersTeam.playerIds.push(lobbyPlayer.playerId);
@@ -215,6 +222,7 @@ export class GameService {
     private async getTurns(entities: Entity[]): Promise<string[]> {
         const classes = await this.classRepository.list();
         return entities
+            .filter((entity) => entity.isPlaying)
             .sort((entityA, entityB) => {
                 const classA = classes.find(
                     (charClass) => charClass.id === entityA.classId
@@ -237,7 +245,6 @@ export class GameService {
         playersCount: number,
         team: Team
     ): Promise<[NPC[], Entity[]]> {
-        //TODO: appliquer des boosts
         const classes = await this.classRepository.list();
 
         const npcs: NPC[] = [];
@@ -248,7 +255,7 @@ export class GameService {
             const mobCell = await this.placeEntity(entityId, plateau);
             // get a random mob class
             const mobClasses = classes.filter(
-                (charClass) => !charClass.playable
+                (charClass) => !charClass.playable && charClass.isPlaying
             );
             const charClass = mobClasses[Ran.int(mobClasses.length)];
             const npc: NPC = {
@@ -269,6 +276,8 @@ export class GameService {
                 stats: charClass.stats,
                 effects: [],
                 dead: false,
+                isInvocation: false,
+                isPlaying: charClass.isPlaying,
             };
             team.entitiesIds.push(entity.id);
 
@@ -296,11 +305,11 @@ export class GameService {
         const game = (await this.gameDataManager.get(gameId))!;
 
         game.readyPlayers = [];
-        for (const line of game.plateau) {
-            for (const cell of line) {
-                cell.entityId = undefined;
-            }
-        }
+        game.entities = game.entities.filter((entity) => !entity.isInvocation);
+        game.plateau = this.mapService.generateRandomMap({
+            width: 10,
+            height: 10,
+        });
         const mobsTeam = game.teams.find(
             (team) => team.name === TeamName.MOBS
         )!;
@@ -344,7 +353,18 @@ export class GameService {
         game.round++;
         game.isStopped = false;
 
+        game.entities = game.entities.sort((entityA, entityB) => {
+            return entityA.stats.initiative < entityB.stats.initiative ? 1 : -1;
+        });
         await this.gameDataManager.set(gameId, game);
         await this.gameSocket.emitGameRenew(game);
+
+        // Wait for all players to be subscribed before doing anything else
+        const firstPlayingEntity = game.entities.find(
+            (entity) => entity.id === game.playerTurns[0]
+        )!;
+        if (firstPlayingEntity?.type === EntityType.NPC) {
+            this.mobService.play(gameId);
+        }
     }
 }

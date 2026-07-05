@@ -8,4 +8,5 @@ export class CharacterClass {
     stats!: Stats;
     classDescription!: string;
     actionList!: Action[];
+    isPlaying!: boolean;
 }

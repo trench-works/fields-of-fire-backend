@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsOptional, IsString } from "class-validator";
 
 export class PlayerReady {
     @IsString()
-    @IsNotEmpty()
-    boostId!: string;
+    @IsOptional()
+    boostId!: string | null;
 }

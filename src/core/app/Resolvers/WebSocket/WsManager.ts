@@ -81,7 +81,7 @@ export class WsManager<
                 reject();
             }
             resolve();
-        });
+        }).catch();
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

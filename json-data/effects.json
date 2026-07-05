@@ -9,7 +9,8 @@
         },
         "instant": {
             "energy": -1
-        }
+        },
+        "action": "NONE"
     },
     {
         "id": "intimidated",
@@ -20,7 +21,8 @@
             "strength": -15,
             "precision": -15
         },
-        "instant": {}
+        "instant": {},
+        "action": "NONE"
     },
     {
         "id": "doped",
@@ -32,7 +34,8 @@
             "precision": 10,
             "armor": 10
         },
-        "instant": {}
+        "instant": {},
+        "action": "NONE"
     },
     {
         "id": "charge",
@@ -44,7 +47,8 @@
         },
         "instant": {
             "mouvement": 2
-        }
+        },
+        "action": "NONE"
     },
     {
         "id": "enhanced_drug",
@@ -58,7 +62,8 @@
         },
         "instant": {
             "energy": 2
-        }
+        },
+        "action": "NONE"
     },
     {
         "id": "provoker",
@@ -66,7 +71,8 @@
         "duration": 2,
         "type": "APPLY",
         "modifier": {},
-        "instant": {}
+        "instant": {},
+        "action": "NONE"
     },
     {
         "id": "angered",
@@ -79,7 +85,8 @@
         },
         "instant": {
             "mouvement": -1
-        }
+        },
+        "action": "NONE"
     },
     {
         "id": "vampire",
@@ -87,7 +94,8 @@
         "duration": null,
         "type": "APPLY",
         "modifier": {},
-        "instant": {}
+        "instant": {},
+        "action": "VAMPIRISM"
     },
     {
         "id": "range",
@@ -95,7 +103,8 @@
         "duration": null,
         "type": "APPLY",
         "modifier": {},
-        "instant": {}
+        "instant": {},
+        "action": "NONE"
     },
     {
         "id": "masochistic",
@@ -103,6 +112,34 @@
         "duration": null,
         "type": "APPLY",
         "modifier": {},
-        "instant": {}
+        "instant": {},
+        "action": "MASOCHISTIC"
+    },
+    {
+        "id": "crit_dammage",
+        "name": "Crit Dammage",
+        "duration": null,
+        "type": "APPLY",
+        "modifier": {},
+        "instant": {},
+        "action": "CRIT_DAMMAGE"
+    },
+    {
+        "id": "crit_chance",
+        "name": "Crit Chance",
+        "duration": null,
+        "type": "APPLY",
+        "modifier": {},
+        "instant": {},
+        "action": "CRIT_CHANCE"
+    },
+    {
+        "id": "weakness",
+        "name": "Weakness",
+        "duration": 3,
+        "type": "CONSUMABLE",
+        "modifier": {},
+        "instant": {},
+        "action": "WEAKNESS"
     }
 ]

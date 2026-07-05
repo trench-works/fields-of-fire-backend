@@ -1,11 +1,13 @@
 import { Module } from "../../core";
 import { PlayerController } from "./application/PlayerController";
 import { TurnTimeoutRepository } from "./data/TurnTimeoutRepository";
+import { ActioAnimationService } from "./services/ActionAnimationService";
 import { AttackService } from "./services/AttackService";
 import { BoostService } from "./services/BoostService";
 import { EntityService } from "./services/EntityService";
 import { InvocationService } from "./services/InvocationService";
 import { MobService } from "./services/MobService";
+import { MoveService } from "./services/MoveService";
 import { PlayerActionService } from "./services/PlayerActionService";
 import { PlayerService } from "./services/PlayerService";
 import { PlayerWebSocketManager } from "./web/PlayerWebSocketManager";
@@ -24,6 +26,8 @@ export class PlayerModule extends Module {
                 BoostService,
                 PlayerService,
                 InvocationService,
+                MoveService,
+                ActioAnimationService,
             ],
         });
     }
