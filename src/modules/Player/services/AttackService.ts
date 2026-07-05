@@ -73,7 +73,7 @@ export class AttackService {
             ).length;
             const critChance = 1 + critChanceBuff * 3;
             if (critRoll < critChance) {
-                defenserDamage = defenserDamage * (2 + 0.25 * critDammageBuff);
+                defenserDamage *= 2 + 0.25 * critDammageBuff;
             }
         }
 
@@ -94,7 +94,7 @@ export class AttackService {
             ).length;
             if (vampireStacks > 0) {
                 const lifeSteal = (defenserDamage / 10) * vampireStacks;
-                attackerDamage = -lifeSteal;
+                attackerDamage -= lifeSteal;
             }
 
             const masoStacks = attacker.effects.filter(
@@ -102,7 +102,7 @@ export class AttackService {
             ).length;
             if (masoStacks > 0) {
                 const masoDamage = defenserDamage * (0.2 * masoStacks);
-                attackerDamage =
+                attackerDamage +=
                     (masoDamage / 2) * (100 / (100 + attackerStats.armor));
                 defenserDamage += masoDamage;
             }
