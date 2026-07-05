@@ -62,16 +62,18 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
         const moverStats = Stats.fromEntity(this.entity);
         let note = 0;
         for (const entity of this.game.entities) {
-            const range = PositionUtils.distance(position, entity.position);
-            if (isLowLife(moverStats)) {
-                if (isSameTeam(entity, this.entity)) {
-                    note += (1 / range) * 5;
+            if (entity.isPlaying) {
+                const range = PositionUtils.distance(position, entity.position);
+                if (isLowLife(moverStats)) {
+                    if (isSameTeam(entity, this.entity)) {
+                        note += (1 / range) * 5;
+                    } else {
+                        note -= (1 / range) * 10;
+                    }
                 } else {
-                    note -= (1 / range) * 10;
-                }
-            } else {
-                if (!isSameTeam(entity, this.entity)) {
-                    note += (1 / range) * 2;
+                    if (!isSameTeam(entity, this.entity)) {
+                        note += (1 / range) * 2;
+                    }
                 }
             }
         }
@@ -160,10 +162,15 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
                     note += -(defenserMalus / action.cost) + attackerBonus;
                 }
             } else {
-                note += defenserDamage / action.cost - attackerDamage;
-                note += defenserMalus / action.cost + attackerBonus;
-                if (isLowLife(attackerStats)) {
-                    note -= 10;
+                if (target.isPlaying) {
+                    note += defenserDamage / action.cost - attackerDamage;
+                    note += defenserMalus / action.cost + attackerBonus;
+                    if (isLowLife(attackerStats)) {
+                        note -= 10;
+                    }
+                } else {
+                    note += defenserDamage / action.cost / 6 - attackerDamage;
+                    note += defenserMalus / action.cost / 6 + attackerBonus;
                 }
             }
         }

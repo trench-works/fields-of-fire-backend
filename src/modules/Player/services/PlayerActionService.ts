@@ -4,7 +4,6 @@ import { Position, PositionUtils } from "../../../game-lib/Utils";
 import { Action, ActionUtils, ActionZoneType } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Effect } from "../../Effect/data/Effect";
-import { GameEventAnimation } from "../../Game/application/interfaces/GameUpdateEvent";
 import { Entity } from "../../Game/data/Entity";
 import { Cell, CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
@@ -14,8 +13,8 @@ import { Stats } from "../../Stat/data/Stats";
 import { PlayerCancelAction } from "../application/interfaces/PlayerCancelAction";
 import { Player } from "../data/Player";
 import { PlayerOutputActions } from "../web/PlayerSocketActions";
+import { ActioAnimationService } from "./ActionAnimationService";
 import { AttackService } from "./AttackService";
-import { BoostService } from "./BoostService";
 import { InvocationService } from "./InvocationService";
 
 export enum PlayerActionId {
@@ -43,7 +42,7 @@ export enum DashType {
     OUT = "OUT",
 }
 
-type AttackTarget = {
+export type AttackTarget = {
     entity: Entity;
     damage: number;
     effects: Effect[];
@@ -62,8 +61,8 @@ export class PlayerActionService {
     private readonly gameTurnService!: GameTurnService;
     @Provide(AttackService)
     private readonly attackService!: AttackService;
-    @Provide(BoostService)
-    private readonly boostService!: BoostService;
+    @Provide(ActioAnimationService)
+    private readonly animationService!: ActioAnimationService;
     @Provide(InvocationService)
     private readonly invocationService!: InvocationService;
 
@@ -195,7 +194,13 @@ export class PlayerActionService {
         });
 
         playerEntity.stats.energy -= action.cost;
-        this.animate(game, playerEntity, action, destination, targets);
+        this.animationService.animate(
+            game,
+            playerEntity,
+            action,
+            destination,
+            targets
+        );
         await this.gameDataManager.set(game.id, game);
     }
 
@@ -285,7 +290,13 @@ export class PlayerActionService {
         this.logger.log(
             `Player ${playerEntity.id} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
         );
-        this.animate(game, playerEntity, action, destination, targets);
+        this.animationService.animate(
+            game,
+            playerEntity,
+            action,
+            destination,
+            targets
+        );
 
         await this.gameDataManager.set(game.id, game);
 
@@ -334,7 +345,13 @@ export class PlayerActionService {
         }
 
         playerEntity.stats.energy -= action.cost;
-        this.animate(game, playerEntity, action, destination, targets);
+        this.animationService.animate(
+            game,
+            playerEntity,
+            action,
+            destination,
+            targets
+        );
         await this.gameDataManager.set(game.id, game);
         await this.gameTurnService.detectGameEnd(game);
     }
@@ -365,32 +382,6 @@ export class PlayerActionService {
         return this.getTarget(game, action, destination).filter(
             (entity) => entity.teamId === playerEntity.teamId
         );
-    }
-
-    async animate(
-        game: Game,
-        playerEntity: Entity,
-        action: Action,
-        destination: Cell,
-        targets: AttackTarget[]
-    ) {
-        const animations: GameEventAnimation[] = [
-            {
-                key: "attack",
-                data: {
-                    entityId: playerEntity.id,
-                    actionId: action.id,
-                    origin: playerEntity.position,
-                    target: destination.position,
-                    hits: targets.map(({ entity, damage }) => ({
-                        ...entity.position,
-                        damage,
-                    })),
-                },
-            },
-        ];
-        animations.push(...this.gameTurnService.detectEntityDeath(game));
-        await this.socketManager.emitUpdate(game, animations);
     }
 
     checkIfAllowed(playerEntity: Entity, action: Action, destination: Cell) {
@@ -509,8 +500,12 @@ export class PlayerActionService {
 
         // Cherche la case juste avant la cible (côté attaquant)
         // en remontant depuis la cible vers l'attaquant
-        let checkX = destination.position.x - stepX;
-        let checkY = destination.position.y - stepY;
+        let checkX = destination.position.x;
+        let checkY = destination.position.y;
+        if (destination.entityId) {
+            checkX -= stepX;
+            checkY -= stepY;
+        }
 
         while (
             checkX !== attacker.position.x ||

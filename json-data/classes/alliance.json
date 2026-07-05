@@ -17,7 +17,8 @@
             "totalMouvement": 3
         },
         "classDescription": "Un fantassin très vilain",
-        "actionList": ["walk", "shoot", "bayonet"]
+        "actionList": ["walk", "shoot", "bayonet"],
+        "isPlaying": true
     },
     {
         "id": "alliance_medic",
@@ -37,7 +38,8 @@
             "totalMouvement": 3
         },
         "classDescription": "Un médecin très très vilain",
-        "actionList": ["walk", "shoot", "heal", "saber"]
+        "actionList": ["walk", "shoot", "heal", "saber"],
+        "isPlaying": true
     },
     {
         "id": "alliance_caporal",
@@ -57,6 +59,7 @@
             "totalMouvement": 3
         },
         "classDescription": "Un Caporal très très très vilain",
-        "actionList": ["walk", "shoot", "artillery_support","saber"]
+        "actionList": ["walk", "shoot", "artillery_support", "saber"],
+        "isPlaying": true
     }
 ]

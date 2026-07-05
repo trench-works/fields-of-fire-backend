@@ -17,7 +17,8 @@
             "totalMouvement": 3
         },
         "classDescription": "Un soldat polyvalent, capable de s'adapter à différentes situations sur le champ de bataille. Il est équipé d'un fusil avec baïonnette, ce qui lui permet d'attaquer efficacement à mi-distance et en mélée. Le Fantassin est également capable de se booster lui-même en s'injectant des produits dopants",
-        "actionList": ["walk", "shoot", "bayonet", "dopage", "charge"]
+        "actionList": ["walk", "shoot", "bayonet", "dopage", "charge"],
+        "isPlaying": true
     },
     {
         "id": "entente_medic",
@@ -37,7 +38,8 @@
             "totalMouvement": 3
         },
         "classDescription": "Un soigneur spécialisé dans le soutien de ses alliés. Le Medic est équipé d'un fusil et d'un hachoir, ce qui lui permet d'attaquer à distance et en mélée. Sa principale force réside dans sa capacité à soigner les blessures de ses alliés mais également infliger des malus au ennemies.",
-        "actionList": ["walk", "shoot", "heal", "amputate", "fighting_drug"]
+        "actionList": ["walk", "shoot", "heal", "amputate", "fighting_drug"],
+        "isPlaying": true
     },
     {
         "id": "entente_caporal",
@@ -63,7 +65,8 @@
             "artillery_support",
             "intimidation",
             "saber"
-        ]
+        ],
+        "isPlaying": true
     },
     {
         "id": "entente_brise_barricade",
@@ -83,6 +86,13 @@
             "totalMouvement": 3
         },
         "classDescription": "Un combattant téméraire un intrépide, le Brise-barricade est équipé d'une hache et d'un bouclier, ce qui lui permet de mettre se protéger et de causer des dégâts à accrue sur la durée au corps à corps.",
-        "actionList": ["walk", "break", "shield_rush", "provok", "barricade"]
+        "actionList": [
+            "walk",
+            "break",
+            "shield_rush",
+            "intimidation",
+            "barricade"
+        ],
+        "isPlaying": true
     }
 ]

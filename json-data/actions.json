@@ -154,7 +154,7 @@
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "selfEffectList": ["angered"],
+        "effectList": ["weakness"],
         "level": "GROUND"
     },
     {
@@ -186,13 +186,14 @@
     {
         "id": "barricade",
         "name": "Barricade",
-        "description": "construit un obstacle",
-        "cost": 1,
+        "description": "Construit un obstacle",
+        "cost": 2,
         "range": { "min": 1, "max": 1 },
         "rangeType": "DIAMOND",
         "actionType": "OTHER",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "level": "GROUND"
+        "level": "GROUND",
+        "invocateClass": "barricade"
     }
 ]

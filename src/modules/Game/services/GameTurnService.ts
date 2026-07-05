@@ -57,11 +57,15 @@ export class GameTurnService implements AsyncResolver {
 
     public async detectGameEnd(game: Game): Promise<boolean> {
         const aliveTeams = game.teams.filter((team) =>
-            team.entitiesIds.some(
-                (entityId) =>
-                    game.entities.find((entity) => entity.id === entityId)!
-                        .dead === false
-            )
+            team.entitiesIds.some((entityId) => {
+                const entity = game.entities.find(
+                    (entity) => entity.id === entityId
+                );
+                if (!entity) {
+                    return false;
+                }
+                return !entity.isInvocation && !entity.dead;
+            })
         );
         if (aliveTeams.length <= 1) {
             const boostMap: Map<string, Boost[]> = new Map();
