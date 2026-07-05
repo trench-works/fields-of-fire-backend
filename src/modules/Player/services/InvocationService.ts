@@ -4,10 +4,16 @@ import { Action } from "../../Action/data/Action";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { Entity, EntityType } from "../../Game/data/Entity";
 import { Game } from "../../Game/data/Game";
+import { GameDataManager } from "../../Game/data/GameRepository";
+import { ActioAnimationService } from "./ActionAnimationService";
 
 export class InvocationService {
     @Provide(CharacterClassRepository)
     private readonly characterClassRepository!: CharacterClassRepository;
+    @Provide(GameDataManager)
+    private readonly gameDataManager!: GameDataManager;
+    @Provide(ActioAnimationService)
+    private readonly animationService!: ActioAnimationService;
 
     async createInvocation(
         game: Game,
@@ -16,6 +22,7 @@ export class InvocationService {
         position: Position
     ) {
         if (action.invocateClass) {
+            console.log("WILL INVOKATE BARRICADE");
             const charClass = (await this.characterClassRepository.get(
                 action.invocateClass
             ))!;
@@ -35,6 +42,14 @@ export class InvocationService {
                 ?.entitiesIds.push(entity.id);
             game.entities.push(entity);
             game.playerTurns.splice(1, 0, entity.id);
+            this.animationService.animate(
+                game,
+                invoker,
+                action,
+                game.plateau[position.x][position.y],
+                []
+            );
+            await this.gameDataManager.set(game.id, game);
         }
     }
 }

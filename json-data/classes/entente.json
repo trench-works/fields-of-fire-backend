@@ -84,25 +84,5 @@
         },
         "classDescription": "Un combattant téméraire un intrépide, le Brise-barricade est équipé d'une hache et d'un bouclier, ce qui lui permet de mettre se protéger et de causer des dégâts à accrue sur la durée au corps à corps.",
         "actionList": ["walk", "break", "shield_rush", "provok", "barricade"]
-    },
-    {
-        "id": "entente_barricade",
-        "name": "barricade de l'Entente",
-        "playable": true,
-        "stats": {
-            "life": 8,
-            "maxLife": 8,
-            "precision": 0,
-            "strength": 0,
-            "armor": 0,
-            "initiative": 0,
-            "dodging": 0,
-            "energy": 0,
-            "mouvement": 0,
-            "totalEnergy": 0,
-            "totalMouvement": 0
-        },
-        "classDescription": "Une Barricade obstruant le chemin et la ligne de vue.",
-        "actionList": []
     }
 ]
