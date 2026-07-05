@@ -157,8 +157,12 @@ export class AttackService {
                 )
         );
 
-        attacker.stats.life -= player ? attackerDamage : attackerDamage * 1.2;
-        target.stats.life -= player ? defenserDamage : defenserDamage * 0.8;
+        attacker.stats.life -= player
+            ? attackerDamage
+            : Math.ceil(attackerDamage * 1.2);
+        target.stats.life -= player
+            ? defenserDamage
+            : Math.ceil(defenserDamage * 0.8);
 
         //manage effect
         if ((action.effectList?.length ?? 0) > 0) {
