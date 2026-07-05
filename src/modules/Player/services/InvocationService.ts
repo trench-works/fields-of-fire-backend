@@ -45,6 +45,7 @@ export class InvocationService {
             //game.playerTurns.splice(1, 0, entity.id);
             const cell = game.plateau[position.x][position.y];
             cell.entityId = entity.id;
+            invoker.stats.energy -= action.cost;
             this.animationService.animate(game, invoker, action, cell, []);
             await this.gameDataManager.set(game.id, game);
         }
