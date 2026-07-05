@@ -107,7 +107,7 @@ export class AttackService {
                 defenserDamage += masoDamage;
             }
 
-            const weaknessStacks = attacker.effects.filter(
+            const weaknessStacks = defenser.effects.filter(
                 (e) => e.action === EffectAction.WEAKNESS
             ).length;
             if (weaknessStacks > 0) {
