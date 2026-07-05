@@ -143,7 +143,7 @@ export class AttackService {
             : 0;
 
         // calculate damages
-        const { attackerDamage, defenserDamage } = this.calculateFinalDamage(
+        let { attackerDamage, defenserDamage } = this.calculateFinalDamage(
             randomDamage,
             action,
             attacker,
@@ -158,12 +158,23 @@ export class AttackService {
                 )
         );
 
-        attacker.stats.life -= player
-            ? attackerDamage
-            : Math.ceil(attackerDamage * 1.5);
-        target.stats.life -= player
+        attackerDamage = player
+            ? Math.ceil(attackerDamage * 0.6)
+            : attackerDamage;
+        defenserDamage = player
             ? defenserDamage
-            : Math.ceil(defenserDamage * 0.5);
+            : Math.ceil(defenserDamage * 0.6);
+
+        attacker.stats.life -= attackerDamage;
+        attacker.stats.life = Math.min(
+            attacker.stats.maxLife,
+            Math.max(0, attacker.stats.life)
+        );
+        target.stats.life -= defenserDamage;
+        target.stats.life = Math.min(
+            target.stats.maxLife,
+            Math.max(0, target.stats.life)
+        );
 
         //manage effect
         if ((action.effectList?.length ?? 0) > 0) {

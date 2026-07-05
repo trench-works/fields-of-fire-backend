@@ -26,6 +26,7 @@ import { LobbyWebSocketManager } from "../../Lobby/web/LobbyWebSocketManager";
 import { MobService } from "../../Player/services/MobService";
 import { GameSubscriptionManager } from "../web/GameSubscriptionManager";
 import { MapService } from "./MapService";
+import { Stats } from "../../Stat/data/Stats";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -220,17 +221,11 @@ export class GameService {
     }
 
     private async getTurns(entities: Entity[]): Promise<string[]> {
-        const classes = await this.classRepository.list();
         return entities
             .filter((entity) => entity.isPlaying)
             .sort((entityA, entityB) => {
-                const classA = classes.find(
-                    (charClass) => charClass.id === entityA.classId
-                )!;
-                const classB = classes.find(
-                    (charClass) => charClass.id === entityB.classId
-                )!;
-                return classA.stats.initiative < classB.stats.initiative
+                return Stats.fromEntity(entityA).initiative <
+                    Stats.fromEntity(entityB).initiative
                     ? 1
                     : -1;
             })
