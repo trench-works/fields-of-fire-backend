@@ -322,8 +322,9 @@ export class PlayerActionService {
             playerEntity,
             destination
         );
+        let movePath: Position[] = [];
         if (newCell) {
-            const movePath: Position[] = new CellAStar().findPathPositions(
+            movePath = new CellAStar().findPathPositions(
                 playerEntity.position,
                 newCell.position,
                 game.plateau
@@ -333,15 +334,6 @@ export class PlayerActionService {
             ].entityId = undefined;
             newCell.entityId = playerEntity.id;
             playerEntity.position = { ...newCell.position };
-            await this.socketManager.emitUpdate(game, [
-                {
-                    key: "move",
-                    data: {
-                        entityId: playerEntity.id,
-                        path: movePath,
-                    },
-                },
-            ]);
         }
 
         playerEntity.stats.energy -= action.cost;
@@ -350,7 +342,8 @@ export class PlayerActionService {
             playerEntity,
             action,
             destination,
-            targets
+            targets,
+            movePath
         );
         await this.gameDataManager.set(game.id, game);
         await this.gameTurnService.detectGameEnd(game);

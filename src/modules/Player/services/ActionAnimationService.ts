@@ -1,4 +1,5 @@
 import { Provide } from "../../../core";
+import { Position } from "../../../game-lib";
 import { Action } from "../../Action/data/Action";
 import { GameEventAnimation } from "../../Game/application/interfaces/GameUpdateEvent";
 import { Entity } from "../../Game/data/Entity";
@@ -18,7 +19,8 @@ export class ActioAnimationService {
         playerEntity: Entity,
         action: Action,
         destination: Cell,
-        targets: AttackTarget[]
+        targets: AttackTarget[],
+        path?: Position[]
     ) {
         const animations: GameEventAnimation[] = [
             {
@@ -32,6 +34,7 @@ export class ActioAnimationService {
                         ...entity.position,
                         damage,
                     })),
+                    path,
                 },
             },
         ];
