@@ -5,6 +5,8 @@ import { CharacterClassRepository } from "../../CharacterClass/data/CharacterCla
 import { Entity, EntityType } from "../../Game/data/Entity";
 import { Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
+import { PlayerCancelAction } from "../application/interfaces/PlayerCancelAction";
+import { PlayerOutputActions } from "../web/PlayerSocketActions";
 import { ActioAnimationService } from "./ActionAnimationService";
 
 export class InvocationService {
@@ -20,7 +22,16 @@ export class InvocationService {
         invoker: Entity,
         action: Action,
         position: Position
-    ) {
+    ): Promise<PlayerCancelAction | void> {
+        const cell = game.plateau[position.x][position.y];
+        if (cell.entityId) {
+            return {
+                actionId: PlayerOutputActions.CANCEL_ACTION,
+                payload: {
+                    reason: "occupied",
+                },
+            };
+        }
         if (action.invocateClass) {
             const charClass = (await this.characterClassRepository.get(
                 action.invocateClass
@@ -43,7 +54,6 @@ export class InvocationService {
                 ?.entitiesIds.push(entity.id);
             game.entities.push(entity);
             //game.playerTurns.splice(1, 0, entity.id);
-            const cell = game.plateau[position.x][position.y];
             cell.entityId = entity.id;
             invoker.stats.energy -= action.cost;
             this.animationService.animate(game, invoker, action, cell, []);
