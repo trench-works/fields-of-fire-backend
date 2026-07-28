@@ -1,7 +1,16 @@
 export enum TeamColor {
     BLUE = "BLUE",
-    ROUGE = "ROUGE",
+    RED = "RED",
+    YELLOW = "YELLOW",
+    GREEN = "GREEN",
 }
+
+export const TEAM_COLORS: TeamColor[] = [
+    TeamColor.BLUE,
+    TeamColor.RED,
+    TeamColor.YELLOW,
+    TeamColor.GREEN,
+];
 
 export enum TeamName {
     PLAYERS = "Players",

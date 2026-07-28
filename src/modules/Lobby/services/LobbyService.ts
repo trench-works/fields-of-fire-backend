@@ -6,6 +6,8 @@ import { MenuWebSocketManager } from "../../Menu/web/MenuWebSocketManager";
 import { UserRepository } from "../../User/data/UserRepository";
 import { LobbyWebSocketManager } from "../web/LobbyWebSocketManager";
 import { GameMode } from "../../Game/data/Game";
+import { LobbyTeam } from "../data/LobbyTeam";
+import { TEAM_COLORS } from "../../Game/data/Team";
 
 export class LobbyService {
     @Provide(LobbyDataManager)
@@ -33,12 +35,19 @@ export class LobbyService {
         if (!lobby) {
             return;
         }
-        lobby.players.push({
-            userId,
-            playerId: Id.get(),
-            classId: "entente_fantassin",
-            name: user?.username ?? "Entente Fantassin",
-        });
+        const team1: LobbyTeam = {
+            players: [
+                {
+                    userId,
+                    playerId: Id.get(),
+                    classId: "entente_fantassin",
+                    name: user?.username ?? "Entente Fantassin",
+                },
+            ],
+            ai: 0,
+            color: TEAM_COLORS[0],
+        };
+        lobby.teams.push(team1);
         await this.onLobbiesUpdate(lobby);
         return lobby;
     }
@@ -61,7 +70,7 @@ export class LobbyService {
                             ?.username ?? "NO_NAME",
                     maxPlayers: lobby.maxPlayers,
                     creatorId: lobby.creatorId,
-                    players: lobby.players,
+                    teams: lobby.teams,
                     name: lobby.name,
                 };
             })

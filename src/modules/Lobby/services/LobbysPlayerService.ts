@@ -31,10 +31,13 @@ export class LobbyPlayerService {
             );
             return lobby;
         }
-        const leavingPlayer = lobby.players.find(
-            (player) => player.userId === userId
-        )?.playerId;
-        lobby.players = lobby.players.filter(
+        const playerTeam = lobby.teams.find((team) =>
+            team.players.some((player) => player.userId === userId)
+        )!;
+        const leavingPlayer = lobby.teams
+            .flatMap((team) => team.players)
+            .find((player) => player.userId === userId)?.playerId;
+        playerTeam.players = playerTeam.players.filter(
             (player) => player.userId !== userId
         );
         lobby.playerReady = lobby.playerReady.filter(
@@ -58,8 +61,9 @@ export class LobbyPlayerService {
             return lobby;
         }
 
-        lobby.players.find((player) => player.userId === userId)!.classId =
-            classId;
+        lobby.teams
+            .flatMap((team) => team.players)
+            .find((player) => player.userId === userId)!.classId = classId;
 
         await this.lobbyDataManager.set(lobbyId, lobby);
         await this.lobbyWebSocketManager.emitLobbyUpdate(lobby);
@@ -77,17 +81,21 @@ export class LobbyPlayerService {
             );
             return new NotFoundError();
         }
-        const currentPlayer = lobby.players.find(
-            (player) => player.userId === userId
-        );
+        const currentPlayer = lobby.teams
+            .flatMap((team) => team.players)
+            .find((player) => player.userId === userId);
         if (currentPlayer) {
             return lobby;
         }
-        if (lobby.players.length === lobby.maxPlayers) {
+        if (
+            lobby.teams.flatMap((team) => team.players).length ===
+            lobby.maxPlayers
+        ) {
             return new SocketError("Lobby is already full !");
         }
         const user = await this.userRepository.get(userId)!;
-        lobby.players.push({
+        lobby.teams[0].players.push({
+            //TODO: remove push to team 0 and instead push to first team with empty slot
             userId,
             playerId: Id.get(),
             classId: "entente_fantassin",
@@ -95,7 +103,7 @@ export class LobbyPlayerService {
         });
         await this.lobbyService.onLobbiesUpdate(lobby);
         await this.lobbyWebSocketManager.emitLobbyUpdate(lobby);
-        this.logger.log(lobby.players);
+        this.logger.log(lobby.teams[0].players);
         return lobby;
     }
 
