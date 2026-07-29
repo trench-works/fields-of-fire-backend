@@ -165,6 +165,7 @@ export class GameService {
             );
             ai.push(...mobs);
             entities.push(...mobsEntities);
+            teams.push(mobsTeam);
         }
         const game: Game = {
             id: gameId,
