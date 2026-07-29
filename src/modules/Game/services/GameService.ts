@@ -8,7 +8,7 @@ import {
     Ran,
     WsEventAwaiter,
 } from "../../../core";
-import { Cell, Game } from "../data/Game";
+import { Cell, Game, GameMode } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
 import { LobbyDataManager } from "../../Lobby/data/LobbyDataManager";
 import { JoinGameResponse } from "../application/interfaces/JoinGameResponse";
@@ -86,79 +86,100 @@ export class GameService {
         });
         const classes = await this.classRepository.list();
 
-        const playersTeam: Team = {
-            id: Id.get(),
-            name: TeamName.PLAYERS,
-            color: TeamColor.BLUE,
-            playerIds: [],
-            npcIds: [],
-            entitiesIds: [],
-        };
-        const mobsTeam: Team = {
-            id: Id.get(),
-            name: TeamName.MOBS,
-            color: TeamColor.ROUGE,
-            playerIds: [],
-            npcIds: [],
-            entitiesIds: [],
-        };
-        const [mobs, mobsEntities] = await this.getMobs(
-            gameId,
-            plateau,
-            2,
-            0,
-            lobby.players.length,
-            mobsTeam
-        );
-        const playersEntities: Entity[] = [];
+        const teams: Team[] = [];
+        const entities: Entity[] = [];
+        const ai: NPC[] = [];
         const players: Player[] = [];
-        this.logger.log(lobby.players);
-        for (const lobbyPlayer of lobby.players) {
-            const entityId = Id.get();
-            const playerCell = await this.placeEntity(entityId, plateau);
-            const user = await this.userRepository.get(lobbyPlayer.userId);
-            const charClass = classes.find(
-                (charClass) => charClass.id === lobbyPlayer.classId
-            )!;
-            players.push({
-                id: lobbyPlayer.playerId,
-                userId: lobbyPlayer.userId,
-                entityId,
+        for (const team of lobby.teams) {
+            const gameTeam: Team = {
+                id: Id.get(),
+                name: TeamName.PLAYERS,
+                color: team.color,
+                playerIds: [],
+                npcIds: [],
+                entitiesIds: [],
+            };
+            this.logger.log(team.players);
+            for (const lobbyPlayer of team.players) {
+                const entityId = Id.get();
+                const playerCell = await this.placeEntity(entityId, plateau);
+                const user = await this.userRepository.get(lobbyPlayer.userId);
+                const charClass = classes.find(
+                    (charClass) => charClass.id === lobbyPlayer.classId
+                )!;
+                players.push({
+                    id: lobbyPlayer.playerId,
+                    userId: lobbyPlayer.userId,
+                    entityId,
+                    gameId,
+                    name: user?.username ?? charClass.name,
+                    invocations: [],
+                    randomBoost: [],
+                });
+                entities.push({
+                    id: entityId,
+                    teamId: gameTeam.id,
+                    controllerId: lobbyPlayer.playerId,
+                    position: { ...playerCell.position },
+                    classId: lobbyPlayer.classId,
+                    type: EntityType.PLAYER,
+                    stats: charClass.stats,
+                    effects: [],
+                    dead: false,
+                    isInvocation: false,
+                    isPlaying: charClass.isPlaying,
+                });
+                gameTeam.entitiesIds.push(entityId);
+                gameTeam.playerIds.push(lobbyPlayer.playerId);
+            }
+            const [npcs, npcsEntities] = await this.getMobs(
                 gameId,
-                name: user?.username ?? charClass.name,
-                invocations: [],
-                randomBoost: [],
-            });
-            playersEntities.push({
-                id: entityId,
-                teamId: playersTeam.id,
-                controllerId: lobbyPlayer.playerId,
-                position: { ...playerCell.position },
-                classId: lobbyPlayer.classId,
-                type: EntityType.PLAYER,
-                stats: charClass.stats,
-                effects: [],
-                dead: false,
-                isInvocation: false,
-                isPlaying: charClass.isPlaying,
-            });
-            playersTeam.entitiesIds.push(entityId);
-            playersTeam.playerIds.push(lobbyPlayer.playerId);
+                plateau,
+                team.ai,
+                0,
+                lobby.teams.flatMap((team) => team.players).length,
+                gameTeam
+            );
+            ai.push(...npcs);
+            entities.push(...npcsEntities);
+            teams.push(gameTeam);
         }
-        const entities = [...playersEntities, ...mobsEntities];
+
+        if (lobby.mode === GameMode.INFINITY) {
+            // GET LES MECHANTS
+            const mobsTeam: Team = {
+                id: Id.get(),
+                name: TeamName.MOBS,
+                color: TeamColor.RED,
+                playerIds: [],
+                npcIds: [],
+                entitiesIds: [],
+            };
+            const [mobs, mobsEntities] = await this.getMobs(
+                gameId,
+                plateau,
+                2,
+                0,
+                lobby.teams.flatMap((team) => team.players).length,
+                mobsTeam
+            );
+            ai.push(...mobs);
+            entities.push(...mobsEntities);
+            teams.push(mobsTeam);
+        }
         const game: Game = {
             id: gameId,
             mode: lobby.mode,
             creatorId: userId,
             plateau: plateau,
             players: players,
-            npc: mobs,
+            npc: ai,
             entities: entities.sort((entityA, entityB) => {
                 return entityA.stats.initiative < entityB.stats.initiative
                     ? 1
                     : -1;
             }),
-            teams: [playersTeam, mobsTeam],
+            teams: teams,
             playerTurns: await this.getTurns(entities),
             readyPlayers: [],
             round: 1,

@@ -25,7 +25,11 @@ export class LobbyGuard implements IGuard {
         if (lobby.creatorId === user.id) {
             return RessourceAccessLevel.DELETE;
         }
-        if (lobby.players.some((player) => player.userId === user.id)) {
+        if (
+            lobby.teams
+                .flatMap((team) => team.players)
+                .some((player) => player.userId === user.id)
+        ) {
             return RessourceAccessLevel.READ;
         }
         return RessourceAccessLevel.NONE;

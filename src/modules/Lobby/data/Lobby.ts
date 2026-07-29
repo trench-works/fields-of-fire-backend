@@ -1,4 +1,5 @@
 import { GameMode } from "../../Game/data/Game";
+import { LobbyTeam } from "./LobbyTeam";
 
 export class LobbyPlayer {
     userId!: string;
@@ -14,6 +15,6 @@ export class Lobby {
     creatorName!: string;
     maxPlayers!: number;
     creatorId!: string;
-    players!: LobbyPlayer[];
+    teams!: LobbyTeam[];
     playerReady!: string[];
 }
