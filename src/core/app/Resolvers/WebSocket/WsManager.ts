@@ -51,7 +51,7 @@ export class WsManager<
               >
             | ValidationError[]
     ): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<void>((resolve) => {
             if (!action) {
                 resolve();
                 return;
@@ -61,7 +61,7 @@ export class WsManager<
                 this.logger.error(
                     `SOCKET NOT OPEN, readyState: ${socket.readyState}`
                 );
-                reject();
+                resolve();
                 return;
             }
 
@@ -78,7 +78,7 @@ export class WsManager<
                 socket.send(message);
             } catch {
                 this.logger.error("CANT SEND PAYLOAD", JSON.stringify(action));
-                reject();
+                resolve();
             }
             resolve();
         }).catch();
