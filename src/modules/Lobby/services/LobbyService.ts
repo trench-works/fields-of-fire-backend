@@ -1,4 +1,4 @@
-import { Id, Logger, Provide } from "../../../core";
+import { Id, Logger, NotFoundError, Provide, UserInfos } from "../../../core";
 import { LobbyDataManager } from "../data/LobbyDataManager";
 import { Lobby } from "../data/Lobby";
 import { LobbyResponse } from "../../Menu/application/interfaces/UpdateLobbyListResponse";
@@ -8,6 +8,7 @@ import { LobbyWebSocketManager } from "../web/LobbyWebSocketManager";
 import { GameMode } from "../../Game/data/Game";
 import { LobbyTeam } from "../data/LobbyTeam";
 import { TEAM_COLORS } from "../../Game/data/Team";
+import { UpdateLobby } from "../application/interfaces/UpdateLobby";
 
 export class LobbyService {
     @Provide(LobbyDataManager)
@@ -20,6 +21,24 @@ export class LobbyService {
     private readonly userRepository!: UserRepository;
     @Provide("Logger")
     private readonly logger!: Logger;
+
+    async updateLobby(lobbyId: string, user: UserInfos, payload: UpdateLobby) {
+        const lobby = await this.lobbyDataManager.getLobby(lobbyId);
+        if (lobby instanceof NotFoundError) {
+            return lobby;
+        }
+        if (lobby.creatorId !== user.id) {
+            return;
+        }
+        if (payload.boardSize) {
+            lobby.boardSize = payload.boardSize;
+        }
+        if (payload.mode) {
+            lobby.mode = payload.mode;
+        }
+        await this.lobbyDataManager.set(lobbyId, lobby);
+        await this.lobbyWebSocketManager.emitLobbyUpdate(lobby);
+    }
 
     async createLobby(userId: string) {
         const user = await this.userRepository.get(userId)!;

@@ -18,6 +18,7 @@ import { ChangeClass } from "./interfaces/ChangeClass";
 import { SingleClientOutputError } from "../../../core/types/Action";
 import { LobbyPlayerService } from "../services/LobbysPlayerService";
 import { PlayerReady } from "./interfaces/PlayerReady";
+import { UpdateLobby } from "./interfaces/UpdateLobby";
 
 export class LobbyController extends WsController<
     LobbyKeys,
@@ -46,6 +47,17 @@ export class LobbyController extends WsController<
         );
         this.on(LobbyInputActions.READY, this.handleSetReady.bind(this));
         this.on(LobbyInputActions.START, this.startGame.bind(this));
+        this.on(LobbyInputActions.UPDATE, this.update.bind(this), {
+            payloadType: UpdateLobby,
+        });
+    }
+
+    async update({
+        key: { lobbyId },
+        user,
+        payload,
+    }: WsListenerOptions<LobbyKeys, UpdateLobby>) {
+        await this.lobbyService.updateLobby(lobbyId, user, payload);
     }
 
     async startGame({
