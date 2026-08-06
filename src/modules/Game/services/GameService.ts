@@ -81,8 +81,8 @@ export class GameService {
         }
         const gameId = Id.get();
         const plateau: Cell[][] = this.mapService.generateRandomMap({
-            width: 10,
-            height: 10,
+            width: lobby.boardSize,
+            height: lobby.boardSize,
         });
         const classes = await this.classRepository.list();
 
@@ -323,8 +323,8 @@ export class GameService {
         game.readyPlayers = [];
         game.entities = game.entities.filter((entity) => !entity.isInvocation);
         game.plateau = this.mapService.generateRandomMap({
-            width: 10,
-            height: 10,
+            width: game.plateau.length,
+            height: game.plateau.length,
         });
         const mobsTeam = game.teams.find(
             (team) => team.name === TeamName.MOBS

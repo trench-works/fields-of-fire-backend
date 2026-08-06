@@ -11,6 +11,7 @@ export class LobbyPlayer {
 export class Lobby {
     id!: string;
     mode!: GameMode;
+    boardSize!: number;
     name!: string;
     creatorName!: string;
     maxPlayers!: number;
