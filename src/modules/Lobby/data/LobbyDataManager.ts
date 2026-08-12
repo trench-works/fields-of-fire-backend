@@ -23,6 +23,10 @@ export class LobbyDataManager extends RedisRepository<Lobby> {
 
     async addLobby(lobby: Omit<Lobby, "id" | "teams">): Promise<Lobby | null> {
         const lobbyId = Id.get();
-        return await this.set(lobbyId, { ...lobby, id: lobbyId, teams: [] });
+        return await this.set(lobbyId, {
+            ...lobby,
+            id: lobbyId,
+            teams: [],
+        });
     }
 }

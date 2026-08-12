@@ -1,4 +1,11 @@
-import { Id, Logger, NotFoundError, Provide, UserInfos } from "../../../core";
+import {
+    HttpError,
+    Id,
+    Logger,
+    NotFoundError,
+    Provide,
+    UserInfos,
+} from "../../../core";
 import { LobbyDataManager } from "../data/LobbyDataManager";
 import { Lobby } from "../data/Lobby";
 import { LobbyResponse } from "../../Menu/application/interfaces/UpdateLobbyListResponse";
@@ -30,23 +37,22 @@ export class LobbyService {
         if (lobby.creatorId !== user.id) {
             return;
         }
-        if (payload.boardSize) {
-            lobby.boardSize = payload.boardSize;
-        }
-        if (payload.mode) {
-            lobby.mode = payload.mode;
-        }
+        lobby.boardSize = payload.boardSize ?? lobby.boardSize;
+        lobby.mode = payload.mode ?? lobby.mode;
         await this.lobbyDataManager.set(lobbyId, lobby);
         await this.lobbyWebSocketManager.emitLobbyUpdate(lobby);
     }
 
     async createLobby(userId: string) {
-        const user = await this.userRepository.get(userId)!;
+        const user = await this.userRepository.get(userId);
+        if (!user) {
+            return new HttpError(400, "User doesnt exist");
+        }
         const lobby = await this.lobbyDataManager.addLobby({
             creatorId: userId,
             mode: GameMode.INFINITY,
-            creatorName: user?.username ?? "NO_NAME",
-            name: `Partie de ${user?.username ?? "NO_NAME"}`,
+            creatorName: user.username,
+            name: `Partie de ${user.username}`,
             maxPlayers: 4,
             boardSize: 10,
             playerReady: [],
@@ -61,7 +67,7 @@ export class LobbyService {
                     userId,
                     playerId: Id.get(),
                     classId: "entente_fantassin",
-                    name: user?.username ?? "Entente Fantassin",
+                    name: user.username,
                 },
             ],
             ai: 0,
@@ -92,6 +98,8 @@ export class LobbyService {
                     creatorId: lobby.creatorId,
                     teams: lobby.teams,
                     name: lobby.name,
+                    mode: lobby.mode,
+                    boardSize: lobby.boardSize,
                 };
             })
         );
