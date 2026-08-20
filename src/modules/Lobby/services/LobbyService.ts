@@ -4,6 +4,7 @@ import {
     Logger,
     NotFoundError,
     Provide,
+    SocketError,
     UserInfos,
 } from "../../../core";
 import { LobbyDataManager } from "../data/LobbyDataManager";
@@ -39,6 +40,69 @@ export class LobbyService {
         }
         lobby.boardSize = payload.boardSize ?? lobby.boardSize;
         lobby.mode = payload.mode ?? lobby.mode;
+        lobby.name = payload.name ?? lobby.name;
+        await this.lobbyDataManager.set(lobbyId, lobby);
+        await this.lobbyWebSocketManager.emitLobbyUpdate(lobby);
+    }
+
+    async addTeam(lobbyId: string, userId: string) {
+        const lobby = await this.lobbyDataManager.getLobby(lobbyId);
+        if (lobby instanceof NotFoundError) {
+            return lobby;
+        }
+        if (lobby.creatorId !== userId) {
+            return new SocketError();
+        }
+        if (lobby.teams.length === 4) {
+            return new SocketError();
+        }
+        lobby.teams.push({
+            players: [],
+            ai: 0,
+            color: TEAM_COLORS[lobby.teams.length],
+        });
+        await this.lobbyDataManager.set(lobbyId, lobby);
+        await this.lobbyWebSocketManager.emitLobbyUpdate(lobby);
+    }
+
+    async joinTeam(lobbyId: string, userId: string, index: number) {
+        const lobby = await this.lobbyDataManager.getLobby(lobbyId);
+        if (lobby instanceof NotFoundError) {
+            return lobby;
+        }
+        if (lobby.mode === GameMode.INFINITY) {
+            return new SocketError();
+        }
+        const team = lobby.teams[index];
+        if (!team) {
+            return new SocketError();
+        }
+        if (team.players.length === 4) {
+            return new SocketError();
+        }
+        const player = lobby.teams
+            .flatMap((team) => team.players)
+            .find((player) => player.userId === userId);
+        lobby.teams = lobby.teams.map((team) => {
+            team.players = team.players.filter(
+                (player) => player.playerId !== player.playerId
+            );
+            return team;
+        });
+        if (player) {
+            team.players.push(player);
+        } else {
+            const user = await this.userRepository.get(userId);
+            if (!user) {
+                return new SocketError("User doesnt exist");
+            }
+            team.players.push({
+                playerId: Id.get(),
+                userId,
+                classId: "entente_fantassin",
+                name: user.username,
+            });
+        }
         await this.lobbyDataManager.set(lobbyId, lobby);
         await this.lobbyWebSocketManager.emitLobbyUpdate(lobby);
     }

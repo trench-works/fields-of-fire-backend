@@ -19,6 +19,7 @@ import { SingleClientOutputError } from "../../../core/types/Action";
 import { LobbyPlayerService } from "../services/LobbysPlayerService";
 import { PlayerReady } from "./interfaces/PlayerReady";
 import { UpdateLobby } from "./interfaces/UpdateLobby";
+import { JoinTeam } from "./interfaces/JoinTeam";
 
 export class LobbyController extends WsController<
     LobbyKeys,
@@ -47,6 +48,8 @@ export class LobbyController extends WsController<
         );
         this.on(LobbyInputActions.READY, this.handleSetReady.bind(this));
         this.on(LobbyInputActions.START, this.startGame.bind(this));
+        this.on(LobbyInputActions.JOIN_TEAM, this.joinTeam.bind(this));
+        this.on(LobbyInputActions.ADD_TEAM, this.addTeam.bind(this));
         this.on(LobbyInputActions.UPDATE, this.update.bind(this), {
             payloadType: UpdateLobby,
         });
@@ -71,6 +74,24 @@ export class LobbyController extends WsController<
         if (game instanceof SocketError) {
             return game;
         }
+    }
+
+    async joinTeam({
+        key: { lobbyId },
+        user,
+        payload: { index },
+    }: WsListenerOptions<
+        LobbyKeys,
+        JoinTeam
+    >): Promise<void | SingleClientOutputError> {
+        return await this.lobbyService.joinTeam(lobbyId, user.id, index);
+    }
+
+    async addTeam({
+        key: { lobbyId },
+        user,
+    }: WsListenerOptions<LobbyKeys>): Promise<void | SingleClientOutputError> {
+        return await this.lobbyService.addTeam(lobbyId, user.id);
     }
 
     async handleLeave({

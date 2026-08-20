@@ -1,4 +1,10 @@
-import { IsEnum, IsNumber, IsOptional } from "class-validator";
+import {
+    IsEnum,
+    IsNumber,
+    IsOptional,
+    IsString,
+    MaxLength,
+} from "class-validator";
 import { GameMode } from "../../../Game/data/Game";
 
 export class UpdateLobby {
@@ -8,4 +14,8 @@ export class UpdateLobby {
     @IsEnum(GameMode)
     @IsOptional()
     mode?: GameMode;
+    @MaxLength(30)
+    @IsString()
+    @IsOptional()
+    name?: string;
 }

@@ -4,6 +4,8 @@ export enum LobbyInputActions {
     START = "start",
     CHANGE_CLASS = "change-class",
     UPDATE = "update",
+    ADD_TEAM = "add-team",
+    JOIN_TEAM = "join-team",
 }
 
 export enum LobbyOutputActions {
