@@ -19,7 +19,7 @@ import { GameCreationError } from "./errors/GameCreationError";
 import { UserRepository } from "../../User/data/UserRepository";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
 import { BoostService } from "../../Player/services/BoostService";
-import { Team, TeamColor, TeamName } from "../data/Team";
+import { Team, TeamColor } from "../data/Team";
 import { NPC } from "../data/NPC";
 import { LobbyOutputActions } from "../../Lobby/application/interfaces/LobbyAction";
 import { LobbyWebSocketManager } from "../../Lobby/web/LobbyWebSocketManager";
@@ -93,7 +93,6 @@ export class GameService {
         for (const team of lobby.teams) {
             const gameTeam: Team = {
                 id: Id.get(),
-                name: TeamName.PLAYERS,
                 color: team.color,
                 playerIds: [],
                 npcIds: [],
@@ -112,9 +111,18 @@ export class GameService {
                     userId: lobbyPlayer.userId,
                     entityId,
                     gameId,
+                    teamId: gameTeam.id,
                     name: user?.username ?? charClass.name,
                     invocations: [],
                     randomBoost: [],
+                    stats: {
+                        kills: 0,
+                        heal: 0,
+                        damages: 0,
+                        steps: 0,
+                        sustained: 0,
+                        shielded: 0,
+                    },
                 });
                 entities.push({
                     id: entityId,
@@ -149,7 +157,6 @@ export class GameService {
             // GET LES MECHANTS
             const mobsTeam: Team = {
                 id: Id.get(),
-                name: TeamName.MOBS,
                 color: TeamColor.RED,
                 playerIds: [],
                 npcIds: [],
@@ -184,7 +191,7 @@ export class GameService {
             readyPlayers: [],
             round: 1,
             isStopped: false,
-            playerWin: false,
+            winnerTeamId: undefined,
         };
         await this.lobbyDataManager.delete(lobbyId);
         await this.gameDataManager.set(gameId, game);
@@ -278,6 +285,7 @@ export class GameService {
                 id: Id.get(),
                 entityId,
                 gameId,
+                teamId: team.id,
             };
             team.npcIds.push(npc.id);
             npcs.push(npc);
@@ -326,9 +334,7 @@ export class GameService {
             width: game.plateau.length,
             height: game.plateau.length,
         });
-        const mobsTeam = game.teams.find(
-            (team) => team.name === TeamName.MOBS
-        )!;
+        const mobsTeam = game.teams[1];
         // Delete NPCs and Entities
         const currentNpcLength = game.npc.length;
         for (const npcId of mobsTeam.npcIds) {

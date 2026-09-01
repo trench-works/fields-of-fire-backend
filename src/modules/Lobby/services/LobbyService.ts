@@ -83,20 +83,23 @@ export class LobbyService {
         const player = lobby.teams
             .flatMap((team) => team.players)
             .find((player) => player.userId === userId);
+        this.logger.log(lobby.teams);
         lobby.teams = lobby.teams.map((team) => {
             team.players = team.players.filter(
-                (player) => player.playerId !== player.playerId
+                (teamPlayer) => teamPlayer.playerId !== player?.playerId
             );
             return team;
         });
+        this.logger.log(lobby.teams);
+        const newTeam = lobby.teams[index];
         if (player) {
-            team.players.push(player);
+            newTeam.players.push(player);
         } else {
             const user = await this.userRepository.get(userId);
             if (!user) {
                 return new SocketError("User doesnt exist");
             }
-            team.players.push({
+            newTeam.players.push({
                 playerId: Id.get(),
                 userId,
                 classId: "entente_fantassin",

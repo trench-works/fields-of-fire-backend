@@ -19,7 +19,6 @@ export enum TeamName {
 
 export type Team = {
     id: string;
-    name: string;
     color: TeamColor;
     // Entities
     playerIds: string[];

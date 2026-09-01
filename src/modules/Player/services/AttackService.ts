@@ -13,7 +13,7 @@ import {
 } from "../../Action/data/Action";
 import { Effect, EffectAction, EffectType } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
-import { Cell } from "../../Game/data/Game";
+import { Cell, Game } from "../../Game/data/Game";
 import { Stats } from "../../Stat/data/Stats";
 import { Player } from "../data/Player";
 
@@ -123,11 +123,17 @@ export class AttackService {
     }
 
     applyDamage(
+        game: Game,
         action: Action,
         attacker: Entity,
-        target: Entity,
-        player?: Player
+        target: Entity
     ): number {
+        const attackerPlayer: Player | undefined = game.players.find(
+            (player) => player.entityId === attacker.id
+        );
+        const targetPlayer: Player | undefined = game.players.find(
+            (player) => player.entityId === target.id
+        );
         //dodging - à voir si on peut dire au front que l'action à été dodge
         if (action.damage?.min ?? -1 >= 0) {
             const diceRoll = Ran.int(100);
@@ -143,13 +149,12 @@ export class AttackService {
             : 0;
 
         // calculate damages
-        let { attackerDamage, defenserDamage } = this.calculateFinalDamage(
+        const { attackerDamage, defenserDamage } = this.calculateFinalDamage(
             randomDamage,
             action,
             attacker,
             target
         );
-
         target.effects = target.effects.filter(
             (effect) =>
                 !(
@@ -158,23 +163,38 @@ export class AttackService {
                 )
         );
 
-        attackerDamage = player
-            ? Math.ceil(attackerDamage * 0.6)
-            : attackerDamage;
-        defenserDamage = player
-            ? defenserDamage
-            : Math.ceil(defenserDamage * 0.6);
-
+        // damagers to attacker
+        if (attackerPlayer && attackerDamage > 0) {
+            attackerPlayer.stats.damages += attackerDamage; // count damage on itself
+            attackerPlayer.stats.sustained += attackerDamage; // count damage on itself
+        }
+        if (attackerPlayer && attackerDamage < 0) {
+            attackerPlayer.stats.heal += -attackerDamage; // count heal on itself
+        }
         attacker.stats.life -= attackerDamage;
         attacker.stats.life = Math.min(
             attacker.stats.maxLife,
             Math.max(0, attacker.stats.life)
         );
+
+        // damages to target
+        if (attackerPlayer && defenserDamage > 0) {
+            attackerPlayer.stats.damages += defenserDamage; // count damage done
+        }
+        if (targetPlayer && defenserDamage > 0) {
+            targetPlayer.stats.sustained += defenserDamage; // count damage taken
+        }
+        if (attackerPlayer && defenserDamage < 0) {
+            attackerPlayer.stats.heal += -defenserDamage; // count heal done to other
+        }
         target.stats.life -= defenserDamage;
         target.stats.life = Math.min(
             target.stats.maxLife,
             Math.max(0, target.stats.life)
         );
+        if (target.stats.life === 0 && attackerPlayer) {
+            attackerPlayer.stats.kills++; // count kills
+        }
 
         //manage effect
         if ((action.effectList?.length ?? 0) > 0) {
@@ -182,11 +202,7 @@ export class AttackService {
                 `action.effectList : ${JSON.stringify(action.effectList)}`
             );
             for (const effect of action.effectList!) {
-                this.applyEffect(
-                    player?.name ?? attacker.classId,
-                    target,
-                    effect
-                );
+                this.applyEffect(attacker.id, target, effect);
             }
             target.effects = action.effectList!;
         }
@@ -194,11 +210,7 @@ export class AttackService {
         if (action.selfEffectList) {
             this.logger.debug(`action.effectList : ${action.effectList}`);
             for (const effect of action.selfEffectList) {
-                this.applyEffect(
-                    player?.name ?? attacker.classId,
-                    attacker,
-                    effect
-                );
+                this.applyEffect(attacker.id, attacker, effect);
             }
         }
 

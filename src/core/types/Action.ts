@@ -26,5 +26,6 @@ export type SingleClientOutputAction<
           actionId: OutputActions;
           payload: PayloadObject;
       }
-    | { actionId: "subscribed" }
+    | { actionId: "subscribed"; payload?: never }
+    | { actionId: "pong"; payload?: never }
     | SingleClientOutputError;
