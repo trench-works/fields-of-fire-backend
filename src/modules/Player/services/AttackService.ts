@@ -53,8 +53,10 @@ export class AttackService {
         }
 
         let brutTotal: number;
+
+        //cas du soin
         if (damage < 0) {
-            brutTotal = damage - statBonus;
+            brutTotal = damage - attackerStats.intelligence;
             defenserDamage = brutTotal;
             if (defenserStats.life - defenserDamage > defenserStats.maxLife) {
                 defenserDamage = -(defenserStats.maxLife - defenserStats.life);
@@ -65,9 +67,7 @@ export class AttackService {
 
             //Crit Logik
             const critRoll = Ran.int(100);
-            const critChanceBuff = attacker.effects.filter(
-                (e) => e.action === EffectAction.CRIT_CHANCE
-            ).length;
+            const critChanceBuff = attackerStats.critical
             const critDammageBuff = attacker.effects.filter(
                 (e) => e.action === EffectAction.CRIT_DAMMAGE
             ).length;
