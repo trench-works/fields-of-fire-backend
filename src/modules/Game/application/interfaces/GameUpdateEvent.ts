@@ -17,6 +17,7 @@ export type GameEventAnimation =
               origin: Position;
               target: Position;
               hits: (Position & { damage: number })[];
+              path?: Position[];
           }
       >
     | GameAnimation<

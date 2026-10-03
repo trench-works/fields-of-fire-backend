@@ -222,6 +222,10 @@ export class WsController<
             const decodedMessage = JSON.parse(message) as InputAction;
             let { payload } = decodedMessage;
             const { actionId } = decodedMessage;
+            if (actionId === "ping") {
+                this.socketManager.send(socket, { actionId: "pong" });
+                return;
+            }
             const handler = this.wsHandlers.get(actionId);
             if (handler) {
                 // payload validation

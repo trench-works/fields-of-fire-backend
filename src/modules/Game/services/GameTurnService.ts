@@ -10,9 +10,8 @@ import { PlayerWebSocketManager } from "../../Player/web/PlayerWebSocketManager"
 import { Stats } from "../../Stat/data/Stats";
 import { GameEventAnimation } from "../application/interfaces/GameUpdateEvent";
 import { EntityType } from "../data/Entity";
-import { Game } from "../data/Game";
+import { Game, GameMode } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
-import { TeamName } from "../data/Team";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
 
 export class GameTurnService implements AsyncResolver {
@@ -69,27 +68,28 @@ export class GameTurnService implements AsyncResolver {
         );
         if (aliveTeams.length <= 1) {
             const boostMap: Map<string, Boost[]> = new Map();
-            for (const player of game.players) {
-                const entity = game.entities.find(
-                    (entity) => entity.id === player.entityId
-                )!;
-                if (entity.dead) {
-                    entity.dead = false;
-                    entity.stats.life = entity.stats.maxLife;
-                    boostMap.set(player.id, []);
-                } else {
-                    const boosts =
-                        await this.boostService.getPlayerBoostSelection();
-                    boostMap.set(player.id, boosts);
-                    player.randomBoost = boosts;
+            if (game.mode === GameMode.INFINITY) {
+                for (const player of game.players) {
+                    const entity = game.entities.find(
+                        (entity) => entity.id === player.entityId
+                    )!;
+                    if (entity.dead) {
+                        entity.dead = false;
+                        entity.stats.life = entity.stats.maxLife;
+                        boostMap.set(player.id, []);
+                    } else {
+                        const boosts =
+                            await this.boostService.getPlayerBoostSelection();
+                        boostMap.set(player.id, boosts);
+                        player.randomBoost = boosts;
+                    }
                 }
             }
-            const playerWin = aliveTeams?.[0]?.name === TeamName.PLAYERS;
             game.isStopped = true;
-            game.playerWin = playerWin;
+            game.winnerTeamId = aliveTeams[0].id;
             await this.gameDataManager.set(game.id, game);
             await this.playerSocketManager.emitGameEnd(game.id, (playerId) => ({
-                playerWin: playerWin,
+                winnerTeamId: aliveTeams[0].id,
                 boosts: boostMap.get(playerId) ?? [],
             }));
 

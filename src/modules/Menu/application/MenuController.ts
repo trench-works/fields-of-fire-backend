@@ -5,6 +5,7 @@ import {
     SingleClientOutputAction,
     WsBaseListenerOptions,
     SocketError,
+    HttpError,
 } from "../../../core";
 import { JoinGameResponse } from "../../Game/application/interfaces/JoinGameResponse";
 import { GameService } from "../../Game/services/GameService";
@@ -74,6 +75,9 @@ export class MenuController extends WsController<
         const lobby = await this.lobbyService.createLobby(id);
         if (!lobby) {
             return;
+        }
+        if (lobby instanceof HttpError) {
+            return lobby;
         }
         return {
             actionId: MenuReturnActions.JOIN,

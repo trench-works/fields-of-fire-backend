@@ -110,9 +110,9 @@
         "effects": [],
         "boosts": [
             {
-                "precision" : 50,
+                "precision": 50,
                 "dodging": -3,
-                "totalMouvement":-1
+                "totalMouvement": -1
             }
         ],
         "probability": 1
@@ -123,8 +123,8 @@
         "effects": [],
         "boosts": [
             {
-                "totalEnergy" : 1,
-                "totalMouvement":-1,
+                "totalEnergy": 1,
+                "totalMouvement": -1,
                 "strength": 5,
                 "precision": 5
             }
@@ -137,8 +137,8 @@
         "effects": [],
         "boosts": [
             {
-                "totalEnergy" : -1,
-                "totalMouvement":1,
+                "totalEnergy": -1,
+                "totalMouvement": 1,
                 "strength": 5,
                 "precision": 5
             }
@@ -151,7 +151,7 @@
         "effects": [],
         "boosts": [
             {
-                "armor" : -20,
+                "armor": -20,
                 "strength": 50
             }
         ],

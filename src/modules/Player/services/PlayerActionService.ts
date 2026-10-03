@@ -114,7 +114,7 @@ export class PlayerActionService {
 
         switch (actionId) {
             case PlayerActionId.WALK:
-                return await this.move(game, playerEntity, destination);
+                return await this.move(game, player, playerEntity, destination);
             case PlayerActionId.AMPUTATE:
             case PlayerActionId.ARTILLERY_SUPPORT:
             case PlayerActionId.BAYONET:
@@ -125,7 +125,6 @@ export class PlayerActionService {
             case PlayerActionId.INTIMIDATION:
                 return await this.attack(
                     game,
-                    player,
                     playerEntity,
                     action,
                     destination
@@ -152,7 +151,6 @@ export class PlayerActionService {
             case PlayerActionId.SHIELD_RUSH:
                 return await this.attackAndDash(
                     game,
-                    player,
                     playerEntity,
                     action,
                     destination
@@ -206,6 +204,7 @@ export class PlayerActionService {
 
     async move(
         game: Game,
+        player: Player,
         playerEntity: Entity,
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
@@ -239,6 +238,8 @@ export class PlayerActionService {
         playerEntity.position = destination.position;
         playerEntity.stats.mouvement -= range;
 
+        player.stats.steps += movePath.length - 1; // count steps taken
+
         await this.gameDataManager.set(game.id, game);
 
         await this.socketManager.emitUpdate(game, [
@@ -254,34 +255,17 @@ export class PlayerActionService {
 
     async attack(
         game: Game,
-        player: Player,
         playerEntity: Entity,
         action: Action,
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
         this.checkIfAllowed(playerEntity, action, destination);
 
-        const targetEntities = this.getAttackTarget(game, action, destination);
-        this.logger.debug(`action : ${JSON.stringify(action)}`);
-
-        const targets: AttackTarget[] = targetEntities.map<AttackTarget>(
-            (entity) => {
-                const target: AttackTarget = {
-                    entity,
-                    damage: 0,
-                    effects: [],
-                };
-
-                const damage = this.attackService.applyDamage(
-                    action,
-                    playerEntity,
-                    entity,
-                    player
-                );
-                target.damage = damage;
-
-                return target;
-            }
+        const targets = this.dammageTargets(
+            game,
+            playerEntity,
+            action,
+            destination
         );
 
         //to finalize
@@ -305,14 +289,12 @@ export class PlayerActionService {
 
     async attackAndDash(
         game: Game,
-        player: Player,
         playerEntity: Entity,
         action: Action,
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
         const targets = this.dammageTargets(
             game,
-            player,
             playerEntity,
             action,
             destination
@@ -322,8 +304,9 @@ export class PlayerActionService {
             playerEntity,
             destination
         );
+        let movePath: Position[] = [];
         if (newCell) {
-            const movePath: Position[] = new CellAStar().findPathPositions(
+            movePath = new CellAStar().findPathPositions(
                 playerEntity.position,
                 newCell.position,
                 game.plateau
@@ -333,15 +316,6 @@ export class PlayerActionService {
             ].entityId = undefined;
             newCell.entityId = playerEntity.id;
             playerEntity.position = { ...newCell.position };
-            await this.socketManager.emitUpdate(game, [
-                {
-                    key: "move",
-                    data: {
-                        entityId: playerEntity.id,
-                        path: movePath,
-                    },
-                },
-            ]);
         }
 
         playerEntity.stats.energy -= action.cost;
@@ -350,7 +324,8 @@ export class PlayerActionService {
             playerEntity,
             action,
             destination,
-            targets
+            targets,
+            movePath
         );
         await this.gameDataManager.set(game.id, game);
         await this.gameTurnService.detectGameEnd(game);
@@ -457,7 +432,6 @@ export class PlayerActionService {
 
     dammageTargets(
         game: Game,
-        player: Player,
         playerEntity: Entity,
         action: Action,
         destination: Cell
@@ -474,10 +448,10 @@ export class PlayerActionService {
                 };
 
                 const damage = this.attackService.applyDamage(
+                    game,
                     action,
                     playerEntity,
-                    entity,
-                    player
+                    entity
                 );
                 target.damage = damage;
 

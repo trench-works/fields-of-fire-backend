@@ -1,4 +1,5 @@
-import { LobbyPlayer } from "../../../Lobby/data/Lobby";
+import { GameMode } from "../../../Game/data/Game";
+import { LobbyTeam } from "../../../Lobby/data/LobbyTeam";
 
 export class LobbyResponse {
     id!: string;
@@ -6,7 +7,9 @@ export class LobbyResponse {
     creator!: string;
     maxPlayers!: number;
     creatorId!: string;
-    players!: LobbyPlayer[];
+    teams!: LobbyTeam[];
+    mode!: GameMode;
+    boardSize!: number;
 }
 
 export class UpdateLobbyListResponse {

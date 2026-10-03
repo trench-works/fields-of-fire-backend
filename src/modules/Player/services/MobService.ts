@@ -125,6 +125,7 @@ export class MobService implements AsyncResolver {
                     if (action?.targets) {
                         for (const target of action?.targets ?? []) {
                             const damage = this.attackService.applyDamage(
+                                game,
                                 action.action,
                                 entity,
                                 target
