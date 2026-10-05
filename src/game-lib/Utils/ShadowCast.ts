@@ -149,7 +149,7 @@ function applyFovToRange(
         }
     });
     return inFovCells;
-}
+} 
 
 export function applyFovToGroundAttack(
     origin: Position,
@@ -161,14 +161,15 @@ export function applyFovToGroundAttack(
         if (!checkCell) {
             return true;
         }
-        const blocked = Boolean(checkCell.isWall || checkCell.entityId);
-        if (blocked) {
-            return true;
-        }
-        const notInRange = !inRange.some(
-            ({ position }) => position.x === x && position.y === y
-        );
-        return notInRange;
+        return Boolean(checkCell.isWall || checkCell.entityId);
+        // const blocked = Boolean(checkCell.isWall || checkCell.entityId);
+        // if (blocked) {
+        //     return true;
+        // }
+        // const notInRange = !inRange.some(
+        //     ({ position }) => position.x === x && position.y === y
+        // );
+        //return notInRange;
     });
 }
 
