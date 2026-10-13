@@ -293,10 +293,10 @@ export class AttackService {
             }
         }
         if (action.level === ActionLevel.GROUND) {
-            return applyFovToGroundAttack(start, result, board);
+            return applyFovToGroundAttack(start, result, board, action.range.max);
         }
         if (action.level === ActionLevel.UNDERGROUND) {
-            return applyFovToUndergroundAttack(start, result, board);
+            return applyFovToUndergroundAttack(start, result, board, action.range.max);
         }
         return result;
     }
