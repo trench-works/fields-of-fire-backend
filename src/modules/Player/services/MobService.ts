@@ -59,7 +59,6 @@ export class MobService implements AsyncResolver {
         }
         let didAction = true;
         while (didAction) {
-            this.logger.debug("Mob calculating a turn");
             const animations: GameEventAnimation[] = [];
             didAction = false;
 

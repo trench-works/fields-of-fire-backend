@@ -270,6 +270,9 @@ export class WsController<
                 }
                 // if user with payload is authorized
                 try {
+                    this.logger.log(
+                        `Incoming request on topic ${JSON.stringify(key)} on Action "${actionId}" for User ${user.id}`
+                    );
                     const result = await handler.listener(listenerOptions);
                     if (result) {
                         this.socketManager.send(socket, result);

@@ -154,8 +154,6 @@ export class PlayerActionService {
         playerId: string,
         target: Position
     ): Promise<void | SocketError | PlayerCancelAction> {
-        this.logger.log("PlayerActionService action method called");
-
         const precheckResult = await this.checkBeforeAction(
             actionId,
             gameId,
@@ -236,7 +234,7 @@ export class PlayerActionService {
                 );
                 break;
             default:
-                this.logger.error("Unknown action ID");
+                this.logger.error("Unknown action ID " + actionId);
         }
         this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
         return result;
@@ -352,10 +350,6 @@ export class PlayerActionService {
 
         //to finalize
         playerEntity.stats.energy -= action.cost;
-
-        this.logger.log(
-            `Player ${playerEntity.id} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
-        );
         this.animationService.animate(
             game,
             playerEntity,
@@ -523,7 +517,6 @@ export class PlayerActionService {
         destination: Cell
     ) {
         const targetEntities = this.getAttackTarget(game, action, destination);
-        this.logger.debug(`action : ${JSON.stringify(action)}`);
 
         const targets: AttackTarget[] = targetEntities.map<AttackTarget>(
             (entity) => {

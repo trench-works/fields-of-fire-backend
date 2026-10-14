@@ -82,12 +82,10 @@ export class PlayerController extends WsController<
 
     async action({
         key,
-        user,
         payload,
     }: WsListenerOptions<PlayerKey, PlayerAction>): Promise<
         PlayerCancelAction | SingleClientOutputError
     > {
-        this.logger.debug("payload received:", key, user, payload);
         return await this.playerActionService.action(
             payload.actionId,
             key.gameId,

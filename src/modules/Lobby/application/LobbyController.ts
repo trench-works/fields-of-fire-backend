@@ -115,7 +115,6 @@ export class LobbyController extends WsController<
         LobbyKeys,
         ChangeClass
     >): Promise<void | SingleClientOutputError> {
-        this.logger.debug(`the key is ${lobbyId}`);
         const lobby = await this.lobbyPlayerService.changeClass(
             lobbyId,
             user.id,
@@ -133,13 +132,11 @@ export class LobbyController extends WsController<
         LobbyKeys,
         PlayerReady
     >): Promise<void | SingleClientOutputError> {
-        this.logger.debug(`the key is ${lobbyId}`);
         const lobby = await this.lobbyPlayerService.setLobbyPlayerReady(
             lobbyId,
             playerId
         );
         if (lobby instanceof NotFoundError || !lobby) {
-            this.logger.error(`hendlesetRdy went wrong ${lobby}`);
             return lobby;
         }
     }

@@ -30,7 +30,6 @@ export class BoostService {
                         entity.effects.push({ ...effect });
                     }
                 }
-                this.logger.log("will apply boosts", boost.boosts);
                 // Applique immédiatement sur stats pour ce combat
                 entity.stats = Stats.add(entity.stats, ...boost.boosts);
 

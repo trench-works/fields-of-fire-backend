@@ -26,9 +26,6 @@ export class LobbyPlayerService {
     ): Promise<Lobby | NotFoundError> {
         const lobby = await this.lobbyDataManager.getLobby(lobbyId);
         if (lobby instanceof NotFoundError) {
-            this.logger.error(
-                `error on removing ${JSON.stringify(userId)} to ${JSON.stringify(lobbyId)} `
-            );
             return lobby;
         }
         const playerTeam = lobby.teams.find((team) =>
@@ -55,9 +52,6 @@ export class LobbyPlayerService {
     ): Promise<Lobby | NotFoundError> {
         const lobby = await this.lobbyDataManager.getLobby(lobbyId);
         if (lobby instanceof NotFoundError) {
-            this.logger.error(
-                `error on changing ${JSON.stringify(classId)} for ${JSON.stringify(userId)} to ${JSON.stringify(lobbyId)} `
-            );
             return lobby;
         }
 
@@ -76,9 +70,6 @@ export class LobbyPlayerService {
     ): Promise<Lobby | SocketError> {
         const lobby = await this.lobbyDataManager.get(lobbyId);
         if (!lobby) {
-            this.logger.error(
-                `error on adding ${JSON.stringify(userId)} to ${JSON.stringify(lobbyId)} `
-            );
             return new NotFoundError();
         }
         const currentPlayer = lobby.teams
@@ -103,21 +94,15 @@ export class LobbyPlayerService {
         });
         await this.lobbyService.onLobbiesUpdate(lobby);
         await this.lobbyWebSocketManager.emitLobbyUpdate(lobby);
-        this.logger.log(lobby.teams[0].players);
         return lobby;
     }
 
     async setLobbyPlayerReady(lobbyId: string, playerId: string) {
-        this.logger.log(`Player ${playerId} is ready in ${lobbyId}`);
         const lobby = await this.lobbyDataManager.get(lobbyId);
         if (!lobby) {
-            this.logger.error(`setLobbyPlayer rdy couldn't find lobby`);
             return;
         }
         if (lobby.playerReady.includes(playerId)) {
-            this.logger.error(
-                `setLobbyPlayer already as ${playerId} in ${JSON.stringify(lobby.playerReady)}`
-            );
             return;
         }
 

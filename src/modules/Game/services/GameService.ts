@@ -98,7 +98,6 @@ export class GameService {
                 npcIds: [],
                 entitiesIds: [],
             };
-            this.logger.log(team.players);
             for (const lobbyPlayer of team.players) {
                 const entityId = Id.get();
                 const playerCell = await this.placeEntity(entityId, plateau);

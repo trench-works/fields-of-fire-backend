@@ -83,14 +83,12 @@ export class LobbyService {
         const player = lobby.teams
             .flatMap((team) => team.players)
             .find((player) => player.userId === userId);
-        this.logger.log(lobby.teams);
         lobby.teams = lobby.teams.map((team) => {
             team.players = team.players.filter(
                 (teamPlayer) => teamPlayer.playerId !== player?.playerId
             );
             return team;
         });
-        this.logger.log(lobby.teams);
         const newTeam = lobby.teams[index];
         if (player) {
             newTeam.players.push(player);

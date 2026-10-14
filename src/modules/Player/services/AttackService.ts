@@ -39,15 +39,11 @@ export class AttackService {
             case ActionType.MELEE:
                 {
                     statBonus += attackerStats.strength / 10;
-                    this.logger.debug(
-                        `Calculated : ${statBonus} because strength = ${attacker.stats!.strength}`
-                    );
                 }
                 break;
             case ActionType.RANGED:
                 {
                     statBonus += attackerStats.precision / 10;
-                    this.logger.debug("range : ", statBonus);
                 }
                 break;
         }
@@ -67,7 +63,7 @@ export class AttackService {
 
             //Crit Logik
             const critRoll = Ran.int(100);
-            const critChanceBuff = attackerStats.critical
+            const critChanceBuff = attackerStats.critical;
             const critDammageBuff = attacker.effects.filter(
                 (e) => e.action === EffectAction.CRIT_DAMMAGE
             ).length;
@@ -198,9 +194,6 @@ export class AttackService {
 
         //manage effect
         if ((action.effectList?.length ?? 0) > 0) {
-            this.logger.debug(
-                `action.effectList : ${JSON.stringify(action.effectList)}`
-            );
             for (const effect of action.effectList!) {
                 this.applyEffect(attacker.id, target, effect);
             }
@@ -208,7 +201,6 @@ export class AttackService {
         }
 
         if (action.selfEffectList) {
-            this.logger.debug(`action.effectList : ${action.effectList}`);
             for (const effect of action.selfEffectList) {
                 this.applyEffect(attacker.id, attacker, effect);
             }
@@ -219,10 +211,8 @@ export class AttackService {
 
     applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
         if (!target.stats) {
-            this.logger.error("Target entity has no stats");
             return;
         }
-        this.logger.log(`target is ${JSON.stringify(target)}`);
         const effectCopy = { ...effect };
         if (caster) {
             effectCopy.author = caster;
@@ -293,10 +283,20 @@ export class AttackService {
             }
         }
         if (action.level === ActionLevel.GROUND) {
-            return applyFovToGroundAttack(start, result, board, action.range.max);
+            return applyFovToGroundAttack(
+                start,
+                result,
+                board,
+                action.range.max
+            );
         }
         if (action.level === ActionLevel.UNDERGROUND) {
-            return applyFovToUndergroundAttack(start, result, board, action.range.max);
+            return applyFovToUndergroundAttack(
+                start,
+                result,
+                board,
+                action.range.max
+            );
         }
         return result;
     }

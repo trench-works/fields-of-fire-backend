@@ -23,7 +23,7 @@ export class PlayerService {
     ) {
         await this.gameDataLocker.waitLock(gameId); //WAIT FOR DATA IS UNLOCK
         this.gameDataLocker.lock(gameId); //LOCK THE GAME ID
-        this.logger.log(`Player ${playerId} chose boost ${boostId}`);
+
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
             this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
@@ -42,20 +42,11 @@ export class PlayerService {
             const entity = game.entities.find(
                 (entity) => entity.id === player.entityId
             )!;
-            this.logger.debug(
-                `Player ${playerId} has stats ${JSON.stringify(entity.stats)}`
-            );
             await this.boostService.applyBoost(entity, boostId);
-
-            this.logger.debug(
-                `Player ${playerId} has stats ${JSON.stringify(entity.stats)} after booost`
-            );
         }
 
         await this.gameDataManager.set(gameId, game);
-        this.logger.log(
-            ` players : ${game.players.length}, readiz : ${game.readyPlayers.length}`
-        );
+
         this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
         if (game.players.length === game.readyPlayers.length) {
             this.gameService.newGameFromGame(game.id);
