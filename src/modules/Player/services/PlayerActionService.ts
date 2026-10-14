@@ -7,6 +7,7 @@ import { Effect } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
 import { Cell, CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
+import { GameDataLocker } from "../../Game/services/GameDataLocker";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { Stats } from "../../Stat/data/Stats";
@@ -65,6 +66,8 @@ export class PlayerActionService {
     private readonly animationService!: ActioAnimationService;
     @Provide(InvocationService)
     private readonly invocationService!: InvocationService;
+    @Provide(GameDataLocker)
+    private readonly gameDataLocker!: GameDataLocker;
 
     async finishTurn(
         gameId: string,
@@ -91,10 +94,13 @@ export class PlayerActionService {
         playerId: string,
         target: { x: number; y: number }
     ): Promise<void | SocketError | PlayerCancelAction> {
+        await this.gameDataLocker.waitLock(gameId); //WAIT FOR DATA IS UNLOCK
+        this.gameDataLocker.lock(gameId); //LOCK THE GAME ID
         this.logger.log("PlayerActionService action method called");
 
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
+            this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
             return new SocketError("Game not found");
         }
         const destination = game.plateau[target.x][target.y];
@@ -103,18 +109,32 @@ export class PlayerActionService {
             (e) => e.id === player!.entityId
         );
         if (!playerEntity) {
+            this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
             return new SocketError("Entity not found");
+        }
+        if (playerEntity.id !== game.playerTurns[0]) {
+            this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
+            return new SocketError("Not player turn");
         }
 
         const listActions = await this.actionRepository.list();
         const action = listActions.find((a) => a.id === actionId);
         if (!action) {
+            this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
             return new SocketError("Action not found");
         }
 
+        let result: void | SocketError | PlayerCancelAction = undefined;
+
         switch (actionId) {
             case PlayerActionId.WALK:
-                return await this.move(game, player, playerEntity, destination);
+                result = await this.move(
+                    game,
+                    player,
+                    playerEntity,
+                    destination
+                );
+                break;
             case PlayerActionId.AMPUTATE:
             case PlayerActionId.ARTILLERY_SUPPORT:
             case PlayerActionId.BAYONET:
@@ -123,44 +143,50 @@ export class PlayerActionService {
             case PlayerActionId.SABER:
             case PlayerActionId.BREAK:
             case PlayerActionId.INTIMIDATION:
-                return await this.attack(
+                result = await this.attack(
                     game,
                     playerEntity,
                     action,
                     destination
                 );
+                break;
             case PlayerActionId.PROVOK:
             case PlayerActionId.DOPAGE:
             case PlayerActionId.SNEAKY:
             case PlayerActionId.FIGHTING_DRUG:
             case PlayerActionId.CHARGE:
-                return await this.boost(
+                result = await this.boost(
                     game,
                     player,
                     playerEntity,
                     action,
                     destination
                 );
+                break;
             case PlayerActionId.BARRICADE:
-                return await this.invocationService.createInvocation(
+                result = await this.invocationService.createInvocation(
                     game,
                     playerEntity,
                     action,
                     destination.position
                 );
+                break;
             case PlayerActionId.SHIELD_RUSH:
-                return await this.attackAndDash(
+                result = await this.attackAndDash(
                     game,
                     playerEntity,
                     action,
                     destination
                 );
+                break;
             default:
                 this.logger.error("Unknown action ID");
         }
+        this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
+        return result;
     }
 
-    async boost(
+    private async boost(
         game: Game,
         player: Player,
         playerEntity: Entity,
@@ -202,7 +228,7 @@ export class PlayerActionService {
         await this.gameDataManager.set(game.id, game);
     }
 
-    async move(
+    private async move(
         game: Game,
         player: Player,
         playerEntity: Entity,
@@ -253,7 +279,7 @@ export class PlayerActionService {
         ]);
     }
 
-    async attack(
+    private async attack(
         game: Game,
         playerEntity: Entity,
         action: Action,
@@ -287,7 +313,7 @@ export class PlayerActionService {
         await this.gameTurnService.detectGameEnd(game);
     }
 
-    async attackAndDash(
+    private async attackAndDash(
         game: Game,
         playerEntity: Entity,
         action: Action,
@@ -331,11 +357,11 @@ export class PlayerActionService {
         await this.gameTurnService.detectGameEnd(game);
     }
 
-    checkMoveDestination(cell: Cell): boolean {
+    private checkMoveDestination(cell: Cell): boolean {
         return Boolean(!cell.entityId && !cell.isHole && !cell.isWall);
     }
 
-    getTarget(game: Game, action: Action, destination: Cell): Entity[] {
+    private getTarget(game: Game, action: Action, destination: Cell): Entity[] {
         const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
             action,
             game,
@@ -344,11 +370,11 @@ export class PlayerActionService {
         return targetEntity;
     }
 
-    getAttackTarget(game: Game, action: Action, destination: Cell) {
+    private getAttackTarget(game: Game, action: Action, destination: Cell) {
         return this.getTarget(game, action, destination);
     }
 
-    getBoostTarget(
+    private getBoostTarget(
         game: Game,
         playerEntity: Entity,
         action: Action,
@@ -359,7 +385,11 @@ export class PlayerActionService {
         );
     }
 
-    checkIfAllowed(playerEntity: Entity, action: Action, destination: Cell) {
+    private checkIfAllowed(
+        playerEntity: Entity,
+        action: Action,
+        destination: Cell
+    ) {
         if (Stats.fromEntity(playerEntity).energy < action.cost) {
             return {
                 actionId: PlayerOutputActions.CANCEL_ACTION,
@@ -381,7 +411,7 @@ export class PlayerActionService {
         }
     }
 
-    checkRange(
+    private checkRange(
         playerEntity: Entity,
         action: Action,
         destination: Cell
@@ -430,7 +460,7 @@ export class PlayerActionService {
         }
     }
 
-    dammageTargets(
+    private dammageTargets(
         game: Game,
         playerEntity: Entity,
         action: Action,
