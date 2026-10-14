@@ -88,14 +88,38 @@ export class PlayerActionService {
         this.gameTurnService.finishTurn(game.id);
     }
 
-    async action(
+    private isActionPossible(action: Action, entity: Entity): boolean {
+        const stats = Stats.fromEntity(entity);
+        switch (action.id) {
+            case "WALK":
+                if (!stats.mouvement) {
+                    return false;
+                }
+                break;
+            default:
+                if (stats.energy < action.cost) {
+                    return false;
+                }
+                break;
+        }
+        return true;
+    }
+
+    private async checkBeforeAction(
         actionId: PlayerActionId,
         gameId: string,
         playerId: string,
-        target: { x: number; y: number }
-    ): Promise<void | SocketError | PlayerCancelAction> {
-        this.logger.log("PlayerActionService action method called");
-
+        target: Position
+    ): Promise<
+        | {
+              game: Game;
+              player: Player;
+              playerEntity: Entity;
+              destination: Cell;
+              action: Action;
+          }
+        | SocketError
+    > {
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
             return new SocketError("Game not found");
@@ -118,8 +142,43 @@ export class PlayerActionService {
             return new SocketError("Action not found");
         }
 
+        if (!this.isActionPossible(action, playerEntity)) {
+            return new SocketError("Can't do this action");
+        }
+        return { game, player, playerEntity, destination, action };
+    }
+
+    async action(
+        actionId: PlayerActionId,
+        gameId: string,
+        playerId: string,
+        target: Position
+    ): Promise<void | SocketError | PlayerCancelAction> {
+        this.logger.log("PlayerActionService action method called");
+
+        const precheckResult = await this.checkBeforeAction(
+            actionId,
+            gameId,
+            playerId,
+            target
+        );
+        if (precheckResult instanceof SocketError) {
+            return precheckResult;
+        }
+
         await this.gameDataLocker.waitLock(gameId); //WAIT FOR DATA IS UNLOCK
         this.gameDataLocker.lock(gameId); //LOCK THE GAME ID
+
+        const checkResult = await this.checkBeforeAction(
+            actionId,
+            gameId,
+            playerId,
+            target
+        );
+        if (checkResult instanceof SocketError) {
+            return checkResult;
+        }
+        const { game, player, playerEntity, destination, action } = checkResult;
 
         let result: void | SocketError | PlayerCancelAction = undefined;
 
