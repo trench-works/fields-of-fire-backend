@@ -94,13 +94,10 @@ export class PlayerActionService {
         playerId: string,
         target: { x: number; y: number }
     ): Promise<void | SocketError | PlayerCancelAction> {
-        await this.gameDataLocker.waitLock(gameId); //WAIT FOR DATA IS UNLOCK
-        this.gameDataLocker.lock(gameId); //LOCK THE GAME ID
         this.logger.log("PlayerActionService action method called");
 
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
-            this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
             return new SocketError("Game not found");
         }
         const destination = game.plateau[target.x][target.y];
@@ -109,20 +106,20 @@ export class PlayerActionService {
             (e) => e.id === player!.entityId
         );
         if (!playerEntity) {
-            this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
             return new SocketError("Entity not found");
         }
         if (playerEntity.id !== game.playerTurns[0]) {
-            this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
             return new SocketError("Not player turn");
         }
 
         const listActions = await this.actionRepository.list();
         const action = listActions.find((a) => a.id === actionId);
         if (!action) {
-            this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
             return new SocketError("Action not found");
         }
+
+        await this.gameDataLocker.waitLock(gameId); //WAIT FOR DATA IS UNLOCK
+        this.gameDataLocker.lock(gameId); //LOCK THE GAME ID
 
         let result: void | SocketError | PlayerCancelAction = undefined;
 
