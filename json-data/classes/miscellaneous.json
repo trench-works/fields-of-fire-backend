@@ -11,6 +11,8 @@
             "armor": 0,
             "initiative": 0,
             "dodging": 0,
+            "intelligence":0,
+            "critical":0,
             "energy": 0,
             "mouvement": 0,
             "totalEnergy": 0,
