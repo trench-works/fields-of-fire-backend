@@ -78,9 +78,7 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
                 }
             }
         }
-        if (note > 0) {
-            pushEval({ note, evaluated: { action, position } });
-        }
+        pushEval({ note, evaluated: { action, position } });
     }
 
     protected evaluateAttack(
@@ -197,10 +195,13 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
                 target
             );
             if (isSameTeam(target, this.entity)) {
+                // Si la target est un allié
                 if (isActionHeal(action)) {
                     if (isFullLife(targetStats)) {
+                        // Si l'action est un heal et que la target est full life
                         note = 0;
                     } else {
+                        // Si l'action est un heal et que la target n'est pas full life
                         note +=
                             -(defenserDamage / action.cost / 3) -
                             attackerDamage;
@@ -212,13 +213,16 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
                         }
                     }
                 } else {
+                    // Si l'action est une attaque ou un boost quelconque
                     note += -(defenserDamage / action.cost) - attackerDamage;
                     note +=
                         -((defenserMalus * 5) / action.cost) +
                         attackerBonus * 5;
                 }
             } else {
+                // Si la target est un ennemi
                 if (target.isPlaying) {
+                    // Si la target est une entité capable de faire des actions
                     note += defenserDamage / action.cost - attackerDamage;
                     note +=
                         (defenserMalus * 5) / action.cost + attackerBonus * 5;
@@ -226,6 +230,7 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
                         note -= 10;
                     }
                 } else {
+                    // Si la target est une entité qui ne bouge pas, barricade par exemple
                     note += defenserDamage / action.cost / 6 - attackerDamage;
                     note +=
                         (defenserMalus * 5) / action.cost / 6 +
@@ -233,9 +238,7 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
                 }
             }
         }
-        if (note > 0) {
-            pushEval({ note, evaluated: { action, position, targets } });
-        }
+        pushEval({ note, evaluated: { action, position, targets } });
     }
 }
 
