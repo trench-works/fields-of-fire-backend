@@ -62,7 +62,7 @@ export class MobService implements AsyncResolver {
             const animations: GameEventAnimation[] = [];
             didAction = false;
 
-            const evaluator = new ActionEvaluator(
+            const evaluator = await new ActionEvaluator(
                 entity,
                 charClass.actionList,
                 game,
