@@ -45,6 +45,7 @@ export class InvocationService {
                 position,
                 stats: charClass.stats,
                 effects: [],
+                boosts: [],
                 dead: false,
                 isInvocation: true,
                 isPlaying: charClass.isPlaying,
