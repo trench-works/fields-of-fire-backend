@@ -4,7 +4,7 @@ export type Evaluation<Evaluated extends object> = {
 };
 
 export abstract class Evaluator<T extends object, Evaluated extends object> {
-    evaluations: Evaluation<Evaluated>[];
+    protected evaluations: Evaluation<Evaluated>[];
 
     constructor(public readonly values: T[]) {
         this.evaluations = [];
@@ -20,6 +20,14 @@ export abstract class Evaluator<T extends object, Evaluated extends object> {
             )
         );
         return this;
+    }
+
+    getPositives(): Evaluation<Evaluated>[] {
+        return this.evaluations.filter((evaluation) => evaluation.note > 0);
+    }
+
+    getEvaluations(): Evaluation<Evaluated>[] {
+        return this.evaluations;
     }
 
     getBest(): Evaluated | null {

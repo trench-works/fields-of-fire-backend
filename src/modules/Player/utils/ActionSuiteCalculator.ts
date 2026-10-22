@@ -3,7 +3,6 @@ import { Position, PositionUtils } from "../../../game-lib";
 import { ActionType } from "../../Action/data/Action";
 import { CharacterClass } from "../../CharacterClass/data/CharacterClass";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
-import { Entity } from "../../Game/data/Entity";
 import { CellAStar, Game } from "../../Game/data/Game";
 import { AttackService } from "../services/AttackService";
 import { MoveService } from "../services/MoveService";
@@ -42,9 +41,12 @@ export class ActionSuiteCalculator {
     private applyAction(
         action: EvaluatedAction,
         game: Game,
-        entity: Entity
+        entityId: string
     ): Game {
         const myGame = MyObject.deepClone(game);
+        const entity = myGame.entities.find(
+            (entity) => entity.id === entityId
+        )!;
         if (
             action.action.actionType === ActionType.MOUVEMENT &&
             !PositionUtils.equal(entity.position, action.position)
@@ -99,23 +101,52 @@ export class ActionSuiteCalculator {
             this.attackService,
             this.moveService
         ).evaluate();
-        if (!evaluator.evaluations.length) {
+        const evaluations = evaluator.getPositives();
+        if (!evaluations.length) {
             return undefined;
         }
-        return evaluator.evaluations.map((evaluation) => ({
+        return evaluations.map((evaluation) => ({
             ...evaluation,
-            game: this.applyAction(evaluation.evaluated, game, entity),
+            game: this.applyAction(evaluation.evaluated, game, entity.id),
         }));
+    }
+
+    private compressActions(
+        actions: EvaluatedAction[] | null
+    ): EvaluatedAction[] | null {
+        if (!actions?.length) {
+            return null;
+        }
+        const compressedActions: EvaluatedAction[] = [];
+        for (const action of actions) {
+            const latestAction = compressedActions.at(-1);
+            if (
+                !latestAction ||
+                !(
+                    latestAction.action.actionType === ActionType.MOUVEMENT &&
+                    action.action.actionType === ActionType.MOUVEMENT
+                )
+            ) {
+                compressedActions.push(action);
+                continue;
+            }
+            latestAction.position = action.position;
+        }
+        return actions;
     }
 
     private async getBranches(
         branch: ActionBranch,
-        charClass: CharacterClass
+        charClass: CharacterClass,
+        depth = 0
     ): Promise<ActionBranch> {
+        console.log(new Date().toISOString() + " DEPTH : " + depth);
         const nextSteps = await this.getNextSteps(branch.game, charClass);
         if (nextSteps) {
             branch.branches = await Promise.all(
-                nextSteps.map(async (step) => this.getBranches(step, charClass))
+                nextSteps.map(async (step) =>
+                    this.getBranches(step, charClass, depth + 1)
+                )
             );
         }
         return branch;
@@ -162,6 +193,6 @@ export class ActionSuiteCalculator {
 
         const evaluator = await new ActionSuiteEvaluator(unnested).evaluate();
 
-        return evaluator.getBest() ?? undefined;
+        return this.compressActions(evaluator.getBest()) ?? undefined;
     }
 }
