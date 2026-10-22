@@ -1,3 +1,4 @@
+import { Boost } from "../../Effect/data/Boost";
 import { Effect } from "../../Effect/data/Effect";
 import { Stats } from "../../Stat/data/Stats";
 
@@ -21,6 +22,7 @@ export class Entity {
 
     stats!: Stats;
     effects!: Effect[];
+    boosts!: Boost[];
 
     dead!: boolean;
     isInvocation!: boolean;
