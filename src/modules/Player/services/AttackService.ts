@@ -209,7 +209,7 @@ export class AttackService {
         return defenserDamage;
     }
 
-    applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
+    applyEffect(caster: string, target: Entity, effect: Effect) {
         if (!target.stats) {
             return;
         }

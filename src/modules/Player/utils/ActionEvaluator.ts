@@ -1,6 +1,7 @@
-import { Evaluation, Evaluator } from "../../../core";
+import { Evaluation, Evaluator, MyMath, MyObject } from "../../../core";
 import { Position, PositionUtils } from "../../../game-lib";
 import { Action, ActionType, ActionUtils } from "../../Action/data/Action";
+import { Effect } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
 import { Game } from "../../Game/data/Game";
 import { Stats } from "../../Stat/data/Stats";
@@ -24,10 +25,10 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
         super(actions);
     }
 
-    protected evaluateValue(
+    protected async evaluateValue(
         action: Action,
         pushEval: (evaluation: Evaluation<EvaluatedAction>) => void
-    ): void {
+    ): Promise<void> {
         if (action.actionType === ActionType.MOUVEMENT) {
             this.evaluateMove(action, pushEval);
         } else {
@@ -77,9 +78,7 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
                 }
             }
         }
-        if (note > 0) {
-            pushEval({ note, evaluated: { action, position } });
-        }
+        pushEval({ note, evaluated: { action, position } });
     }
 
     protected evaluateAttack(
@@ -99,14 +98,65 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
         }
     }
 
+    protected getEffectStatNote(stats: Partial<Stats>): number {
+        let bonus = 0;
+        for (const key of MyObject.keys(stats)) {
+            if (
+                [
+                    "precision",
+                    "strength",
+                    "armor",
+                    "initiative",
+                    "dodging",
+                    "intelligence",
+                    "critical",
+                ].includes(key)
+            ) {
+                bonus += (stats[key] ?? 0) / 10;
+            } else if (["life", "totalLife"].includes(key)) {
+                bonus += (stats[key] ?? 0) / 5;
+            } else if (
+                [
+                    "energy",
+                    "mouvement",
+                    "totalEnergy",
+                    "totalMouvement",
+                ].includes(key)
+            ) {
+                bonus += stats[key] ?? 0;
+            }
+        }
+        return bonus;
+    }
+
+    protected getEffectNote(effect: Effect, target: Entity): number {
+        let bonus = 0;
+        // calculate instant bonus
+        bonus += this.getEffectStatNote(effect.instant);
+        // calculate duration bonus
+        bonus +=
+            this.getEffectStatNote(effect.modifier) *
+            (effect.duration ?? Number.MAX_SAFE_INTEGER);
+        return bonus;
+    }
+
     protected calculateEffectsNote(
         action: Action,
+        self: Entity,
         target: Entity
     ): { attackerBonus: number; defenserMalus: number } {
-        /**
-         * TODO: determinate note selon malus et bonus
-         */
-        return { attackerBonus: 0, defenserMalus: 0 };
+        return {
+            attackerBonus: MyMath.sum(
+                (action.selfEffectList ?? []).map((effect) =>
+                    this.getEffectNote(effect, self)
+                )
+            ),
+            defenserMalus: MyMath.sum(
+                (action.effectList ?? []).map((effect) =>
+                    this.getEffectNote(effect, target)
+                )
+            ),
+        };
     }
 
     protected calculateAttackNote(
@@ -141,42 +191,54 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
                 );
             const { attackerBonus, defenserMalus } = this.calculateEffectsNote(
                 action,
+                this.entity,
                 target
             );
             if (isSameTeam(target, this.entity)) {
+                // Si la target est un allié
                 if (isActionHeal(action)) {
                     if (isFullLife(targetStats)) {
+                        // Si l'action est un heal et que la target est full life
                         note = 0;
                     } else {
+                        // Si l'action est un heal et que la target n'est pas full life
                         note +=
                             -(defenserDamage / action.cost / 3) -
                             attackerDamage;
                         note +=
-                            -(defenserMalus / action.cost / 3) + attackerBonus;
+                            -((defenserMalus * 5) / action.cost / 3) +
+                            attackerBonus * 5;
                         if (isLowLife(targetStats)) {
                             note += 5;
                         }
                     }
                 } else {
+                    // Si l'action est une attaque ou un boost quelconque
                     note += -(defenserDamage / action.cost) - attackerDamage;
-                    note += -(defenserMalus / action.cost) + attackerBonus;
+                    note +=
+                        -((defenserMalus * 5) / action.cost) +
+                        attackerBonus * 5;
                 }
             } else {
+                // Si la target est un ennemi
                 if (target.isPlaying) {
+                    // Si la target est une entité capable de faire des actions
                     note += defenserDamage / action.cost - attackerDamage;
-                    note += defenserMalus / action.cost + attackerBonus;
+                    note +=
+                        (defenserMalus * 5) / action.cost + attackerBonus * 5;
                     if (isLowLife(attackerStats)) {
                         note -= 10;
                     }
                 } else {
+                    // Si la target est une entité qui ne bouge pas, barricade par exemple
                     note += defenserDamage / action.cost / 6 - attackerDamage;
-                    note += defenserMalus / action.cost / 6 + attackerBonus;
+                    note +=
+                        (defenserMalus * 5) / action.cost / 6 +
+                        attackerBonus * 5;
                 }
             }
         }
-        if (note > 0) {
-            pushEval({ note, evaluated: { action, position, targets } });
-        }
+        pushEval({ note, evaluated: { action, position, targets } });
     }
 }
 
