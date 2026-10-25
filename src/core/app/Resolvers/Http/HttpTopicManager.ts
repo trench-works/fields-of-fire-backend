@@ -13,11 +13,12 @@ export class HttpTopicManager<
     ) {}
 
     async get(req: Request, res: Response): Promise<void> {
-        const { params, query } = req;
+        const { params, query, headers } = req;
         res.send(
             await this.handler.listener({
                 params,
                 query,
+                headers,
             })
         );
     }

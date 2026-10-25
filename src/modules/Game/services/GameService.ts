@@ -52,11 +52,14 @@ export class GameService {
     @Provide(MapService)
     private readonly mapService!: MapService;
 
-    async getPlayerCurrentGame(
+    async getPlayerGame(
+        gameId: string,
         userId: string
     ): Promise<JoinGameResponse | null> {
-        const game = (await this.gameDataManager.findAll()).find((game) =>
-            game.players.some((player) => player.userId === userId)
+        const game = (await this.gameDataManager.findAll()).find(
+            (game) =>
+                game.players.some((player) => player.userId === userId) &&
+                game.id === gameId
         );
         if (!game) {
             return null;
@@ -176,6 +179,7 @@ export class GameService {
         }
         const game: Game = {
             id: gameId,
+            name: lobby.name,
             mode: lobby.mode,
             creatorId: userId,
             plateau: plateau,

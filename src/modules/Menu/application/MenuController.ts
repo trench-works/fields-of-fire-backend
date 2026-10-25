@@ -3,15 +3,16 @@ import {
     Provide,
     WsListenerOptions,
     SingleClientOutputAction,
-    WsBaseListenerOptions,
     SocketError,
     HttpError,
+    NotFoundError,
 } from "../../../core";
 import { JoinGameResponse } from "../../Game/application/interfaces/JoinGameResponse";
 import { GameService } from "../../Game/services/GameService";
 import { LobbyService } from "../../Lobby/services/LobbyService";
 import { LobbyPlayerService } from "../../Lobby/services/LobbysPlayerService";
 import { MenuWebSocketManager } from "../web/MenuWebSocketManager";
+import { JoinGame } from "./interfaces/JoinGame";
 import { JoinLobby } from "./interfaces/JoinLobby";
 import { JoinLobbyResponse } from "./interfaces/JoinLobbyResponse";
 import {
@@ -44,27 +45,44 @@ export class MenuController extends WsController<
             payloadType: JoinLobby,
             responsePayloadType: JoinLobbyResponse,
         });
+        this.on(MenuInputActions.RECONNECT, this.reconnect.bind(this), {
+            payloadType: JoinGame,
+            responsePayloadType: JoinGameResponse,
+        });
         this.onSubscribe(this.onConnect.bind(this));
     }
 
-    async onConnect({
+    async reconnect({
         user: { id },
-    }: WsBaseListenerOptions<MenuKey>): Promise<void | SingleClientOutputAction<
-        JoinGameResponse | UpdateLobbyListResponse,
-        MenuReturnActions.RECONNECT | MenuReturnActions.UPDATE
+        payload: { gameId },
+    }: WsListenerOptions<
+        MenuKey,
+        JoinGame
+    >): Promise<void | SingleClientOutputAction<
+        JoinGameResponse,
+        MenuReturnActions.RECONNECT
     >> {
-        const game = await this.gameService.getPlayerCurrentGame(id);
-        if (game) {
-            return { actionId: MenuReturnActions.RECONNECT, payload: game };
-        } else {
-            const lobbies = await this.lobbyService.getLobbies();
-            return {
-                actionId: MenuReturnActions.UPDATE,
-                payload: {
-                    lobbies,
-                },
-            };
+        const game = await this.gameService.getPlayerGame(gameId, id);
+        if (!game) {
+            return new NotFoundError();
         }
+        return {
+            actionId: MenuReturnActions.RECONNECT,
+            payload: game,
+        };
+    }
+
+    async onConnect(): Promise<void | SingleClientOutputAction<
+        UpdateLobbyListResponse,
+        MenuReturnActions.UPDATE
+    >> {
+        const lobbies = await this.lobbyService.getLobbies();
+        return {
+            actionId: MenuReturnActions.UPDATE,
+            payload: {
+                lobbies,
+            },
+        };
     }
 
     async createLobby({
