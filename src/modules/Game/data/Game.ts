@@ -21,6 +21,7 @@ export enum GameMode {
 
 export type Game = {
     id: string;
+    name: string;
     mode: GameMode;
     creatorId: string;
     plateau: Cell[][];
