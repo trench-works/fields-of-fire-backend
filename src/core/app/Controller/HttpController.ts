@@ -9,6 +9,7 @@ export type GetListenerOptions<
 > = {
     params?: ParamObject;
     query?: QueryObject;
+    headers: Record<string, string>;
 };
 
 export type PostListenerOptions<
