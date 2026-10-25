@@ -12,7 +12,7 @@ import { CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
-import { ActionEvaluator } from "../utils/ActionEvaluator";
+import { ActionSuiteCalculator } from "../utils/ActionSuiteCalculator";
 import { AttackService } from "./AttackService";
 import { MoveService } from "./MoveService";
 
@@ -57,103 +57,95 @@ export class MobService implements AsyncResolver {
         if (!charClass) {
             return;
         }
-        let didAction = true;
-        while (didAction) {
-            const animations: GameEventAnimation[] = [];
-            didAction = false;
+        const actions = await new ActionSuiteCalculator(
+            this.classRepository,
+            this.attackService,
+            this.moveService
+        ).generate(game);
 
-            const evaluator = new ActionEvaluator(
-                entity,
-                charClass.actionList,
-                game,
-                this.attackService,
-                this.moveService
-            ).evaluate();
-            // evaluator.evaluations.forEach((evaluation) =>
-            //     console.log(
-            //         `${evaluation.evaluated.action.id} : ${JSON.stringify(evaluation.evaluated.position)} : ${evaluation.note}`
-            //     )
-            // );
-
-            const action = evaluator.getBest();
-            if (action) {
-                if (
-                    action.action.actionType === ActionType.MOUVEMENT &&
-                    !PositionUtils.equal(entity.position, action.position)
-                ) {
-                    didAction = true;
-                    const moves = new CellAStar().findPath(
-                        entity.position,
-                        action.position,
-                        game.plateau
-                    );
-                    const originalPosition = { ...entity.position };
-                    const movePath: Position[] = [{ ...entity.position }];
-                    while (entity.stats.mouvement > 0 && moves.length > 0) {
-                        game.plateau[entity.position.x][
-                            entity.position.y
-                        ].entityId = undefined;
-                        entity.position = PositionUtils.add(
-                            entity.position,
-                            moves[0]
-                        );
-                        movePath.push({ ...entity.position });
-                        game.plateau[entity.position.x][
-                            entity.position.y
-                        ].entityId = entity.id;
-                        entity.stats.mouvement--;
-                        moves.shift();
-                    }
+        if (actions) {
+            for (const action of actions) {
+                const animations: GameEventAnimation[] = [];
+                if (action) {
                     if (
-                        !PositionUtils.equal(originalPosition, entity.position)
+                        action.action.actionType === ActionType.MOUVEMENT &&
+                        !PositionUtils.equal(entity.position, action.position)
                     ) {
+                        const moves = new CellAStar().findPath(
+                            entity.position,
+                            action.position,
+                            game.plateau
+                        );
+                        const originalPosition = { ...entity.position };
+                        const movePath: Position[] = [{ ...entity.position }];
+                        while (entity.stats.mouvement > 0 && moves.length > 0) {
+                            game.plateau[entity.position.x][
+                                entity.position.y
+                            ].entityId = undefined;
+                            entity.position = PositionUtils.add(
+                                entity.position,
+                                moves[0]
+                            );
+                            movePath.push({ ...entity.position });
+                            game.plateau[entity.position.x][
+                                entity.position.y
+                            ].entityId = entity.id;
+                            entity.stats.mouvement--;
+                            moves.shift();
+                        }
+                        if (
+                            !PositionUtils.equal(
+                                originalPosition,
+                                entity.position
+                            )
+                        ) {
+                            animations.push({
+                                key: "move",
+                                data: {
+                                    entityId: entity.id,
+                                    path: movePath,
+                                },
+                            });
+                        }
+                    } else {
+                        entity.stats.energy -= action.action.cost;
+                        const hits: (Position & {
+                            damage: number;
+                        })[] = [];
+                        if (action?.targets) {
+                            for (const target of action?.targets ?? []) {
+                                const damage = this.attackService.applyDamage(
+                                    game,
+                                    action.action,
+                                    entity,
+                                    target
+                                );
+                                hits.push({ ...action.position, damage });
+                            }
+                        }
                         animations.push({
-                            key: "move",
+                            key: "attack",
                             data: {
                                 entityId: entity.id,
-                                path: movePath,
+                                actionId: action.action.id,
+                                origin: entity.position,
+                                target: action.position,
+                                hits,
                             },
                         });
+                        animations.push(
+                            ...this.gameTurnService.detectEntityDeath(game)
+                        );
                     }
-                } else {
-                    didAction = true;
-                    entity.stats.energy -= action.action.cost;
-                    const hits: (Position & {
-                        damage: number;
-                    })[] = [];
-                    if (action?.targets) {
-                        for (const target of action?.targets ?? []) {
-                            const damage = this.attackService.applyDamage(
-                                game,
-                                action.action,
-                                entity,
-                                target
-                            );
-                            hits.push({ ...action.position, damage });
-                        }
-                    }
-                    animations.push({
-                        key: "attack",
-                        data: {
-                            entityId: entity.id,
-                            actionId: action.action.id,
-                            origin: entity.position,
-                            target: action.position,
-                            hits,
-                        },
-                    });
-                    animations.push(
-                        ...this.gameTurnService.detectEntityDeath(game)
-                    );
                 }
-            }
 
-            // Update users display
-            await this.socketManager.emitUpdate(game, animations);
-            if (await this.gameTurnService.detectGameEnd(game)) {
-                return;
+                // Update users display
+                await this.socketManager.emitUpdate(game, animations);
+                if (await this.gameTurnService.detectGameEnd(game)) {
+                    return;
+                }
+                await this.gameDataManager.set(game.id, game);
             }
-            await this.gameDataManager.set(game.id, game);
         }
     }
 

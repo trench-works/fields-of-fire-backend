@@ -4,20 +4,30 @@ export type Evaluation<Evaluated extends object> = {
 };
 
 export abstract class Evaluator<T extends object, Evaluated extends object> {
-    evaluations: Evaluation<Evaluated>[];
+    protected evaluations: Evaluation<Evaluated>[];
 
     constructor(public readonly values: T[]) {
         this.evaluations = [];
     }
 
-    evaluate(): this {
+    async evaluate(): Promise<this> {
         this.evaluations = [];
-        for (const value of this.values) {
-            this.evaluateValue(value, (evaluation) =>
-                this.evaluations.push(evaluation)
-            );
-        }
+        await Promise.all(
+            this.values.map((value) =>
+                this.evaluateValue(value, (evaluation) =>
+                    this.evaluations.push(evaluation)
+                )
+            )
+        );
         return this;
+    }
+
+    getPositives(): Evaluation<Evaluated>[] {
+        return this.evaluations.filter((evaluation) => evaluation.note > 0);
+    }
+
+    getEvaluations(): Evaluation<Evaluated>[] {
+        return this.evaluations;
     }
 
     getBest(): Evaluated | null {
@@ -33,5 +43,5 @@ export abstract class Evaluator<T extends object, Evaluated extends object> {
     protected abstract evaluateValue(
         value: T,
         pushEvaluation: (evaluation: Evaluation<Evaluated>) => void
-    ): void;
+    ): Promise<void>;
 }

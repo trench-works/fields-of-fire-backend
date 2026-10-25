@@ -264,7 +264,11 @@ export class PlayerActionService {
             };
             if (action.effectList) {
                 for (const effect of action.effectList) {
-                    this.attackService.applyEffect(player.name, entity, effect);
+                    this.attackService.applyEffect(
+                        player.entityId,
+                        entity,
+                        effect
+                    );
                 }
                 target.effects = action.effectList;
             }
