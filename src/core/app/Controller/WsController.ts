@@ -5,7 +5,6 @@ import { Instantiable } from "../Types/Instantiable";
 import { validateSync, ValidationError } from "class-validator";
 import { IGuard, RessourceAccessLevel } from "../Providers/Guard";
 import { AccessRefused, SocketError } from "../../errors";
-import { UserInfos } from "../Types/UserInfos";
 import { WsManager } from "../Resolvers/WebSocket/WsManager";
 import {
     InputAction,
@@ -13,8 +12,9 @@ import {
     SingleClientOutputAction,
 } from "../../types/Action";
 import { Provide } from "../../decorators";
-import { Logger } from "../Providers";
+import { Logger, TokenService } from "../Providers";
 import { plainToInstance } from "class-transformer";
+import { PeregrinToken } from "../Types/Token";
 
 type WsControllerConfig<RessourceKeyObject extends Record<string, unknown>> = {
     topic: string;
@@ -91,7 +91,7 @@ export type WsBaseListenerOptions<
 > = {
     key: RessourceKeyObject;
     socket: WebSocket;
-    user: UserInfos;
+    token: PeregrinToken;
 };
 
 export type WsListenerOptions<
@@ -142,6 +142,7 @@ export class WsController<
     >;
 
     @Provide("Logger") protected logger!: Logger;
+    @Provide(TokenService) protected tokenService!: TokenService;
 
     constructor({
         topic,
@@ -216,13 +217,13 @@ export class WsController<
     private async handleMessage(
         socket: WebSocket,
         key: RessourceKeyObject,
-        user: UserInfos,
+        token: PeregrinToken,
         message: string
     ): Promise<void> {
         try {
             const decodedMessage = JSON.parse(message) as InputAction;
             let { payload } = decodedMessage;
-            const { actionId, token } = decodedMessage;
+            const { actionId } = decodedMessage;
             if (actionId === "ping") {
                 this.socketManager.send(socket, { actionId: "pong" });
                 return;
@@ -250,7 +251,7 @@ export class WsController<
                     payload,
                     key,
                     socket,
-                    user,
+                    token,
                 };
                 // payload validation
                 if (
@@ -272,11 +273,11 @@ export class WsController<
                 // if user with payload is authorized
                 try {
                     this.logger.log(
-                        `Incoming request on topic ${JSON.stringify(key)} on Action "${actionId}" for User ${user.id}`
+                        `Incoming request on topic ${JSON.stringify(key)} on Action "${actionId}" for User ${token.user.id}`
                     );
                     const result = await handler.listener(listenerOptions);
                     if (result) {
-                        this.socketManager.send(socket, { ...result, token }); //TODO: add token refreshing logic
+                        this.socketManager.send(socket, result);
                     }
                 } catch (err: unknown) {
                     this.socketManager.send(socket, err as SocketError);
@@ -291,7 +292,7 @@ export class WsController<
 
     async subscribe(
         socket: WebSocket,
-        { user, key }: { key: RessourceKeyObject; user: UserInfos }
+        { token, key }: { key: RessourceKeyObject; token: PeregrinToken }
     ): Promise<void | ValidationError[]> {
         if (key && Object.keys(key).length > 0 && this.config.key) {
             const keyDto = new this.config.key();
@@ -305,14 +306,14 @@ export class WsController<
         const listenerOptions: WsBaseListenerOptions<RessourceKeyObject> = {
             key,
             socket,
-            user,
+            token,
         };
-        this.socketManager.set(user.id, { socket, key });
+        this.socketManager.set(token.user.id, { socket, key });
         socket.on("message", (data) =>
-            this.handleMessage(socket, key, user, data.toString())
+            this.handleMessage(socket, key, token, data.toString())
         );
         socket.on("close", (): void => {
-            this.socketManager.unset(user.id);
+            this.socketManager.unset(token.user.id);
         });
         await this.send(socket, { actionId: "subscribed" });
         const results = await Promise.all(

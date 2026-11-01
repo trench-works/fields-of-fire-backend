@@ -3,6 +3,7 @@ import { WebSocket } from "ws";
 import { UserInfos } from "../../Types/UserInfos";
 import { validateSync, ValidationError } from "class-validator";
 import { InputAction } from "../../../types/Action";
+import { SocketTokenInvalid } from "../../../errors/ws/SocketTokenInvalid";
 
 type SubcribePayload<RessourceKeyObject> = {
     key: RessourceKeyObject;
@@ -40,14 +41,17 @@ export class WsTopicManager<
         const user = new UserInfos();
         Object.assign(user, payload.user);
         const validateUser = validateSync(user);
-        //TODO: verify as well that user is authenticated and authorized
         if (validateUser?.length) {
             socket.close(4000, JSON.stringify(validateUser));
             return;
         }
+        const token = this.tokenService.decode(user.token);
+        if (token instanceof Error) {
+            return new SocketTokenInvalid();
+        }
 
         const validations = this.controllers.map((controller) =>
-            controller.subscribe(socket, { key: payload.key, user })
+            controller.subscribe(socket, { key: payload.key, token })
         );
         const errors = await Promise.all(validations);
 
