@@ -4,7 +4,6 @@ import {
     WsListenerOptions,
     SingleClientOutputAction,
     SocketError,
-    HttpError,
     NotFoundError,
 } from "../../../core";
 import { JoinGameResponse } from "../../Game/application/interfaces/JoinGameResponse";
@@ -94,7 +93,7 @@ export class MenuController extends WsController<
         if (!lobby) {
             return;
         }
-        if (lobby instanceof HttpError) {
+        if (lobby instanceof SocketError) {
             return lobby;
         }
         return {

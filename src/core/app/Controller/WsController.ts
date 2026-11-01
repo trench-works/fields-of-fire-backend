@@ -108,6 +108,7 @@ type OnOptions<
     payloadType?: Instantiable<PayloadObject>;
     responsePayloadType?: Instantiable<PayloadResponseObject>;
     accessLevel?: RessourceAccessLevel;
+    authenticated?: boolean;
 };
 
 export class WsController<
@@ -221,7 +222,7 @@ export class WsController<
         try {
             const decodedMessage = JSON.parse(message) as InputAction;
             let { payload } = decodedMessage;
-            const { actionId } = decodedMessage;
+            const { actionId, token } = decodedMessage;
             if (actionId === "ping") {
                 this.socketManager.send(socket, { actionId: "pong" });
                 return;
@@ -275,7 +276,7 @@ export class WsController<
                     );
                     const result = await handler.listener(listenerOptions);
                     if (result) {
-                        this.socketManager.send(socket, result);
+                        this.socketManager.send(socket, { ...result, token }); //TODO: add token refreshing logic
                     }
                 } catch (err: unknown) {
                     this.socketManager.send(socket, err as SocketError);

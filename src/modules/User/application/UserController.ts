@@ -11,19 +11,25 @@ export class UserController extends HttpController {
 
     constructor() {
         super();
-        this.post("/authenticate", this.authenticate.bind(this));
-        this.post("/register", this.register.bind(this));
+        this.post("/authenticate", this.authenticate.bind(this), {
+            authenticated: false,
+        });
+        this.post("/register", this.register.bind(this), {
+            authenticated: false,
+        });
     }
 
     async authenticate({
         body,
+        res,
     }: PostListenerOptions<object, Authenticate>): Promise<User | HttpError> {
-        return await this.userService.authenticate(body);
+        return await this.userService.authenticate(body, res);
     }
 
     async register({
         body,
+        res,
     }: PostListenerOptions<object, Register>): Promise<User | HttpError> {
-        return await this.userService.register(body);
+        return await this.userService.register(body, res);
     }
 }

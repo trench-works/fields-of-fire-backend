@@ -1,10 +1,11 @@
-import { App, Logger } from "../..";
+import { App } from "../..";
 import { EnvObject } from "../Types/Env";
 
 export interface Resolver {
-  prepare(controllers: object[], logger: Logger): ResolverApplier;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prepare(controllers: object[], ...providers: any[]): ResolverApplier;
 }
 
 export interface ResolverApplier {
-  apply<Config extends EnvObject>(app: App<Config>): void;
+    apply<Config extends EnvObject>(app: App<Config>): void;
 }

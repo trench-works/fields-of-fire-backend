@@ -1,4 +1,4 @@
-import { WsController, Logger } from "../..";
+import { WsController, Logger, TokenService } from "../..";
 import { WebSocket } from "ws";
 import { UserInfos } from "../../Types/UserInfos";
 import { validateSync, ValidationError } from "class-validator";
@@ -16,6 +16,7 @@ export class WsTopicManager<
     constructor(
         private readonly controllers: WsController<RessourceKeyObject>[],
         private readonly logger: Logger,
+        private readonly tokenService: TokenService,
         private readonly topic: string
     ) {}
 

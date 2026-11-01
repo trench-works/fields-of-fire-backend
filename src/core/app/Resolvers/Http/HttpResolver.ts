@@ -1,21 +1,29 @@
-import { Logger } from "../../Providers";
+import { Logger, TokenService } from "../../Providers";
 import { HttpTopicManager } from "./HttpTopicManager";
 import { App } from "../../App";
 import { EnvObject } from "../../Types/Env";
 import { Resolver, ResolverApplier } from "../Resolver";
 import {
     GetHandler,
+    GetListenerOptions,
     HttpController,
     PostHandler,
+    PostListenerOptions,
 } from "../../Controller/HttpController";
 
 export class HttpResolver implements Resolver, ResolverApplier {
     private pathMappedGetHandlers: Map<string, GetHandler> = new Map();
     private pathMappedPostHandlers: Map<string, PostHandler> = new Map();
-    private logger: Logger | undefined;
+    private logger!: Logger;
+    private tokenService!: TokenService;
 
-    prepare(controllers: object[], logger: Logger): this {
+    prepare(
+        controllers: object[],
+        logger: Logger,
+        tokenService: TokenService
+    ): this {
         this.logger = logger;
+        this.tokenService = tokenService;
         for (const controller of controllers) {
             if (HttpController.isHttpController(controller)) {
                 for (const [
@@ -52,11 +60,19 @@ export class HttpResolver implements Resolver, ResolverApplier {
             throw new Error("Call prepare function before calling apply");
         }
         for (const [path, handler] of this.pathMappedGetHandlers.entries()) {
-            const pathManager = new HttpTopicManager(handler, this.logger);
+            const pathManager = new HttpTopicManager<GetListenerOptions>(
+                handler,
+                this.logger,
+                this.tokenService
+            );
             app.app.get(path, pathManager.get.bind(pathManager));
         }
         for (const [path, handler] of this.pathMappedPostHandlers.entries()) {
-            const pathManager = new HttpTopicManager(handler, this.logger);
+            const pathManager = new HttpTopicManager<PostListenerOptions>(
+                handler,
+                this.logger,
+                this.tokenService
+            );
             app.app.post(path, pathManager.post.bind(pathManager));
         }
     }
