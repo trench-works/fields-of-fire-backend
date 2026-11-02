@@ -1,24 +1,30 @@
-import { Hash, HttpError, Id, Provide } from "../../../core";
-import { User } from "../data/User";
+import { Hash, HttpError, Id, Provide, TokenService } from "../../../core";
 import { UserRepository } from "../data/UserRepository";
 import { Authenticate } from "../application/interfaces/Authenticate";
+import { AuthenticateUserResponse } from "../application/interfaces/AuthenticateUserResponse";
 
 export class UserService {
     @Provide(UserRepository)
     private readonly userRepository!: UserRepository;
+    @Provide(TokenService)
+    private readonly tokenService!: TokenService;
 
     async authenticate({
         username,
         password,
-    }: Authenticate): Promise<User | HttpError> {
-        const user = await this.userRepository.repository.findOne({
+    }: Authenticate): Promise<AuthenticateUserResponse | HttpError> {
+        const user = await this.userRepository.findOne({
             where: { username: username },
         });
         if (!user) {
             return new HttpError(400, "User doesnt exist");
         }
         if (await Hash.compare(password, user.password)) {
-            return this.userRepository.entityToRessource(user.dataValues);
+            return {
+                id: user.id,
+                username: user.username,
+                token: this.tokenService.encode({ user: { id: user.id } }),
+            };
         } else {
             return new HttpError(400, "Unable to authenticate");
         }
@@ -27,7 +33,7 @@ export class UserService {
     async register({
         username,
         password,
-    }: Authenticate): Promise<User | HttpError> {
+    }: Authenticate): Promise<AuthenticateUserResponse | HttpError> {
         const existingUser = (await this.userRepository.list()).find(
             (user) => user.username === username
         );
@@ -43,6 +49,10 @@ export class UserService {
         if (!newUser) {
             return new HttpError(400, "Couldnt create User");
         }
-        return newUser;
+        return {
+            id: newUser.id,
+            username: newUser.username,
+            token: this.tokenService.encode({ user: { id: newUser.id } }),
+        };
     }
 }

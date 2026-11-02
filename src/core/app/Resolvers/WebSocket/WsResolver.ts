@@ -1,14 +1,20 @@
-import { App, WsController, Logger } from "../..";
+import { App, WsController, Logger, TokenService } from "../..";
 import { EnvObject } from "../../Types/Env";
 import { Resolver, ResolverApplier } from "../Resolver";
 import { WsTopicManager } from "./WsTopicManager";
 
 export class WsResolver implements Resolver, ResolverApplier {
     private topicMappedControllers: Map<string, WsController[]> = new Map();
-    private logger: Logger | undefined;
+    private logger!: Logger;
+    private tokenService!: TokenService;
 
-    prepare(controllers: object[], logger: Logger): this {
+    prepare(
+        controllers: object[],
+        logger: Logger,
+        tokenService: TokenService
+    ): this {
         this.logger = logger;
+        this.tokenService = tokenService;
         for (const controller of controllers) {
             if (WsController.isWsController(controller)) {
                 if (this.topicMappedControllers.has(controller.topic)) {
@@ -36,6 +42,7 @@ export class WsResolver implements Resolver, ResolverApplier {
             const topicManager = new WsTopicManager(
                 controllers,
                 this.logger,
+                this.tokenService,
                 topic
             );
             app.socket.app.ws(

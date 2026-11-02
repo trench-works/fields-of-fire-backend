@@ -1,10 +1,14 @@
-import { App, Logger } from "../..";
+import { App, Logger, TokenService } from "../..";
 import { EnvObject } from "../Types/Env";
 
 export interface Resolver {
-  prepare(controllers: object[], logger: Logger): ResolverApplier;
+    prepare(
+        controllers: object[],
+        logger: Logger,
+        tokenService: TokenService
+    ): ResolverApplier;
 }
 
 export interface ResolverApplier {
-  apply<Config extends EnvObject>(app: App<Config>): void;
+    apply<Config extends EnvObject>(app: App<Config>): void;
 }
