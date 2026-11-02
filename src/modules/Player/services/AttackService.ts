@@ -26,12 +26,13 @@ export class AttackService {
         action: Action,
         attacker: Entity,
         defenser: Entity
-    ): { defenserDamage: number; attackerDamage: number } {
+    ): { defenserDamage: number; attackerDamage: number, isCritical: boolean } {
         const attackerStats = Stats.fromEntity(attacker);
         const defenserStats = Stats.fromEntity(defenser);
 
         let attackerDamage: number = 0;
         let defenserDamage: number;
+        let isCritical : boolean = false;
 
         let statBonus: number = 0;
         // calculate stats bonus
@@ -70,6 +71,7 @@ export class AttackService {
             const critChance = 1 + critChanceBuff;
             if (critRoll < critChance) {
                 defenserDamage *= 2 + 0.33 * critDammageBuff;
+                isCritical = true;
             }
         }
 
@@ -115,6 +117,7 @@ export class AttackService {
         return {
             attackerDamage: Math.ceil(attackerDamage),
             defenserDamage: Math.ceil(defenserDamage),
+            isCritical,
         };
     }
 
@@ -123,7 +126,7 @@ export class AttackService {
         action: Action,
         attacker: Entity,
         target: Entity
-    ): number {
+    ): {damage: number, isCritical: boolean} {
         const attackerPlayer: Player | undefined = game.players.find(
             (player) => player.entityId === attacker.id
         );
@@ -136,7 +139,7 @@ export class AttackService {
             const isDodged = target.stats.dodging > diceRoll ? true : false;
 
             if (isDodged) {
-                return 0;
+                return { damage: 0, isCritical: false };
             }
         }
 
@@ -145,7 +148,7 @@ export class AttackService {
             : 0;
 
         // calculate damages
-        const { attackerDamage, defenserDamage } = this.calculateFinalDamage(
+        const { attackerDamage, defenserDamage, isCritical } = this.calculateFinalDamage(
             randomDamage,
             action,
             attacker,
@@ -213,7 +216,7 @@ export class AttackService {
         }
 
 
-        return defenserDamage;
+        return {damage: defenserDamage, isCritical};
     }
 
     applyEffect(caster: string | undefined, target: Entity, effect: Effect) {

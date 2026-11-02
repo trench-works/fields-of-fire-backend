@@ -142,8 +142,7 @@
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "level": "GROUND",
-        "effectList": ["angered"]
+        "level": "GROUND"
     },
     {
         "id": "break",
