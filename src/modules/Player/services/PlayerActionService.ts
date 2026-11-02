@@ -47,6 +47,7 @@ export type AttackTarget = {
     entity: Entity;
     damage: number;
     effects: Effect[];
+    isCritical: boolean;
 };
 
 export class PlayerActionService {
@@ -262,6 +263,7 @@ export class PlayerActionService {
                 entity,
                 damage: 0,
                 effects: [],
+                isCritical : false
             };
             if (action.effectList) {
                 for (const effect of action.effectList) {
@@ -547,15 +549,17 @@ export class PlayerActionService {
                     entity,
                     damage: 0,
                     effects: [],
+                    isCritical: false
                 };
 
-                const damage = this.attackService.applyDamage(
+                const result = this.attackService.applyDamage(
                     game,
                     action,
                     playerEntity,
                     entity
                 );
-                target.damage = damage;
+                target.damage = result.damage;
+                target.isCritical = result.isCritical;
 
                 return target;
             }
