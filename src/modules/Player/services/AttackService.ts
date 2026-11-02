@@ -67,9 +67,9 @@ export class AttackService {
             const critDammageBuff = attacker.effects.filter(
                 (e) => e.action === EffectAction.CRIT_DAMMAGE
             ).length;
-            const critChance = 1 + critChanceBuff * 3;
+            const critChance = 1 + critChanceBuff;
             if (critRoll < critChance) {
-                defenserDamage *= 2 + 0.25 * critDammageBuff;
+                defenserDamage *= 2 + 0.33 * critDammageBuff;
             }
         }
 
@@ -78,7 +78,7 @@ export class AttackService {
                 1 +
                 (PositionUtils.distance(attacker.position, defenser.position) -
                     1) *
-                    0.1;
+                    0.15;
         }
 
         // Vampire : vol de vie par stack
@@ -89,7 +89,7 @@ export class AttackService {
                 (e) => e.action === EffectAction.VAMPIRISM
             ).length;
             if (vampireStacks > 0) {
-                const lifeSteal = (defenserDamage / 10) * vampireStacks;
+                const lifeSteal = Math.ceil((defenserDamage / 10) * vampireStacks);
                 attackerDamage -= lifeSteal;
             }
 
@@ -197,7 +197,7 @@ export class AttackService {
             for (const effect of action.effectList!) {
                 this.applyEffect(attacker.id, target, effect);
             }
-            target.effects = action.effectList!;
+            //target.effects = action.effectList!;
         }
 
         if (action.selfEffectList) {
@@ -206,12 +206,23 @@ export class AttackService {
             }
         }
 
+        if (action.onHitEffectList && target) {
+            for (const effect of action.onHitEffectList) {
+                this.applyEffect(attacker.id, attacker, effect);
+            }
+        }
+
+
         return defenserDamage;
     }
 
     applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
         if (!target.stats) {
             return;
+        }
+        // chance de ne pas appliquer l'effet
+        if (effect.chance !== undefined && Ran.int(100) >= effect.chance) {
+            return; 
         }
         const effectCopy = { ...effect };
         if (caster) {

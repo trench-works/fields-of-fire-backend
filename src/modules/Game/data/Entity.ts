@@ -27,4 +27,6 @@ export class Entity {
     dead!: boolean;
     isInvocation!: boolean;
     isPlaying!: boolean;
+
+    actionUses!: Record<string, Record<string, number>>;
 }

@@ -15,6 +15,7 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
     async entityToRessource(entity: ActionEntity): Promise<Action> {
         const effectList: Effect[] = [];
         const selfEffectList: Effect[] = [];
+        const onHitEffectList: Effect[] = [];
         if (entity.effectList) {
             for (const key of entity.effectList) {
                 const effect = await this.effectRepository.get(key);
@@ -31,10 +32,19 @@ export class ActionRepository extends FolderRepository<Action, ActionEntity> {
                 }
             }
         }
+        if (entity.onHitEffectList) {
+            for (const key of entity.onHitEffectList) {
+                const onHitEffect = await this.effectRepository.get(key);
+                if (onHitEffect && !(onHitEffect instanceof DBError)) {
+                    onHitEffectList.push(onHitEffect);
+                }
+            }
+        }
         return {
             ...entity,
             effectList,
             selfEffectList,
+            onHitEffectList,
         };
     }
 

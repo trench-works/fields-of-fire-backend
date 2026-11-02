@@ -247,7 +247,8 @@ export class PlayerActionService {
         action: Action,
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
-        this.checkIfAllowed(playerEntity, action, destination);
+        const refusal = this.checkIfAllowed(playerEntity, action, destination);
+        if (refusal) return refusal;
 
         const targetEntities = this.getBoostTarget(
             game,
@@ -272,6 +273,7 @@ export class PlayerActionService {
         });
 
         playerEntity.stats.energy -= action.cost;
+        this.registerUse(playerEntity,action,destination);
         this.animationService.animate(
             game,
             playerEntity,
@@ -339,7 +341,8 @@ export class PlayerActionService {
         action: Action,
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
-        this.checkIfAllowed(playerEntity, action, destination);
+        const refusal = this.checkIfAllowed(playerEntity, action, destination);
+        if (refusal) return refusal;
 
         const targets = this.dammageTargets(
             game,
@@ -350,6 +353,7 @@ export class PlayerActionService {
 
         //to finalize
         playerEntity.stats.energy -= action.cost;
+        this.registerUse(playerEntity,action,destination);
         this.animationService.animate(
             game,
             playerEntity,
@@ -369,6 +373,9 @@ export class PlayerActionService {
         action: Action,
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
+        const refusal = this.checkIfAllowed(playerEntity, action, destination);
+        if (refusal) return refusal;
+
         const targets = this.dammageTargets(
             game,
             playerEntity,
@@ -395,6 +402,7 @@ export class PlayerActionService {
         }
 
         playerEntity.stats.energy -= action.cost;
+        this.registerUse(playerEntity,action,destination);
         this.animationService.animate(
             game,
             playerEntity,
@@ -439,7 +447,7 @@ export class PlayerActionService {
         playerEntity: Entity,
         action: Action,
         destination: Cell
-    ) {
+    ): PlayerCancelAction | undefined {
         if (Stats.fromEntity(playerEntity).energy < action.cost) {
             return {
                 actionId: PlayerOutputActions.CANCEL_ACTION,
@@ -449,7 +457,8 @@ export class PlayerActionService {
             };
         }
 
-        this.checkRange(playerEntity, action, destination);
+        const rangeError = this.checkRange(playerEntity, action, destination);
+        if (rangeError) return rangeError;
 
         if (action.targetRequired && !destination?.entityId) {
             return {
@@ -459,6 +468,20 @@ export class PlayerActionService {
                 },
             };
         }
+
+        if (action.maxUsePerTarget && destination.entityId ) {
+            const used = playerEntity.actionUses?.[action.id]?.[destination.entityId] ?? 0;
+            if (used >= action.maxUsePerTarget) {
+                return {
+                    actionId: PlayerOutputActions.CANCEL_ACTION,
+                    payload: {
+                        reason: "max-use-per-target",
+                    },
+                };
+            }
+        }
+
+        return undefined;
     }
 
     private checkRange(
@@ -539,6 +562,14 @@ export class PlayerActionService {
         );
         return targets;
     }
+
+    private registerUse(entity: Entity, action: Action, destination: Cell) {
+        if (!action.maxUsePerTarget || !destination.entityId) return;
+        const uses = (entity.actionUses ??= {});
+        const byTarget = (uses[action.id] ??= {});
+        byTarget[destination.entityId] = (byTarget[destination.entityId] ?? 0) + 1;
+    }
+
     private findGapClosePosition(
         game: Game,
         attacker: Entity,

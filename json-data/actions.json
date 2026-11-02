@@ -37,6 +37,7 @@
         "targetRequired": true,
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
+        "maxUsePerTarget":2,
         "level": "GROUND"
     },
     {
@@ -56,10 +57,10 @@
         "id": "artillery_support",
         "name": "Appui d'artillerie",
         "description": "Attaque à distance sur une zone",
-        "cost": 4,
+        "cost": 3,
         "range": { "min": 3, "max": 6 },
         "rangeType": "DIAMOND",
-        "damage": { "min": 5, "max": 11 },
+        "damage": { "min": 6, "max": 13 },
         "actionType": "RANGED",
         "zoneType": ["DIAMOND"],
         "zoneSize": 2,
@@ -69,7 +70,7 @@
         "id": "intimidation",
         "name": "Intimidation",
         "description": "Debuff sur une cible",
-        "cost": 2,
+        "cost": 1,
         "range": { "min": 1, "max": 4 },
         "rangeType": "DIAMOND",
         "actionType": "SUPPORT",
@@ -141,7 +142,8 @@
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "level": "GROUND"
+        "level": "GROUND",
+        "effectList": ["angered"]
     },
     {
         "id": "break",
@@ -174,13 +176,14 @@
         "id": "shield_rush",
         "name": "Charge de bouclier",
         "description": "rush sur une cible",
-        "cost": 2,
+        "cost": 4,
         "range": { "min": 1, "max": 4 },
-        "damage": { "min": 1, "max": 8 },
+        "damage": { "min": 2, "max": 8 },
         "rangeType": "PLUS",
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
+        "onHitEffectList":["regain2PE"],
         "level": "GROUND"
     },
     {
