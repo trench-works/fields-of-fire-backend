@@ -10,6 +10,7 @@
         "instant": {
             "energy": -1
         },
+        "chance": 66,
         "action": "NONE"
     },
     {
@@ -18,8 +19,8 @@
         "duration": 3,
         "type": "APPLY",
         "modifier": {
-            "strength": -15,
-            "precision": -15
+            "strength": -20,
+            "precision": -20
         },
         "instant": {},
         "action": "NONE"
@@ -120,7 +121,9 @@
         "name": "Crit Dammage",
         "duration": null,
         "type": "APPLY",
-        "modifier": {},
+        "modifier": {
+            "critical": 3
+        },
         "instant": {},
         "action": "CRIT_DAMMAGE"
     },
@@ -129,7 +132,9 @@
         "name": "Crit Chance",
         "duration": null,
         "type": "APPLY",
-        "modifier": {},
+        "modifier": {
+            "critical": 10
+        },
         "instant": {},
         "action": "CRIT_CHANCE"
     },
@@ -141,5 +146,14 @@
         "modifier": {},
         "instant": {},
         "action": "WEAKNESS"
+    },
+        {
+        "id": "regain2PE",
+        "name": "+2PE",
+        "duration": 0,
+        "type": "APPLY",
+        "modifier": {},
+        "instant": {"energy": 2},
+        "action": "NONE"
     }
 ]

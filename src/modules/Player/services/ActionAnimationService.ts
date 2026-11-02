@@ -30,9 +30,10 @@ export class ActioAnimationService {
                     actionId: action.id,
                     origin: playerEntity.position,
                     target: destination.position,
-                    hits: targets.map(({ entity, damage }) => ({
+                    hits: targets.map(({ entity, damage, isCritical }) => ({
                         ...entity.position,
                         damage,
+                        isCritical
                     })),
                     path,
                 },

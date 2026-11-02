@@ -16,7 +16,7 @@ export type GameEventAnimation =
               actionId: string;
               origin: Position;
               target: Position;
-              hits: (Position & { damage: number })[];
+              hits: (Position & { damage: number, isCritical: boolean })[];
               path?: Position[];
           }
       >

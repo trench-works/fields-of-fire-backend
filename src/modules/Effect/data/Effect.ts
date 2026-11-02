@@ -24,6 +24,7 @@ export class Effect {
     duration!: number | null;
     modifier!: Partial<Stats>;
     instant!: Partial<Stats>;
+    chance?: number;
     author?: string;
     description?: string;
 }

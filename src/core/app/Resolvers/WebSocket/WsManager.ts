@@ -45,10 +45,11 @@ export class WsManager<
     async send<PayloadObject extends object = object>(
         socket: WebSocket,
         action:
-            | SingleClientOutputAction<
+            | ({ token?: string } & SingleClientOutputAction<
                   PayloadObject,
                   OutputActions | ReturnActions
-              >
+              >)
+            | void
             | ValidationError[]
     ): Promise<void> {
         return new Promise<void>((resolve) => {

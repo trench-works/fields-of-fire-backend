@@ -49,6 +49,7 @@ export class InvocationService {
                 dead: false,
                 isInvocation: true,
                 isPlaying: charClass.isPlaying,
+                actionUses: {},
             };
             game.teams
                 .find((team) => team.id === invoker.teamId)

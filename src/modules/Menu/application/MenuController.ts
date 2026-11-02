@@ -4,7 +4,6 @@ import {
     WsListenerOptions,
     SingleClientOutputAction,
     SocketError,
-    HttpError,
     NotFoundError,
 } from "../../../core";
 import { JoinGameResponse } from "../../Game/application/interfaces/JoinGameResponse";
@@ -53,7 +52,9 @@ export class MenuController extends WsController<
     }
 
     async reconnect({
-        user: { id },
+        token: {
+            user: { id },
+        },
         payload: { gameId },
     }: WsListenerOptions<
         MenuKey,
@@ -86,7 +87,9 @@ export class MenuController extends WsController<
     }
 
     async createLobby({
-        user: { id },
+        token: {
+            user: { id },
+        },
     }: WsListenerOptions<MenuKey>): Promise<
         SingleClientOutputAction<JoinLobbyResponse, MenuReturnActions>
     > {
@@ -94,7 +97,7 @@ export class MenuController extends WsController<
         if (!lobby) {
             return;
         }
-        if (lobby instanceof HttpError) {
+        if (lobby instanceof SocketError) {
             return lobby;
         }
         return {
@@ -105,7 +108,9 @@ export class MenuController extends WsController<
         };
     }
     async joinLobby({
-        user: { id },
+        token: {
+            user: { id },
+        },
         payload: { lobbyId },
     }: WsListenerOptions<MenuKey, JoinLobby>): Promise<
         SingleClientOutputAction<JoinLobbyResponse, MenuReturnActions>

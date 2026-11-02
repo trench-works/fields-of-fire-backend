@@ -26,12 +26,13 @@ export class AttackService {
         action: Action,
         attacker: Entity,
         defenser: Entity
-    ): { defenserDamage: number; attackerDamage: number } {
+    ): { defenserDamage: number; attackerDamage: number, isCritical: boolean } {
         const attackerStats = Stats.fromEntity(attacker);
         const defenserStats = Stats.fromEntity(defenser);
 
         let attackerDamage: number = 0;
         let defenserDamage: number;
+        let isCritical : boolean = false;
 
         let statBonus: number = 0;
         // calculate stats bonus
@@ -67,9 +68,10 @@ export class AttackService {
             const critDammageBuff = attacker.effects.filter(
                 (e) => e.action === EffectAction.CRIT_DAMMAGE
             ).length;
-            const critChance = 1 + critChanceBuff * 3;
+            const critChance = 1 + critChanceBuff;
             if (critRoll < critChance) {
-                defenserDamage *= 2 + 0.25 * critDammageBuff;
+                defenserDamage *= 2 + 0.33 * critDammageBuff;
+                isCritical = true;
             }
         }
 
@@ -78,7 +80,7 @@ export class AttackService {
                 1 +
                 (PositionUtils.distance(attacker.position, defenser.position) -
                     1) *
-                    0.1;
+                    0.15;
         }
 
         // Vampire : vol de vie par stack
@@ -89,7 +91,7 @@ export class AttackService {
                 (e) => e.action === EffectAction.VAMPIRISM
             ).length;
             if (vampireStacks > 0) {
-                const lifeSteal = (defenserDamage / 10) * vampireStacks;
+                const lifeSteal = Math.ceil((defenserDamage / 10) * vampireStacks);
                 attackerDamage -= lifeSteal;
             }
 
@@ -115,6 +117,7 @@ export class AttackService {
         return {
             attackerDamage: Math.ceil(attackerDamage),
             defenserDamage: Math.ceil(defenserDamage),
+            isCritical,
         };
     }
 
@@ -123,7 +126,7 @@ export class AttackService {
         action: Action,
         attacker: Entity,
         target: Entity
-    ): number {
+    ): {damage: number, isCritical: boolean} {
         const attackerPlayer: Player | undefined = game.players.find(
             (player) => player.entityId === attacker.id
         );
@@ -136,7 +139,7 @@ export class AttackService {
             const isDodged = target.stats.dodging > diceRoll ? true : false;
 
             if (isDodged) {
-                return 0;
+                return { damage: 0, isCritical: false };
             }
         }
 
@@ -145,7 +148,7 @@ export class AttackService {
             : 0;
 
         // calculate damages
-        const { attackerDamage, defenserDamage } = this.calculateFinalDamage(
+        const { attackerDamage, defenserDamage, isCritical } = this.calculateFinalDamage(
             randomDamage,
             action,
             attacker,
@@ -197,7 +200,7 @@ export class AttackService {
             for (const effect of action.effectList!) {
                 this.applyEffect(attacker.id, target, effect);
             }
-            target.effects = action.effectList!;
+            //target.effects = action.effectList!;
         }
 
         if (action.selfEffectList) {
@@ -206,12 +209,23 @@ export class AttackService {
             }
         }
 
-        return defenserDamage;
+        if (action.onHitEffectList && target) {
+            for (const effect of action.onHitEffectList) {
+                this.applyEffect(attacker.id, attacker, effect);
+            }
+        }
+
+
+        return {damage: defenserDamage, isCritical};
     }
 
     applyEffect(caster: string, target: Entity, effect: Effect) {
         if (!target.stats) {
             return;
+        }
+        // chance de ne pas appliquer l'effet
+        if (effect.chance !== undefined && Ran.int(100) >= effect.chance) {
+            return; 
         }
         const effectCopy = { ...effect };
         if (caster) {
