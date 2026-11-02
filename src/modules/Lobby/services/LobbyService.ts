@@ -5,7 +5,6 @@ import {
     Provide,
     SocketBadRequest,
     SocketError,
-    UserInfos,
 } from "../../../core";
 import { LobbyDataManager } from "../data/LobbyDataManager";
 import { Lobby } from "../data/Lobby";
@@ -30,12 +29,12 @@ export class LobbyService {
     @Provide("Logger")
     private readonly logger!: Logger;
 
-    async updateLobby(lobbyId: string, user: UserInfos, payload: UpdateLobby) {
+    async updateLobby(lobbyId: string, userId: string, payload: UpdateLobby) {
         const lobby = await this.lobbyDataManager.getLobby(lobbyId);
         if (lobby instanceof NotFoundError) {
             return lobby;
         }
-        if (lobby.creatorId !== user.id) {
+        if (lobby.creatorId !== userId) {
             return;
         }
         lobby.boardSize = payload.boardSize ?? lobby.boardSize;

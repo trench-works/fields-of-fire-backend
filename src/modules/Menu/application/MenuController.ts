@@ -52,7 +52,9 @@ export class MenuController extends WsController<
     }
 
     async reconnect({
-        user: { id },
+        token: {
+            user: { id },
+        },
         payload: { gameId },
     }: WsListenerOptions<
         MenuKey,
@@ -85,7 +87,9 @@ export class MenuController extends WsController<
     }
 
     async createLobby({
-        user: { id },
+        token: {
+            user: { id },
+        },
     }: WsListenerOptions<MenuKey>): Promise<
         SingleClientOutputAction<JoinLobbyResponse, MenuReturnActions>
     > {
@@ -104,7 +108,9 @@ export class MenuController extends WsController<
         };
     }
     async joinLobby({
-        user: { id },
+        token: {
+            user: { id },
+        },
         payload: { lobbyId },
     }: WsListenerOptions<MenuKey, JoinLobby>): Promise<
         SingleClientOutputAction<JoinLobbyResponse, MenuReturnActions>

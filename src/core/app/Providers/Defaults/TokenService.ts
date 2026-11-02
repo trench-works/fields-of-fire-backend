@@ -42,7 +42,7 @@ export class TokenService {
         return sign(
             { ...token, sign: { time: dayjs().toISOString() } },
             this.config.secret,
-            { expiresIn: 60 }
+            { expiresIn: this.config.expiringSeconds }
         );
     }
 
@@ -55,8 +55,7 @@ export class TokenService {
                 return new Error();
             }
             return token as PeregrinToken;
-        } catch (err) {
-            console.error(err);
+        } catch {
             return new Error();
         }
     }

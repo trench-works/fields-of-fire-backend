@@ -57,15 +57,15 @@ export class LobbyController extends WsController<
 
     async update({
         key: { lobbyId },
-        user,
+        token: { user },
         payload,
     }: WsListenerOptions<LobbyKeys, UpdateLobby>) {
-        await this.lobbyService.updateLobby(lobbyId, user, payload);
+        await this.lobbyService.updateLobby(lobbyId, user.id, payload);
     }
 
     async startGame({
         key: { lobbyId },
-        user,
+        token: { user },
     }: WsListenerOptions<LobbyKeys>): Promise<void | SingleClientOutputError> {
         const game = await this.gameService.createGameFromLobby(
             lobbyId,
@@ -78,7 +78,7 @@ export class LobbyController extends WsController<
 
     async joinTeam({
         key: { lobbyId },
-        user,
+        token: { user },
         payload: { index },
     }: WsListenerOptions<
         LobbyKeys,
@@ -89,14 +89,14 @@ export class LobbyController extends WsController<
 
     async addTeam({
         key: { lobbyId },
-        user,
+        token: { user },
     }: WsListenerOptions<LobbyKeys>): Promise<void | SingleClientOutputError> {
         return await this.lobbyService.addTeam(lobbyId, user.id);
     }
 
     async handleLeave({
         key: { lobbyId },
-        user,
+        token: { user },
     }: WsListenerOptions<LobbyKeys>): Promise<void | SingleClientOutputError> {
         const lobby = await this.lobbyPlayerService.removePlayer(
             lobbyId,
@@ -109,7 +109,7 @@ export class LobbyController extends WsController<
 
     async handleClassChange({
         key: { lobbyId },
-        user,
+        token: { user },
         payload: { classId },
     }: WsListenerOptions<
         LobbyKeys,

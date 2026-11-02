@@ -72,7 +72,9 @@ export class App<Config extends EnvObject = DefaultConfig> {
             this.tokenService
         ).build();
         for (const resolver of appProps.resolvers) {
-            new resolver().prepare(controllers, this.loggerService).apply(this);
+            new resolver()
+                .prepare(controllers, this.loggerService, this.tokenService)
+                .apply(this);
         }
     }
 

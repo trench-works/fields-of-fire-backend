@@ -1,9 +1,12 @@
-import { App } from "../..";
+import { App, Logger, TokenService } from "../..";
 import { EnvObject } from "../Types/Env";
 
 export interface Resolver {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    prepare(controllers: object[], ...providers: any[]): ResolverApplier;
+    prepare(
+        controllers: object[],
+        logger: Logger,
+        tokenService: TokenService
+    ): ResolverApplier;
 }
 
 export interface ResolverApplier {

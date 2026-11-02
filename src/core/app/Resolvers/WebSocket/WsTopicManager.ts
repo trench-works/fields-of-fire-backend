@@ -1,13 +1,10 @@
 import { WsController, Logger, TokenService } from "../..";
 import { WebSocket } from "ws";
-import { UserInfos } from "../../Types/UserInfos";
-import { validateSync, ValidationError } from "class-validator";
+import { ValidationError } from "class-validator";
 import { InputAction } from "../../../types/Action";
-import { SocketTokenInvalid } from "../../../errors/ws/SocketTokenInvalid";
 
 type SubcribePayload<RessourceKeyObject> = {
     key: RessourceKeyObject;
-    user: UserInfos;
 };
 
 export class WsTopicManager<
@@ -25,29 +22,25 @@ export class WsTopicManager<
         socket.on("message", async (rawData: string) => {
             const {
                 actionId,
+                token,
                 payload,
             }: InputAction<SubcribePayload<RessourceKeyObject>> =
                 JSON.parse(rawData);
             if (actionId === "subscribe") {
-                await this.subscribe(socket, payload);
+                await this.subscribe(socket, token, payload);
             }
         });
     }
 
     async subscribe(
         socket: WebSocket,
+        rawToken: string,
         payload: SubcribePayload<RessourceKeyObject>
     ) {
-        const user = new UserInfos();
-        Object.assign(user, payload.user);
-        const validateUser = validateSync(user);
-        if (validateUser?.length) {
-            socket.close(4000, JSON.stringify(validateUser));
-            return;
-        }
-        const token = this.tokenService.decode(user.token);
+        const token = this.tokenService.decode(rawToken);
         if (token instanceof Error) {
-            return new SocketTokenInvalid();
+            socket.close(4000, "TOKEN INVALID");
+            return;
         }
 
         const validations = this.controllers.map((controller) =>

@@ -36,7 +36,7 @@ export class HttpTopicManager<
     async get(req: Request, res: Response): Promise<void> {
         const authenticateResponse = await this.authenticate(req);
         if (authenticateResponse instanceof HttpTokenInvalid) {
-            res.send(authenticateResponse);
+            res.status(401).send();
             return;
         }
         const { token, newToken } = authenticateResponse;
@@ -59,7 +59,7 @@ export class HttpTopicManager<
     async post(req: Request, res: Response): Promise<void> {
         const authenticateResponse = await this.authenticate(req);
         if (authenticateResponse instanceof HttpTokenInvalid) {
-            res.send(authenticateResponse);
+            res.status(401).send();
             return;
         }
         const { token, newToken } = authenticateResponse;
