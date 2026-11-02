@@ -219,7 +219,7 @@ export class AttackService {
         return {damage: defenserDamage, isCritical};
     }
 
-    applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
+    applyEffect(caster: string, target: Entity, effect: Effect) {
         if (!target.stats) {
             return;
         }
