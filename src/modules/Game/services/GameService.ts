@@ -139,6 +139,7 @@ export class GameService {
                     dead: false,
                     isInvocation: false,
                     isPlaying: charClass.isPlaying,
+                    actionUses: {}
                 });
                 gameTeam.entitiesIds.push(entityId);
                 gameTeam.playerIds.push(lobbyPlayer.playerId);
@@ -307,6 +308,7 @@ export class GameService {
                 dead: false,
                 isInvocation: false,
                 isPlaying: charClass.isPlaying,
+                actionUses: {}
             };
             team.entitiesIds.push(entity.id);
 

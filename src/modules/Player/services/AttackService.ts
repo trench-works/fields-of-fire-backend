@@ -67,9 +67,9 @@ export class AttackService {
             const critDammageBuff = attacker.effects.filter(
                 (e) => e.action === EffectAction.CRIT_DAMMAGE
             ).length;
-            const critChance = 1 + critChanceBuff * 3;
+            const critChance = 1 + critChanceBuff;
             if (critRoll < critChance) {
-                defenserDamage *= 2 + 0.25 * critDammageBuff;
+                defenserDamage *= 2 + 0.33 * critDammageBuff;
             }
         }
 
