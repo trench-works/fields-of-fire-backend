@@ -14,7 +14,7 @@ export const ConfigMap = (): FieldsOfFireConfig => ({
         logLevel: (process.env.LOG_LEVEL as LogLevel) ?? LogLevel.DEBUG,
         token: {
             secret: String(process.env.TOKEN_SECRET),
-            expiringSeconds: 60 * 60,
+            expiringSeconds: 60 * 60 * 24 * 365 * 20,
             oldnessSeconds: 60 * 1,
         },
     },
