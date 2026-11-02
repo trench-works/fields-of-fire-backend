@@ -196,6 +196,7 @@ export class PlayerActionService {
             case PlayerActionId.HEAL:
             case PlayerActionId.SABER:
             case PlayerActionId.BREAK:
+            case PlayerActionId.INTIMIDATION:
                 result = await this.attack(
                     game,
                     playerEntity,
@@ -203,7 +204,6 @@ export class PlayerActionService {
                     destination
                 );
                 break;
-            case PlayerActionId.INTIMIDATION:
             case PlayerActionId.PROVOK:
             case PlayerActionId.DOPAGE:
             case PlayerActionId.SNEAKY:

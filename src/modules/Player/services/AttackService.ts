@@ -197,7 +197,7 @@ export class AttackService {
             for (const effect of action.effectList!) {
                 this.applyEffect(attacker.id, target, effect);
             }
-            target.effects = action.effectList!;
+            //target.effects = action.effectList!;
         }
 
         if (action.selfEffectList) {
@@ -219,6 +219,10 @@ export class AttackService {
     applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
         if (!target.stats) {
             return;
+        }
+        // chance de ne pas appliquer l'effet
+        if (effect.chance !== undefined && Ran.int(100) >= effect.chance) {
+            return; 
         }
         const effectCopy = { ...effect };
         if (caster) {
