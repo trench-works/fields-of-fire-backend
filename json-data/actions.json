@@ -174,13 +174,14 @@
         "id": "shield_rush",
         "name": "Charge de bouclier",
         "description": "rush sur une cible",
-        "cost": 2,
+        "cost": 4,
         "range": { "min": 1, "max": 4 },
         "damage": { "min": 1, "max": 8 },
         "rangeType": "PLUS",
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
+        "onHitEffectList":["regain2PE"],
         "level": "GROUND"
     },
     {

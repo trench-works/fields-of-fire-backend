@@ -141,5 +141,14 @@
         "modifier": {},
         "instant": {},
         "action": "WEAKNESS"
+    },
+        {
+        "id": "regain2PE",
+        "name": "+2PE",
+        "duration": 0,
+        "type": "APPLY",
+        "modifier": {},
+        "instant": {"energy": 2},
+        "action": "NONE"
     }
 ]

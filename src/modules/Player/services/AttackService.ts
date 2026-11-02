@@ -206,6 +206,13 @@ export class AttackService {
             }
         }
 
+        if (action.onHitEffectList && target) {
+            for (const effect of action.onHitEffectList) {
+                this.applyEffect(attacker.id, attacker, effect);
+            }
+        }
+
+
         return defenserDamage;
     }
 
