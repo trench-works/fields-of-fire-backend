@@ -17,6 +17,7 @@ import { GameMode } from "../../Game/data/Game";
 import { LobbyTeam } from "../data/LobbyTeam";
 import { TEAM_COLORS } from "../../Game/data/Team";
 import { UpdateLobby } from "../application/interfaces/UpdateLobby";
+import { MasteryRepository } from "../../Mastery/data/MasteryRepository";
 
 export class LobbyService {
     @Provide(LobbyDataManager)
@@ -27,6 +28,8 @@ export class LobbyService {
     private readonly lobbyWebSocketManager!: LobbyWebSocketManager;
     @Provide(UserRepository)
     private readonly userRepository!: UserRepository;
+    @Provide(MasteryRepository)
+    private readonly masteryRepository!: MasteryRepository;
     @Provide("Logger")
     private readonly logger!: Logger;
 

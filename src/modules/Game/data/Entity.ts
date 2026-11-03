@@ -1,5 +1,6 @@
 import { Boost } from "../../Effect/data/Boost";
 import { Effect } from "../../Effect/data/Effect";
+import { Mastery } from "../../Mastery/data/Mastery";
 import { Stats } from "../../Stat/data/Stats";
 
 export enum EntityType {
@@ -23,6 +24,7 @@ export class Entity {
     stats!: Stats;
     effects!: Effect[];
     boosts!: Boost[];
+    mastery?: Mastery;
 
     dead!: boolean;
     isInvocation!: boolean;

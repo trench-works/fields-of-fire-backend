@@ -9,4 +9,6 @@ export class UserEntity extends PostgresEntity {
     @AllowNull(false)
     @Column({ type: DataType.TEXT })
     declare password: string;
+    @Column({ type: DataType.NUMBER })
+    declare masteryPoints: number;
 }

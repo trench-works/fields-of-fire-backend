@@ -14,6 +14,7 @@ export class UserRepository
         return {
             id: entity.id,
             username: entity.username,
+            masteryPoint: entity.masteryPoints,
         };
     }
 

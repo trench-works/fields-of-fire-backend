@@ -1,0 +1,156 @@
+[
+    {
+        "id":"masteries_fantassin",
+        "classId":"fantassin",
+        "rootMastery": {
+            "id" : "fantassin_b0_m1",
+            "name": "Endoctrinement",
+            "maxLevel": 3,
+            "statsPerLevel": {
+                "force" : 5,
+                "precision" : 5,
+                "life" : 5
+            }
+        },
+        "masteries": [
+            {
+                "id" : "fantassin_branch_1",
+                "name": "Voie de l'assaillant",
+                "maxLevel": 1,
+                "passive": "ENDURING",
+                "masteringPointsRequired": 5,
+                "subMasteries": [
+                    {
+                        "id": "fantassin_b1_m1",
+                        "name": "Chair à Canon",
+                        "maxLevel": 3,
+                        "statsPerLevel": {
+                            "life" : 8,
+                            "armor" : 10
+                        },
+                        "masteryRequirements": [{ "masteryId" : "fantassin_b0_m1", "level": 2}]
+                    },
+                    {
+                        "id": "fantassin_b1_m2",
+                        "name": "Baïonnette au canon",
+                        "maxLevel": 3,
+                        "statsPerLevel": {
+                            "force": 10
+                        },
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1", "level": 2}]
+                    },
+                    {
+                        "id": "fantassin_b1_m3",
+                        "name": "Droit vers la mort",
+                        "maxLevel": 1,
+                        "statsPerLevel": {
+                            "movement" : 1
+                        },
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b1_m2", "level": 2}]
+                    }
+                ]
+            },
+            {
+                "id" : "fantassin_branch_2",
+                "name": "Voie de la sentinelle",
+                "maxLevel": 1,
+                "passive": "REFLEX_SHOT",
+                "masteringPointsRequired": 5,
+                "subMasteries": [
+                    {
+                        "id": "fantassin_b2_m1",
+                        "name": "Fusil entretenu",
+                        "maxLevel": 3,
+                        "statsPerLevel": {
+                            "precision" : 10
+                        },
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b0_m1", "level": 2}]
+                    },
+                    {
+                        "id": "fantassin_b2_m2",
+                        "name": "Tireur aguerri",
+                        "maxLevel": 3,
+                        "actionNewEffect": [{
+                            "actionId": "SHOOT",
+                            "effectId": "SHARPSHOT"
+                        }],
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1", "level": 2}]
+                    },
+                    {
+                        "id": "fantassin_b2_m3",
+                        "name": "Feu nourri",
+                        "maxLevel": 1,
+                        "actionNewEffect": [{
+                            "actionId": "SHOOT",
+                            "effectId": "SERIAL_SHOOTER"
+                        }],
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b2_m2", "level": 2}]
+                    }
+                ]
+            },
+            {
+                "id" : "fantassin_branch_3",
+                "name": "Voie du guerrier",
+                "maxLevel": 1,
+                "passive": "REVENGEFULL",
+                "masteringPointsRequired": 5,
+                "subMasteries": [
+                    {
+                        "id": "fantassin_b3_m1",
+                        "name": "Gilet pare-balles",
+                        "maxLevel": 3,
+                        "statsPerLevel": {
+                            "armure" : 15
+                        },
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b0_m1", "level": 2}]
+                    },
+                    {
+                        "id": "fantassin_b3_m2",
+                        "name": "Chevrotine",
+                        "maxLevel": 1,
+                        "actionNewEffect": [{
+                            "actionId": "SHOOT",
+                            "effectId": "CHEVROTINE"
+                        }],
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m1", "level": 2}]
+                    },
+                    {
+                        "id": "fantassin_b3_m3a",
+                        "name": "Canon scié",
+                        "maxLevel": 2,
+                        "actionNewEffect": [{
+                            "actionId": "SHOOT",
+                            "effectId": "SAWEDOFF_BARREL"
+                        }],
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m2", "level": 1}]
+                    },
+                    {
+                        "id": "fantassin_b3_m3b",
+                        "name": "Suréquipé",
+                        "maxLevel": 2,
+                        "newActions": "GRENADE",
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m2", "level": 1}]
+                    },
+                    {
+                        "id": "fantassin_b3_m4a",
+                        "name": "Vaporiseur",
+                        "maxLevel": 1,
+                        "actionNewEffect": [{
+                            "actionId": "SHOOT",
+                            "effect": "VAPORIZER"
+                        }],
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m3a", "level": 1}]
+                    },
+                    {
+                        "id": "fantassin_b3_m4b",
+                        "name": "Grenade Incendiaire",
+                        "maxLevel": 2,
+                        "newActions": "FLAME_GRENADE",
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m3a", "level": 1}]
+                    }
+                ]
+            }
+
+        ]
+    }
+]
