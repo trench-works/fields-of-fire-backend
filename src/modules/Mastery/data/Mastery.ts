@@ -1,6 +1,7 @@
-import { Action } from "../../Action/data/Action";
+import { Action, ActionEntity, ActionLevel, ActionType, ActionZoneType } from "../../Action/data/Action";
 import { Effect } from "../../Effect/data/Effect";
 import { Stats } from "../../Stat/data/Stats";
+import { ActionModification, ActionModificationEntity } from "./ActionModifier";
 
 export class Mastery {
     id!: string;
@@ -10,7 +11,7 @@ export class Mastery {
     statsPerLevel?: Partial<Stats>;
     masteryRequirements?: {masteryId:string, level:number}[];
     newActions?: Action[];
-    actionNewEffect?: {actionId:string, effect:Effect}[]
+    actionModified?: ActionModification[]
     subMasteries?: Mastery[];
     passive?: Effect;
     masteringPointsRequired?: number;
@@ -24,12 +25,11 @@ export class MasteryEntity {
     statsPerLevel?: Partial<Stats>;
     masteryRequirements?: { masteryId: string; level: number }[];
     newActions?: string[];
-    actionNewEffect?: { actionId: string; effectId: string }[];
+    actionModified?: ActionModificationEntity[];
     subMasteries?: MasteryEntity[];
     passive?: string;
     masteringPointsRequired?: number;
 }
-
 
 export class MasteryTree {
     id!: string;
