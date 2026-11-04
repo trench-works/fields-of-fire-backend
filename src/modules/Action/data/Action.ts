@@ -25,6 +25,7 @@ export class Action {
     actionType!: ActionType;
     mooveToTarget?: { x: number; y: number };
     maxUsePerTarget?: number;
+    maxUsePerRound?: number;
     pushValue?: number;
     cost!: number;
     isWalkAction?: boolean;
@@ -49,6 +50,7 @@ export class ActionEntity {
     actionType!: ActionType;
     mooveToTarget?: { x: number; y: number };
     maxUsePerTarget?: number;
+    maxUsePerRound?: number;
     pushValue?: number;
     cost!: number;
     isWalkAction?: boolean;
