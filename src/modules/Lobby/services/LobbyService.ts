@@ -1,4 +1,5 @@
 import {
+    DBError,
     HttpError,
     Id,
     Logger,
@@ -17,7 +18,9 @@ import { GameMode } from "../../Game/data/Game";
 import { LobbyTeam } from "../data/LobbyTeam";
 import { TEAM_COLORS } from "../../Game/data/Team";
 import { UpdateLobby } from "../application/interfaces/UpdateLobby";
-import { MasteryRepository } from "../../Mastery/data/MasteryRepository";
+import { UpdateMasteries } from "../application/interfaces/UpdateMastery";
+import { MasteryService } from "../../Mastery/services/MasteryService";
+import { MasteryTreeRepository } from "../../Mastery/repository/MasteryTreeRepository";
 
 export class LobbyService {
     @Provide(LobbyDataManager)
@@ -28,10 +31,12 @@ export class LobbyService {
     private readonly lobbyWebSocketManager!: LobbyWebSocketManager;
     @Provide(UserRepository)
     private readonly userRepository!: UserRepository;
-    @Provide(MasteryRepository)
-    private readonly masteryRepository!: MasteryRepository;
+    @Provide(MasteryTreeRepository)
+    private readonly masteryTreeRepository!: MasteryTreeRepository;
     @Provide("Logger")
     private readonly logger!: Logger;
+    @Provide(MasteryService)
+    private readonly masteryService!: MasteryService;
 
     async updateLobby(lobbyId: string, user: UserInfos, payload: UpdateLobby) {
         const lobby = await this.lobbyDataManager.getLobby(lobbyId);
@@ -171,5 +176,33 @@ export class LobbyService {
                 };
             })
         );
+    }
+
+    async setMasteries(lobbyId: string, userId: string, payload: UpdateMasteries) {
+        const lobby = await this.lobbyDataManager.getLobby(lobbyId);
+        if (lobby instanceof NotFoundError) {
+            return lobby;
+        }
+
+        const player = lobby.teams
+            .flatMap((team) => team.players)
+            .find((p) => p.userId === userId);
+        if (!player) {
+            return new SocketError("Player not in lobby");
+        }
+
+        const tree = await this.masteryTreeRepository.get(player.classId);
+        if (!tree || tree instanceof DBError) {
+            return new SocketError("No mastery tree for this class");
+        }
+
+        const error = this.masteryService.validate(tree, payload.masteries);
+        if (error) {
+            return new SocketError(error);
+        }
+
+        player.masteries = payload.masteries;
+        await this.lobbyDataManager.set(lobbyId, lobby);
+        await this.lobbyWebSocketManager.emitLobbyUpdate(lobby);
     }
 }

@@ -1,7 +1,7 @@
 [
     {
         "id":"masteries_fantassin",
-        "classId":"fantassin",
+        "classId":"entente_fantassin",
         "rootMastery": {
             "id" : "fantassin_b0_m1",
             "name": "Endoctrinement",
@@ -128,7 +128,7 @@
                         "id": "fantassin_b3_m3b",
                         "name": "Suréquipé",
                         "maxLevel": 2,
-                        "newActions": "GRENADE",
+                        "newActions": ["GRENADE"],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b3_m2", "level": 1}]
                     },
                     {
@@ -145,7 +145,7 @@
                         "id": "fantassin_b3_m4b",
                         "name": "Grenade Incendiaire",
                         "maxLevel": 2,
-                        "newActions": "FLAME_GRENADE",
+                        "newActions": ["FLAME_GRENADE"],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b3_m3a", "level": 1}]
                     }
                 ]

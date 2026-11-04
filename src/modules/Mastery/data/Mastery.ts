@@ -7,7 +7,6 @@ export class Mastery {
     name!: string;
     description?: string;
     maxLevel!: number;
-    rootMastery?: Mastery;
     statsPerLevel?: Partial<Stats>;
     masteryRequirements?: {masteryId:string, level:number}[];
     newActions?: Action[];
@@ -22,12 +21,11 @@ export class MasteryEntity {
     name!: string;
     description?: string;
     maxLevel!: number;
-    rootMastery?: Mastery;
     statsPerLevel?: Partial<Stats>;
-    masteryRequirements?: [{masteryId:string, level:number}];
+    masteryRequirements?: { masteryId: string; level: number }[];
     newActions?: string[];
-    actionNewEffect?: [{actionId:string, effect:string}]
-    subMasteries?: Mastery[];
+    actionNewEffect?: { actionId: string; effectId: string }[];
+    subMasteries?: MasteryEntity[];
     passive?: string;
     masteringPointsRequired?: number;
 }
@@ -36,5 +34,15 @@ export class MasteryEntity {
 export class MasteryTree {
     id!: string;
     classId!: string;
+    rootMastery?: Mastery;
     masteries!: Mastery[];
 }
+
+export class MasteryTreeEntity {
+    id!: string;
+    classId!: string;
+    rootMastery?: MasteryEntity;
+    masteries!: MasteryEntity[];
+}
+
+export type MasterySelection = Record<string, number>;

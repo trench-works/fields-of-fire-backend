@@ -1,5 +1,5 @@
 import { GameMode } from "../../Game/data/Game";
-import { Mastery } from "../../Mastery/data/Mastery";
+import { MasterySelection } from "../../Mastery/data/Mastery";
 import { LobbyTeam } from "./LobbyTeam";
 
 export class LobbyPlayer {
@@ -7,7 +7,7 @@ export class LobbyPlayer {
     playerId!: string;
     classId!: string;
     name!: string;
-    mastery?: Mastery;
+    masteries?: MasterySelection;
 }
 
 export class Lobby {

@@ -125,7 +125,7 @@ export class GameService {
                         sustained: 0,
                         shielded: 0,
                     },
-                    selectedMastery: lobbyPlayer.mastery
+                    masteries: lobbyPlayer.masteries ?? {}
                 });
                 entities.push({
                     id: entityId,
@@ -141,7 +141,7 @@ export class GameService {
                     isInvocation: false,
                     isPlaying: charClass.isPlaying,
                     actionUses: {},
-                    mastery: lobbyPlayer.mastery
+                    masteries: lobbyPlayer.masteries
                 });
                 gameTeam.entitiesIds.push(entityId);
                 gameTeam.playerIds.push(lobbyPlayer.playerId);
