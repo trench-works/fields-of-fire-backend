@@ -1,4 +1,4 @@
-import { ActionEntity, ActionZoneType, ActionType, ActionLevel, Action } from "../../Action/data/Action";
+import { ActionEntity, ActionZoneType, ActionType, ActionLevel, Action } from "./Action";
 import { Effect } from "../../Effect/data/Effect";
 
 export type ActionModification = { id: string } & ActionModifier;
@@ -83,20 +83,26 @@ export function applyModification(action: Action, mod: ActionModification): Acti
         const max = Math.max(min, resolveValue(action.damage?.max ?? 0, damage.max));
         result.damage = { min, max };
     }
-    if(zoneSize){
-        result.zoneSize = resolveValue(action.zoneSize, zoneSize);
+    if (zoneSize !== undefined) {
+        result.zoneSize = Math.max(0, resolveValue(action.zoneSize, zoneSize));
     }
-    if(maxUsePerTarget){
-        result.maxUsePerTarget = resolveValue(action.maxUsePerTarget ?? 0, maxUsePerTarget);
+    if (cost !== undefined) {
+        result.cost = Math.max(0, resolveValue(action.cost, cost));
     }
-    if(maxUsePerRound){
-        result.maxUsePerRound = resolveValue(action.maxUsePerRound ?? 0, maxUsePerRound);
+    if (maxUsePerTarget !== undefined) {
+        result.maxUsePerTarget = resolveOptionalValue(action.maxUsePerTarget, maxUsePerTarget);
     }
-    if(cost){
-        result.cost = resolveValue(action.cost , cost);
+    if (maxUsePerRound !== undefined) {
+        result.maxUsePerRound = resolveOptionalValue(action.maxUsePerRound, maxUsePerRound);
     }
     if (effectList) result.effectList = effectList;
     if (selfEffectList) result.selfEffectList = selfEffectList;
     if (onHitEffectList) result.onHitEffectList = onHitEffectList;
     return result;
+}
+
+function resolveOptionalValue(base: number | undefined,mod: number | string,): number | undefined {
+    if (typeof mod === "number") return mod;     
+    if (base === undefined) return undefined;
+    return resolveValue(base, mod);
 }

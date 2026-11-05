@@ -1,7 +1,7 @@
 import { Action, ActionEntity, ActionLevel, ActionType, ActionZoneType } from "../../Action/data/Action";
 import { Effect } from "../../Effect/data/Effect";
 import { Stats } from "../../Stat/data/Stats";
-import { ActionModification, ActionModificationEntity } from "./ActionModifier";
+import { ActionModification, ActionModificationEntity } from "../../Action/data/ActionModifier";
 
 export class Mastery {
     id!: string;

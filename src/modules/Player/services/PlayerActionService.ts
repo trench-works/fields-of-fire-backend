@@ -421,17 +421,18 @@ export class PlayerActionService {
         return Boolean(!cell.entityId && !cell.isHole && !cell.isWall);
     }
 
-    private getTarget(game: Game, action: Action, destination: Cell): Entity[] {
+    private getTarget(game: Game, action: Action, destination: Cell, position: Position): Entity[] {
         const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
             action,
             game,
-            destination.position
+            destination.position,
+            position
         );
         return targetEntity;
     }
 
-    private getAttackTarget(game: Game, action: Action, destination: Cell) {
-        return this.getTarget(game, action, destination);
+    private getAttackTarget(game: Game, action: Action, destination: Cell, position: Position) {
+        return this.getTarget(game, action, destination, position);
     }
 
     private getBoostTarget(
@@ -440,7 +441,7 @@ export class PlayerActionService {
         action: Action,
         destination: Cell
     ) {
-        return this.getTarget(game, action, destination).filter(
+        return this.getTarget(game, action, destination, playerEntity.position).filter(
             (entity) => entity.teamId === playerEntity.teamId
         );
     }
@@ -471,7 +472,7 @@ export class PlayerActionService {
             };
         }
 
-        if (action.maxUsePerTarget && action.maxUsePerTarget !== 0 && destination.entityId ) {
+        if (action.maxUsePerTarget && destination.entityId ) {
             const used = playerEntity.actionUses?.[action.id]?.[destination.entityId] ?? 0;
             if (used >= action.maxUsePerTarget) {
                 return {
@@ -484,7 +485,7 @@ export class PlayerActionService {
         }
 
         // pour les utilisation max par fight, voir pour grisé l'action une fois le maximum d'utilisation atteint
-        if (action.maxUsePerRound && action.maxUsePerRound !== 0  && destination.entityId ) {
+        if (action.maxUsePerRound && destination.entityId ) {
             const used = playerEntity.actionUses?.[action.id]?.[destination.entityId] ?? 0;
             if (used >= action.maxUsePerRound) {
                 return {
@@ -554,7 +555,7 @@ export class PlayerActionService {
         action: Action,
         destination: Cell
     ) {
-        const targetEntities = this.getAttackTarget(game, action, destination);
+        const targetEntities = this.getAttackTarget(game, action, destination, playerEntity.position);
 
         const targets: AttackTarget[] = targetEntities.map<AttackTarget>(
             (entity) => {

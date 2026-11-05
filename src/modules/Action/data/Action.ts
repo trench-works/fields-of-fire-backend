@@ -72,13 +72,15 @@ export enum ActionZoneType {
     CIRCLE = "CIRCLE",
     PLUS = "PLUS",
     XCROSS = "XCROSS",
+    CONE = "CONE"
 }
 
 export class ActionUtils {
     static getEntitiesInRange(
         action: Action,
         game: Game,
-        target: Position
+        target: Position,
+        origin: Position
     ): Entity[] {
         const inBoundsConditions: ((position: Position) => boolean)[] = [];
         for (const zoneType of action.zoneType) {
@@ -112,6 +114,32 @@ export class ActionUtils {
                             action.zoneSize
                     );
                     break;
+                case ActionZoneType.CONE: {
+                    const dx = target.x - origin.x;
+                    const dy = target.y - origin.y;
+
+                    // pas de direction (cible sur le lanceur) : le cône ne touche rien
+                    if (dx === 0 && dy === 0) {
+                        inBoundsConditions.push(() => false);
+                        break;
+                    }
+
+                    // direction cardinale dominante vers la cible
+                    const horizontal = Math.abs(dx) >= Math.abs(dy);
+                    const sign = horizontal ? Math.sign(dx) : Math.sign(dy);
+
+                    inBoundsConditions.push((position) => {
+                        const depth = horizontal
+                            ? (position.x - origin.x) * sign
+                            : (position.y - origin.y) * sign;
+                        const lateral = horizontal
+                            ? Math.abs(position.y - origin.y)
+                            : Math.abs(position.x - origin.x);
+
+                        return depth >= 1 && depth <= action.zoneSize && lateral <= depth - 1;
+                    });
+                    break;
+                }
             }
         }
         const entities: Entity[] = [];

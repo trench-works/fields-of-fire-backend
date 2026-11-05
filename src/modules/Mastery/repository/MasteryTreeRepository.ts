@@ -3,7 +3,7 @@ import { Action } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Effect } from "../../Effect/data/Effect";
 import { EffectRepository } from "../../Effect/data/EffectRepository";
-import { ActionModificationEntity, ActionModification } from "../data/ActionModifier";
+import { ActionModificationEntity, ActionModification } from "../../Action/data/ActionModifier";
 import { MasteryTree, Mastery, MasteryEntity, MasteryTreeEntity } from "../data/Mastery";
 
 export class MasteryTreeRepository extends FolderRepository<MasteryTree, MasteryTreeEntity> {

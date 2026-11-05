@@ -1,8 +1,15 @@
+import { Provide } from "../../../core";
+import { ActionService } from "../../Action/ActionService";
+import { Action } from "../../Action/data/Action";
+import { ActionModification } from "../../Action/data/ActionModifier";
 import { Entity } from "../../Game/data/Entity";
 import { Stats } from "../../Stat/data/Stats";
 import { Mastery, MasterySelection, MasteryTree } from "../data/Mastery";
 
 export class MasteryService {
+
+    @Provide(ActionService)
+    private readonly actionService!: ActionService;
 
     private collect(tree: MasteryTree): Map<string, Mastery> {
         const all = new Map<string, Mastery>();
@@ -74,5 +81,29 @@ export class MasteryService {
                 entity.effects.push({ ...mastery.passive });
             }
         }
+    }  
+
+    collectModifications(tree: MasteryTree, selection: MasterySelection): ActionModification[] {
+        const mods: ActionModification[] = [];
+        for (const mastery of this.collect(tree).values()) {
+            const level = selection[mastery.id] ?? 0;
+            for (let i = 0; i < level; i++) {
+                mods.push(...(mastery.actionModified ?? []));
+            }
+        }
+        return mods;
+    }
+
+    // fonction pour ajouter une seule fois une nouvelle action si la maitrise à plusieur niveau.
+    resolveActions(tree: MasteryTree, selection: MasterySelection, base: Action[]): Action[] {
+        const all = new Map<string, Action>(base.map((a) => [a.id, a]));
+        for (const mastery of this.collect(tree).values()) {
+            if ((selection[mastery.id] ?? 0) < 1) continue;
+            for (const a of mastery.newActions ?? []) all.set(a.id, a);
+        }
+        return this.actionService.resolveActions(
+            [...all.values()],
+            this.collectModifications(tree, selection),
+        );
     }
 }

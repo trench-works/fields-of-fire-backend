@@ -7,9 +7,10 @@
             "name": "Endoctrinement",
             "maxLevel": 3,
             "statsPerLevel": {
-                "force" : 5,
+                "strength" : 5,
                 "precision" : 5,
-                "life" : 5
+                "life" : 5,
+                "maxLife" : 5
             }
         },
         "masteries": [
@@ -26,6 +27,7 @@
                         "maxLevel": 3,
                         "statsPerLevel": {
                             "life" : 8,
+                            "maxLife" : 8,
                             "armor" : 10
                         },
                         "masteryRequirements": [{ "masteryId" : "fantassin_b0_m1", "level": 2}]
@@ -35,8 +37,12 @@
                         "name": "Baïonnette au canon",
                         "maxLevel": 3,
                         "statsPerLevel": {
-                            "force": 10
+                            "strength": 10
                         },
+                        "actionModified": [{
+                            "id": "bayonet",
+                            "damage": { "min": "+1", "max": "+1" }
+                        }],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1", "level": 2}]
                     },
                     {
@@ -44,7 +50,9 @@
                         "name": "Droit vers la mort",
                         "maxLevel": 1,
                         "statsPerLevel": {
-                            "movement" : 1
+                            "mouvement" : 1,
+                            "maxLife" : 5,
+                            "life" : 5
                         },
                         "masteryRequirements": [ { "masteryId" : "fantassin_b1_m2", "level": 2}]
                     }
@@ -62,7 +70,7 @@
                         "name": "Fusil entretenu",
                         "maxLevel": 3,
                         "statsPerLevel": {
-                            "precision" : 10
+                            "precision" : 15
                         },
                         "masteryRequirements": [ { "masteryId" : "fantassin_b0_m1", "level": 2}]
                     },
@@ -70,7 +78,20 @@
                         "id": "fantassin_b2_m2",
                         "name": "Tireur aguerri",
                         "maxLevel": 3,
-                        "actionNewEffect": [{
+                        "actionModified": [{
+                            "id": "shoot",
+                            "effectId": "SHARPSHOT"
+                        }],
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1", "level": 2}]
+                    },
+                    {
+                        "id": "fantassin_b2_m2",
+                        "name": "Tireur d'élite",
+                        "maxLevel": 3,
+                        "statsPerLevel": {
+                            "critical" : 5
+                        },
+                        "actionModified": [{
                             "id": "shoot",
                             "effectId": "SHARPSHOT"
                         }],
@@ -108,10 +129,13 @@
                         "id": "fantassin_b3_m2",
                         "name": "Chevrotine",
                         "maxLevel": 1,
-                        "actionNewEffect": [{
+                        "actionModified": [{
                             "id": "shoot",
-                            "name": "Fey disparate",
-                            "effectId": ["chevrotine"]
+                            "damage": {"max" : 5},
+                            "rangeType": "PLUS",
+                            "zoneType": ["CONE"],
+                            "zoneSize": 2,
+                            "range": {"max" : 2}
                         }],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b3_m1", "level": 2}]
                     },
@@ -119,9 +143,9 @@
                         "id": "fantassin_b3_m3a",
                         "name": "Canon scié",
                         "maxLevel": 2,
-                        "actionNewEffect": [{
+                        "actionModified": [{
                             "id": "shoot",
-                            "damage": { "min" : "+2", "max" : "+3"}
+                            "damage": { "min" : "+2", "max" : "+2"}
                         }],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b3_m2", "level": 1}]
                     },
@@ -133,14 +157,27 @@
                         "masteryRequirements": [ { "masteryId" : "fantassin_b3_m2", "level": 1}]
                     },
                     {
-                        "id": "fantassin_b3_m4a",
+                        "id": "fantassin_b3_m4a1",
                         "name": "Vaporiseur",
                         "maxLevel": 1,
                         "actionModified": [{
                             "id": "shoot",
-                            "effectList": ["vaporiseur"]
+                            "actionType": "MELEE",
+                            "range": {"max":1},
+                            "damage":{"min" : "+2","max" : "+1"}
                         }],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m3a", "level": 1}]
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m3a", "level": 1},{ "masteryId" : "fantassin_b3_m4a2", "level": 0}]
+                    },
+                    {
+                        "id": "fantassin_b3_m4a2",
+                        "name": "Dissuadeur",
+                        "maxLevel": 1,
+                        "actionModified": [{
+                            "id": "shoot",
+                            "range": {"max": "+1"},
+                            "damage":{"max" : "+1"}
+                        }],
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m3a", "level": 1},{ "masteryId" : "fantassin_b3_m4a1", "level": 0}]
                     },
                     {
                         "id": "fantassin_b3_m4b",
@@ -151,7 +188,6 @@
                     }
                 ]
             }
-
         ]
     }
 ]

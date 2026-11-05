@@ -7,6 +7,7 @@ import {
     LoggerService,
     Ran,
     WsEventAwaiter,
+    DBError,
 } from "../../../core";
 import { Cell, Game, GameMode } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
@@ -27,6 +28,11 @@ import { MobService } from "../../Player/services/MobService";
 import { GameSubscriptionManager } from "../web/GameSubscriptionManager";
 import { MapService } from "./MapService";
 import { Stats } from "../../Stat/data/Stats";
+import { MasterySelection } from "../../Mastery/data/Mastery";
+import { MasteryTreeRepository } from "../../Mastery/repository/MasteryTreeRepository";
+import { MasteryService } from "../../Mastery/services/MasteryService";
+import { ActionRepository } from "../../Action/data/ActionRepository";
+import { Action } from "../../Action/data/Action";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -51,6 +57,10 @@ export class GameService {
     private readonly gameSubscribeAwaiters!: GameSubscriptionManager;
     @Provide(MapService)
     private readonly mapService!: MapService;
+    @Provide(MasteryTreeRepository)
+    private readonly masteryTreeRepository!: MasteryTreeRepository;
+    @Provide(MasteryService)
+    private readonly masteryService!: MasteryService;
 
     async getPlayerGame(
         gameId: string,
@@ -108,6 +118,48 @@ export class GameService {
                 const charClass = classes.find(
                     (charClass) => charClass.id === lobbyPlayer.classId
                 )!;
+
+                const selection: MasterySelection = { ...(lobbyPlayer.masteries ?? {}) };
+
+                const tree = await this.masteryTreeRepository.get(lobbyPlayer.classId);
+                const hasTree = tree && !(tree instanceof DBError);
+
+                if (hasTree) {
+                    //etre sûr que le user n'est pas undefined
+                    const error = this.masteryService.validate(tree, selection, user!.masteryPoints);
+                    if (error) return new SocketError(error);
+                }
+                const baseActions: Action[] = charClass.actionList;
+                const entity: Entity = {
+                    id: entityId,
+                    teamId: gameTeam.id,
+                    controllerId: lobbyPlayer.playerId,
+                    position: { ...playerCell.position },
+                    classId: lobbyPlayer.classId,
+                    type: EntityType.PLAYER,
+                    stats: { ...charClass.stats },
+                    effects: [],
+                    boosts: [],
+                    dead: false,
+                    isInvocation: false,
+                    isPlaying: charClass.isPlaying,
+                    actionUses: {},
+                    masteries: selection,
+                    actionList: baseActions.map((a) => a.id),
+                    modifiedActionList: [],
+                };
+
+                if (hasTree) {
+                    this.masteryService.applyToEntity(tree, selection, entity);
+                    const resolved = this.masteryService.resolveActions(tree, selection, baseActions);
+                    entity.actionList = resolved.map((a) => a.id);
+                    // on ne stocke que ce qui diffère de la base (ou qui est nouveau)
+                    entity.modifiedActionList = resolved.filter((a) => {
+                        const base = baseActions.find((b) => b.id === a.id);
+                        return !base || base !== a;
+                    });
+                };
+
                 players.push({
                     id: lobbyPlayer.playerId,
                     userId: lobbyPlayer.userId,
@@ -126,22 +178,6 @@ export class GameService {
                         shielded: 0,
                     },
                     masteries: lobbyPlayer.masteries ?? {}
-                });
-                entities.push({
-                    id: entityId,
-                    teamId: gameTeam.id,
-                    controllerId: lobbyPlayer.playerId,
-                    position: { ...playerCell.position },
-                    classId: lobbyPlayer.classId,
-                    type: EntityType.PLAYER,
-                    stats: charClass.stats,
-                    effects: [],
-                    boosts: [],
-                    dead: false,
-                    isInvocation: false,
-                    isPlaying: charClass.isPlaying,
-                    actionUses: {},
-                    masteries: lobbyPlayer.masteries
                 });
                 gameTeam.entitiesIds.push(entityId);
                 gameTeam.playerIds.push(lobbyPlayer.playerId);
