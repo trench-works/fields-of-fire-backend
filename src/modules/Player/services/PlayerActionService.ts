@@ -486,7 +486,7 @@ export class PlayerActionService {
 
         // pour les utilisation max par fight, voir pour grisé l'action une fois le maximum d'utilisation atteint
         if (action.maxUsePerRound && destination.entityId ) {
-            const used = playerEntity.actionUses?.[action.id]?.[destination.entityId] ?? 0;
+            const used = playerEntity.actionUsesPerRound?.[action.id]?.[destination.entityId] ?? 0;
             if (used >= action.maxUsePerRound) {
                 return {
                     actionId: PlayerOutputActions.CANCEL_ACTION,

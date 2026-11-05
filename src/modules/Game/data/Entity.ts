@@ -33,4 +33,5 @@ export class Entity {
     isPlaying!: boolean;
 
     actionUses!: Record<string, Record<string, number>>;
+    actionUsesPerRound!: Record<string, Record<string, number>>;
 }

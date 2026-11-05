@@ -129,6 +129,8 @@ export class GameTurnService implements AsyncResolver {
             Stats.fromEntity(playerEntity).totalMouvement;
         playerEntity.stats.energy = Stats.fromEntity(playerEntity).totalEnergy;
 
+        //on remet le compte des actions utilisées dans le tour a 0
+        playerEntity.actionUses = {};
         await this.gameDataManager.set(game.id, game);
 
         // If new playing entity is a mob, then launch playing actions for the mob

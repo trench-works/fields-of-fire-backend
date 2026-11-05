@@ -144,6 +144,7 @@ export class GameService {
                     isInvocation: false,
                     isPlaying: charClass.isPlaying,
                     actionUses: {},
+                    actionUsesPerRound: {},
                     masteries: selection,
                     actionList: baseActions.map((a) => a.id),
                     modifiedActionList: [],
@@ -346,7 +347,8 @@ export class GameService {
                 dead: false,
                 isInvocation: false,
                 isPlaying: charClass.isPlaying,
-                actionUses: {}
+                actionUses: {},
+                actionUsesPerRound: {},
             };
             team.entitiesIds.push(entity.id);
 
@@ -411,6 +413,8 @@ export class GameService {
             entity.effects = entity.effects.filter((e) => e.duration === null); // garde les effets permanents
             entity.stats.energy = entity.stats.totalEnergy;
             entity.stats.mouvement = entity.stats.totalMouvement;
+            entity.actionUses = {};
+            entity.actionUsesPerRound= {};
 
             const playerCell = await this.placeEntity(entity.id, game.plateau);
             entity.position = { ...playerCell.position };
