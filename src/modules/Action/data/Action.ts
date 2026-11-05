@@ -157,4 +157,12 @@ export class ActionUtils {
         }
         return entities;
     }
+
+    //à voir si il ne faut pas plutot le mettre dans Entity
+    static getEntityAction(entity: Entity, actionId: string, fallback: Action[]): Action | undefined {
+        return (
+            entity.modifiedActionList?.find((a) => a.id === actionId) ??
+            fallback.find((a) => a.id === actionId)
+        );
+    }
 }

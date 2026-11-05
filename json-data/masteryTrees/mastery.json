@@ -121,7 +121,7 @@
                         "name": "Gilet pare-balles",
                         "maxLevel": 3,
                         "statsPerLevel": {
-                            "armure" : 15
+                            "armor" : 15
                         },
                         "masteryRequirements": [ { "masteryId" : "fantassin_b0_m1", "level": 2}]
                     },

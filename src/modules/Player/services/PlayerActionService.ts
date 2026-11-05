@@ -138,7 +138,7 @@ export class PlayerActionService {
         }
 
         const listActions = await this.actionRepository.list();
-        const action = listActions.find((a) => a.id === actionId);
+        const action = ActionUtils.getEntityAction(playerEntity, actionId, listActions);
         if (!action) {
             return new SocketError("Action not found");
         }
