@@ -148,6 +148,7 @@ export class GameService {
                     masteries: selection,
                     actionList: baseActions.map((a) => a.id),
                     modifiedActionList: [],
+                    passives: [],
                 };
 
                 if (hasTree) {
@@ -349,6 +350,7 @@ export class GameService {
                 isPlaying: charClass.isPlaying,
                 actionUses: {},
                 actionUsesPerRound: {},
+                passives: [],
             };
             team.entitiesIds.push(entity.id);
 

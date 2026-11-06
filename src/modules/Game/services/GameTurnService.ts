@@ -4,6 +4,8 @@ import {
     AsyncResolver,
 } from "../../../core/app/Controller/DependencyResolver";
 import { Boost } from "../../Effect/data/Boost";
+import { GameEventType } from "../../Passive/data/GameEvent";
+import { PassiveService } from "../../Passive/services/PassiveService";
 import { BoostService } from "../../Player/services/BoostService";
 import { MobService } from "../../Player/services/MobService";
 import { PlayerWebSocketManager } from "../../Player/web/PlayerWebSocketManager";
@@ -24,18 +26,27 @@ export class GameTurnService implements AsyncResolver {
     @Provide(BoostService)
     private readonly boostService!: BoostService;
 
+    private passiveService!: PassiveService;
     private mobService!: MobService;
 
     asyncResolve(resolver: AsyncDependencyResolver): void {
         this.mobService = resolver.getProvider(MobService);
+        //BASTIEN Uncomment le code ci-dessous provoque une erreur de fou :)
+        this.passiveService = resolver.getProvider(PassiveService);
     }
 
-    public detectEntityDeath(game: Game): GameEventAnimation[] {
+    public async detectEntityDeath(game: Game): Promise<GameEventAnimation[]> {
         const animations: GameEventAnimation[] = [];
         if (game.entities) {
             for (const entity of game.entities) {
                 if (entity.stats.life <= 0 && !entity.dead) {
                     entity.dead = true;
+                    await this.passiveService.dispatch(game, {
+                        type: GameEventType.ENTITY_DIED,
+                        origin: "player",
+                        entityId: game.playerTurns[0],
+                        // killerId:
+                    });
                     game.playerTurns = game.playerTurns.filter(
                         (entityId) => entityId !== entity.id
                     );
@@ -104,10 +115,22 @@ export class GameTurnService implements AsyncResolver {
         if (!game || game.isStopped) {
             return;
         }
+
         this.detectEntityDeath(game);
         if (await this.detectGameEnd(game)) {
             return;
         }
+        await this.passiveService.dispatch(game, {
+            type: GameEventType.TURN_END,
+            origin: "player",
+            entityId: game.playerTurns[0],
+        });
+        //au cas ou un passif tue qqun
+        this.detectEntityDeath(game);
+        if (await this.detectGameEnd(game)) {
+            return;
+        }
+
         // Do turn change mechanic
         const playingEntityId = game.playerTurns.shift()!;
         game.playerTurns.push(playingEntityId);
@@ -131,6 +154,18 @@ export class GameTurnService implements AsyncResolver {
 
         //on remet le compte des actions utilisées dans le tour a 0
         playerEntity.actionUses = {};
+        
+        await this.passiveService.dispatch(game, {
+            type: GameEventType.TURN_START,
+            origin: "player",
+            entityId: game.playerTurns[0],
+        });
+        this.detectEntityDeath(game);
+        if (await this.detectGameEnd(game)) {
+            return;
+        }
+
+
         await this.gameDataManager.set(game.id, game);
 
         // If new playing entity is a mob, then launch playing actions for the mob

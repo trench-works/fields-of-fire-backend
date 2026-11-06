@@ -42,8 +42,8 @@ export type GameEvent = BaseEvent &
     );
 
 export enum GameEventType {
-    TURN_START = "TURN_START",
-    TURN_END = "TURN_END",
+    TURN_START = "TURN_START", //
+    TURN_END = "TURN_END", //
     ACTION_USED = "ACTION_USED",
     DAMAGE_DEALT = "DAMAGE_DEALT",
     ENTITY_MOVED = "ENTITY_MOVED",

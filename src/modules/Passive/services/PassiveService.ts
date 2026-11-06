@@ -26,7 +26,6 @@ export class PassiveService implements AsyncResolver {
     @Provide(ActionAnimationService)
     private readonly animationService!: ActionAnimationService;
 
-    // résolu en différé : AttackService appellera lui-même PassiveService (cycle)
     private attackService!: AttackService;
 
     asyncResolve(resolver: AsyncDependencyResolver): void {

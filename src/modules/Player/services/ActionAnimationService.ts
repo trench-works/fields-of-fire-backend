@@ -39,7 +39,7 @@ export class ActionAnimationService {
                 },
             },
         ];
-        animations.push(...this.gameTurnService.detectEntityDeath(game));
+        animations.push(... await this.gameTurnService.detectEntityDeath(game));
         await this.socketManager.emitUpdate(game, animations);
     }
 }

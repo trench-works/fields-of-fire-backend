@@ -14,7 +14,7 @@ export type PassiveContext = {
     castFree: (caster: Entity, action: Action, targets: Entity[]) => Promise<void>;
     applyEffects: (caster: Entity, hitTarget: Entity | undefined, effects: ManagedEffect[]) => void;
     getEffect: (id: string) => Promise<Effect | undefined>;
-};
+}
 
 export type PassiveDefinition = {
     id: string;

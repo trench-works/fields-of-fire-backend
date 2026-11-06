@@ -51,6 +51,7 @@ export class InvocationService {
                 isPlaying: charClass.isPlaying,
                 actionUses: {},
                 actionUsesPerRound: {},
+                passives: [],
             };
             game.teams
                 .find((team) => team.id === invoker.teamId)

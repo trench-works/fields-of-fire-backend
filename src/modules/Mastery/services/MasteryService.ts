@@ -78,7 +78,7 @@ export class MasteryService {
 
             const required = mastery.masteringPointsRequired ?? 0;
             if (mastery.passive && this.pointsInBranch(mastery, selection) >= required) {
-                entity.effects.push({ ...mastery.passive });
+                entity.passives.push(mastery.passive.id);
             }
         }
     }  
