@@ -8,7 +8,7 @@ import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { AttackTarget } from "./PlayerActionService";
 
-export class ActioAnimationService {
+export class ActionAnimationService {
     @Provide(GameWebSocketManager)
     private readonly socketManager!: GameWebSocketManager;
     @Provide(GameTurnService)

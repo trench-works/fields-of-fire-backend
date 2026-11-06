@@ -26,7 +26,9 @@ export class Entity {
     stats!: Stats;
     effects!: Effect[];
     boosts!: Boost[];
+
     masteries?: MasterySelection;
+    passives?: string[];
 
     dead!: boolean;
     isInvocation!: boolean;

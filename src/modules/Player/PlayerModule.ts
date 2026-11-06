@@ -1,7 +1,7 @@
 import { Module } from "../../core";
 import { PlayerController } from "./application/PlayerController";
 import { TurnTimeoutRepository } from "./data/TurnTimeoutRepository";
-import { ActioAnimationService } from "./services/ActionAnimationService";
+import { ActionAnimationService } from "./services/ActionAnimationService";
 import { AttackService } from "./services/AttackService";
 import { BoostService } from "./services/BoostService";
 import { EntityService } from "./services/EntityService";
@@ -27,7 +27,7 @@ export class PlayerModule extends Module {
                 PlayerService,
                 InvocationService,
                 MoveService,
-                ActioAnimationService,
+                ActionAnimationService,
             ],
         });
     }

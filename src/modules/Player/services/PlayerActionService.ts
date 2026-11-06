@@ -13,7 +13,7 @@ import { Stats } from "../../Stat/data/Stats";
 import { PlayerCancelAction } from "../application/interfaces/PlayerCancelAction";
 import { Player } from "../data/Player";
 import { PlayerOutputActions } from "../web/PlayerSocketActions";
-import { ActioAnimationService } from "./ActionAnimationService";
+import { ActionAnimationService } from "./ActionAnimationService";
 import { AttackService } from "./AttackService";
 import { InvocationService } from "./InvocationService";
 
@@ -62,8 +62,8 @@ export class PlayerActionService {
     private readonly gameTurnService!: GameTurnService;
     @Provide(AttackService)
     private readonly attackService!: AttackService;
-    @Provide(ActioAnimationService)
-    private readonly animationService!: ActioAnimationService;
+    @Provide(ActionAnimationService)
+    private readonly animationService!: ActionAnimationService;
     @Provide(InvocationService)
     private readonly invocationService!: InvocationService;
     @Provide(GameDataLocker)
