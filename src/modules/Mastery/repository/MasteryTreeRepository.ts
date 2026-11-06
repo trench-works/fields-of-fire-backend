@@ -1,5 +1,5 @@
 import { FolderRepository, Provide, ColdRessource, DBError } from "../../../core";
-import { Action } from "../../Action/data/Action";
+import { Action, ManagedEffect, ManagedEffectEntity } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Effect } from "../../Effect/data/Effect";
 import { EffectRepository } from "../../Effect/data/EffectRepository";
@@ -23,27 +23,24 @@ export class MasteryTreeRepository extends FolderRepository<MasteryTree, Mastery
         return { ...entity, rootMastery, masteries };
     }
 
-    private async resolveEffects(ids: string[]): Promise<Effect[]> {
-        const effects: Effect[] = [];
-        for (const id of ids) {
-            const effect = await this.effectRepository.get(id);
-            if (effect && !(effect instanceof DBError)) effects.push(effect);
+    private async resolveManagedEffects(list: ManagedEffectEntity[]): Promise<ManagedEffect[]> {
+        const result: ManagedEffect[] = [];
+        for (const managed of list) {
+            const effect = await this.effectRepository.get(managed.effect);
+            if (effect && !(effect instanceof DBError)) {
+                const { effect: _effectId, ...rest } = managed;
+                result.push({ ...rest, effect });
+            }
         }
-        return effects;
+        return result;
     }
 
-    private async resolveModification(
-        entity: ActionModificationEntity,
-    ): Promise<ActionModification> {
-        const { effectList, selfEffectList, onHitEffectList, ...rest } = entity;
+    private async resolveModification(entity: ActionModificationEntity): Promise<ActionModification> {
+        const { effectList, ...rest } = entity;
         return {
             ...rest,
-            ...(effectList && { effectList: await this.resolveEffects(effectList) }),
-            ...(selfEffectList && {
-                selfEffectList: await this.resolveEffects(selfEffectList),
-            }),
-            ...(onHitEffectList && {
-                onHitEffectList: await this.resolveEffects(onHitEffectList),
+            ...(effectList && {
+                effectList: await this.resolveManagedEffects(effectList),
             }),
         };
     }

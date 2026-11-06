@@ -80,7 +80,7 @@
                         "maxLevel": 3,
                         "actionModified": [{
                             "id": "shoot",
-                            "effectId": "SHARPSHOT"
+                            "effectList": {}
                         }],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1", "level": 2}]
                     },
@@ -93,7 +93,7 @@
                         },
                         "actionModified": [{
                             "id": "shoot",
-                            "effectId": "SHARPSHOT"
+                            "effectList": {}
                         }],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1", "level": 2}]
                     },
@@ -103,7 +103,7 @@
                         "maxLevel": 1,
                         "actionModified": [{
                             "id": "shoot",
-                            "effectId": "SERIAL_SHOOTER"
+                            "effectList": {}
                         }],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b2_m2", "level": 2}]
                     }
@@ -154,6 +154,10 @@
                         "name": "Suréquipé",
                         "maxLevel": 2,
                         "newActions": ["grenade"],
+                        "actionModified": [{
+                            "id": "grenade",
+                            "maxUsePerRound": "+1"
+                        }],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b3_m2", "level": 1}]
                     },
                     {
@@ -184,6 +188,10 @@
                         "name": "Grenade Incendiaire",
                         "maxLevel": 2,
                         "newActions": ["flame_grenade"],
+                        "actionModified": [{
+                            "id": "flame_grenade",
+                            "maxUsePerRound": "+1"
+                        }],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b3_m3a", "level": 1}]
                     }
                 ]

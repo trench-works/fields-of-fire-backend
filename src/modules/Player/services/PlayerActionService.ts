@@ -1,9 +1,8 @@
 import { Logger, Provide, SocketError } from "../../../core";
 
 import { Position, PositionUtils } from "../../../game-lib/Utils";
-import { Action, ActionUtils, ActionZoneType } from "../../Action/data/Action";
+import { Action, ActionUtils, ActionZoneType, ManagedEffect } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
-import { Effect } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
 import { Cell, CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
@@ -46,7 +45,7 @@ export enum DashType {
 export type AttackTarget = {
     entity: Entity;
     damage: number;
-    effects: Effect[];
+    effects: ManagedEffect[];
     isCritical: boolean;
 };
 
@@ -259,20 +258,15 @@ export class PlayerActionService {
         );
 
         const targets = targetEntities.map((entity) => {
-            const target: AttackTarget = {
-                entity,
-                damage: 0,
-                effects: [],
-                isCritical : false
-            };
-            if (action.effectList) {
-                for (const effect of action.effectList) {
-                    this.attackService.applyEffect(player.name, entity, effect);
-                }
-                target.effects = action.effectList;
-            }
+            const target: AttackTarget = { entity, damage: 0, effects: [], isCritical: false };
+            target.effects = action.effectList ?? [];
             return target;
         });
+
+        this.attackService.applyManagedEffects(
+            game, playerEntity, targetEntities[0], action.effectList ?? [], true,
+        );
+
 
         playerEntity.stats.energy -= action.cost;
         this.registerUse(playerEntity,action,destination);

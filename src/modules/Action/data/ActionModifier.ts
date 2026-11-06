@@ -1,5 +1,4 @@
-import { ActionEntity, ActionZoneType, ActionType, ActionLevel, Action } from "./Action";
-import { Effect } from "../../Effect/data/Effect";
+import { ActionZoneType, ActionType, ActionLevel, Action, ManagedEffect, ManagedEffectEntity } from "./Action";
 
 export type ActionModification = { id: string } & ActionModifier;
 
@@ -9,9 +8,7 @@ export class ActionModifier {
         name?: string;
         description?: string;
         damage?: { min?: number | string; max?: number |string };
-        effectList?: Effect[];
-        selfEffectList?: Effect[];
-        onHitEffectList?: Effect[];
+        effectList?: ManagedEffect[];
         rangeType?: ActionZoneType;
         range?: { min?: number | string; max?: number |string};
         zoneType?: ActionZoneType[];
@@ -29,7 +26,7 @@ export class ActionModifierEntity {
         name?: string;
         description?: string;
         damage?: { min?: number | string; max?: number |string };
-        effectList?: string[];
+        effectList?: ManagedEffectEntity[];
         selfEffectList?: string[];
         onHitEffectList?: string[];
         rangeType?: ActionZoneType;
@@ -65,7 +62,7 @@ function resolveValue(base: number, mod?: number | string): number {
 }
 
 export function applyModification(action: Action, mod: ActionModification): Action {
-    const { id: _id, damage, range, effectList, selfEffectList, onHitEffectList, zoneSize, maxUsePerTarget, maxUsePerRound, cost, ...simple } = mod;
+    const { id: _id, damage, range, effectList, zoneSize, maxUsePerTarget, maxUsePerRound, cost, ...simple } = mod;
 
     const defined = Object.fromEntries(
         Object.entries(simple).filter(([, v]) => v !== undefined),
@@ -96,8 +93,6 @@ export function applyModification(action: Action, mod: ActionModification): Acti
         result.maxUsePerRound = resolveOptionalValue(action.maxUsePerRound, maxUsePerRound);
     }
     if (effectList) result.effectList = effectList;
-    if (selfEffectList) result.selfEffectList = selfEffectList;
-    if (onHitEffectList) result.onHitEffectList = onHitEffectList;
     return result;
 }
 

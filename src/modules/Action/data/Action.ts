@@ -15,9 +15,7 @@ export class Action {
     name!: string;
     description?: string;
     damage?: { min: number; max: number };
-    effectList?: Effect[];
-    selfEffectList?: Effect[];
-    onHitEffectList?: Effect[];
+    effectList?: ManagedEffect[];
     rangeType!: ActionZoneType;
     range!: { min: number; max: number };
     zoneType!: ActionZoneType[];
@@ -40,9 +38,7 @@ export class ActionEntity {
     name!: string;
     description?: string;
     damage?: { min: number; max: number };
-    effectList?: string[];
-    selfEffectList?: string[];
-    onHitEffectList?: string[];
+    effectList?: ManagedEffectEntity[];
     rangeType!: ActionZoneType;
     range!: { min: number; max: number };
     zoneType!: ActionZoneType[];
@@ -57,6 +53,30 @@ export class ActionEntity {
     targetRequired?: boolean;
     invocateClass?: string;
     level!: ActionLevel;
+}
+
+export class ManagedEffect {
+    effect!: Effect;
+    chanceToApply?: number;
+    target!: EffectTarget;
+    onHit?: boolean;
+}
+
+export class ManagedEffectEntity {
+    effect!: string;
+    chanceToApply?: number;
+    target!: EffectTarget;
+    onHit?: boolean;
+}
+
+export enum EffectTarget {
+    SELF = "SELF",
+    TARGET = "TARGET",
+    RANDOM_ALLY = "RANDOM_ALLY",
+    RANDOM_FOE = "RANDOM_FOE",
+    ALL_ALLY = "ALL_ALLY",
+    ALL_FOE = "ALL_FOE",
+    ALL = "ALL"
 }
 
 export enum ActionType {
