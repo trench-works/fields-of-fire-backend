@@ -45,7 +45,7 @@ export class GameTurnService implements AsyncResolver {
                         type: GameEventType.ENTITY_DIED,
                         origin: "player",
                         entityId: game.playerTurns[0],
-                        // killerId:
+                        killerId: entity.lastDamagedBy,
                     });
                     game.playerTurns = game.playerTurns.filter(
                         (entityId) => entityId !== entity.id

@@ -9,6 +9,8 @@ import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameDataLocker } from "../../Game/services/GameDataLocker";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
+import { GameEventType } from "../../Passive/data/GameEvent";
+import { PassiveService } from "../../Passive/services/PassiveService";
 import { Stats } from "../../Stat/data/Stats";
 import { PlayerCancelAction } from "../application/interfaces/PlayerCancelAction";
 import { Player } from "../data/Player";
@@ -68,6 +70,8 @@ export class PlayerActionService {
     private readonly invocationService!: InvocationService;
     @Provide(GameDataLocker)
     private readonly gameDataLocker!: GameDataLocker;
+    @Provide(PassiveService)
+    private readonly passiveService!: PassiveService;
 
     async finishTurn(
         gameId: string,
@@ -178,6 +182,8 @@ export class PlayerActionService {
         }
         const { game, player, playerEntity, destination, action } = checkResult;
 
+
+
         let result: void | SocketError | PlayerCancelAction = undefined;
 
         switch (actionId) {
@@ -270,6 +276,7 @@ export class PlayerActionService {
 
         playerEntity.stats.energy -= action.cost;
         this.registerUse(playerEntity,action,destination);
+        await this.emitAttackEvents(game, playerEntity, action, destination, targets);
         this.animationService.animate(
             game,
             playerEntity,
@@ -291,6 +298,8 @@ export class PlayerActionService {
             playerEntity.position,
             destination.position
         );
+        
+        const startPosition = { ...playerEntity.position};
 
         const mouvement = Stats.fromEntity(playerEntity).mouvement;
         if (range > mouvement) {
@@ -317,6 +326,7 @@ export class PlayerActionService {
         playerEntity.stats.mouvement -= range;
 
         player.stats.steps += movePath.length - 1; // count steps taken
+        await this.emitMoved(game, playerEntity, startPosition, "walk");
 
         await this.gameDataManager.set(game.id, game);
 
@@ -350,6 +360,7 @@ export class PlayerActionService {
         //to finalize
         playerEntity.stats.energy -= action.cost;
         this.registerUse(playerEntity,action,destination);
+        await this.emitAttackEvents(game, playerEntity, action, destination, targets);
         this.animationService.animate(
             game,
             playerEntity,
@@ -378,12 +389,14 @@ export class PlayerActionService {
             action,
             destination
         );
+
         const newCell = this.findGapClosePosition(
             game,
             playerEntity,
             destination
         );
         let movePath: Position[] = [];
+        const from = { ...playerEntity.position };
         if (newCell) {
             movePath = new CellAStar().findPathPositions(
                 playerEntity.position,
@@ -396,9 +409,10 @@ export class PlayerActionService {
             newCell.entityId = playerEntity.id;
             playerEntity.position = { ...newCell.position };
         }
-
+        await this.emitMoved(game, playerEntity, from, "dash");
         playerEntity.stats.energy -= action.cost;
         this.registerUse(playerEntity,action,destination);
+        await this.emitAttackEvents(game, playerEntity, action, destination, targets);
         this.animationService.animate(
             game,
             playerEntity,
@@ -616,5 +630,55 @@ export class PlayerActionService {
         }
 
         return null; // pas de case libre trouvée
+    }
+
+    private async emitAttackEvents(
+        game: Game,
+        caster: Entity,
+        action: Action,
+        destination: Cell,
+        targets: AttackTarget[],
+    ): Promise<void> {
+        await this.passiveService.dispatch(game, {
+            type: GameEventType.ACTION_USED,
+            origin: "player",
+            sourceId: caster.id,
+            actionId: action.id,
+            targetPosition: destination.position,
+            targetIds: targets.map((t) => t.entity.id),
+        });
+
+        for (const { entity, damage, isCritical } of targets) {
+            await this.passiveService.dispatch(game, {
+                type: GameEventType.DAMAGE_DEALT,
+                origin: "player",
+                sourceId: caster.id,
+                targetId: entity.id,
+                actionId: action.id,
+                damage,
+                isCritical,
+            });
+        }
+    }
+
+    private async emitMoved(
+        game: Game,
+        entity: Entity,
+        from: Position,
+        cause: "walk" | "push" | "dash",
+        movedById?: string,
+    ): Promise<void> {
+        // pas de déplacement réel : pas d'événement
+        if (from.x === entity.position.x && from.y === entity.position.y) return;
+
+        await this.passiveService.dispatch(game, {
+            type: GameEventType.ENTITY_MOVED,
+            origin: "player",
+            entityId: entity.id,
+            from,
+            to: { ...entity.position },
+            cause,
+            movedById,
+        });
     }
 }

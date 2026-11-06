@@ -30,6 +30,7 @@ export class Entity {
     masteries?: MasterySelection;
     passives!: string[];
 
+    lastDamagedBy?: string;
     dead!: boolean;
     isInvocation!: boolean;
     isPlaying!: boolean;

@@ -100,7 +100,7 @@ export class LobbyController extends WsController<
 
     async setMasteries({ 
         key: { lobbyId },
-        user, 
+        token: { user },
         payload 
     }: WsListenerOptions<LobbyKeys, UpdateMasteries>) {
     return await this.lobbyService.setMasteries(lobbyId, user.id, payload);

@@ -188,11 +188,17 @@ export class AttackService {
         if (attackerPlayer && defenserDamage < 0) {
             attackerPlayer.stats.heal += -defenserDamage; // count heal done to other
         }
+
         target.stats.life -= defenserDamage;
         target.stats.life = Math.min(
             target.stats.maxLife,
             Math.max(0, target.stats.life)
         );
+
+        // vérifier en cas de mort indirecte (maso,bleeding, etc...)
+        if (defenserDamage > 0 && attacker.id !== target.id) {
+            target.lastDamagedBy = attacker.id;
+        }
         if (target.stats.life === 0 && attackerPlayer) {
             attackerPlayer.stats.kills++; // count kills
         }
