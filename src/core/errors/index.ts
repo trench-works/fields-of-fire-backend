@@ -4,3 +4,5 @@ export * from "./ws/AccessRefused";
 export * from "./ws/ActionImpossible";
 export * from "./http/HttpError";
 export * from "./http/UnknownError";
+export * from "./http/HttpTokenInvalid";
+export * from "./ws/SocketBadRequest";

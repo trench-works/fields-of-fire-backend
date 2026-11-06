@@ -12,6 +12,11 @@ export const ConfigMap = (): FieldsOfFireConfig => ({
         name: process.env.APP_NAME ?? "Fields Of Fire",
         port: Number(process.env.SERVER_PORT ?? 3000),
         logLevel: (process.env.LOG_LEVEL as LogLevel) ?? LogLevel.DEBUG,
+        token: {
+            secret: String(process.env.TOKEN_SECRET),
+            expiringSeconds: 60 * 60 * 24 * 365 * 20,
+            oldnessSeconds: 60 * 1,
+        },
     },
     redis: {
         host: process.env.REDIS_HOST ?? "localhost",

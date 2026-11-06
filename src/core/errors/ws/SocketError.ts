@@ -1,1 +1,9 @@
-export class SocketError extends Error {}
+export class SocketError {
+    code: string;
+    message?: string;
+
+    constructor(code: string, message?: string) {
+        this.code = code;
+        this.message = message;
+    }
+}

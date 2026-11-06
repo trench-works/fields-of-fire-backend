@@ -1,12 +1,11 @@
 import {
     DBError,
-    HttpError,
     Id,
     Logger,
     NotFoundError,
     Provide,
+    SocketBadRequest,
     SocketError,
-    UserInfos,
 } from "../../../core";
 import { LobbyDataManager } from "../data/LobbyDataManager";
 import { Lobby } from "../data/Lobby";
@@ -38,12 +37,12 @@ export class LobbyService {
     @Provide(MasteryService)
     private readonly masteryService!: MasteryService;
 
-    async updateLobby(lobbyId: string, user: UserInfos, payload: UpdateLobby) {
+    async updateLobby(lobbyId: string, userId: string, payload: UpdateLobby) {
         const lobby = await this.lobbyDataManager.getLobby(lobbyId);
         if (lobby instanceof NotFoundError) {
             return lobby;
         }
-        if (lobby.creatorId !== user.id) {
+        if (lobby.creatorId !== userId) {
             return;
         }
         lobby.boardSize = payload.boardSize ?? lobby.boardSize;
@@ -59,10 +58,10 @@ export class LobbyService {
             return lobby;
         }
         if (lobby.creatorId !== userId) {
-            return new SocketError();
+            return new SocketBadRequest();
         }
         if (lobby.teams.length === 4) {
-            return new SocketError();
+            return new SocketBadRequest();
         }
         lobby.teams.push({
             players: [],
@@ -79,14 +78,14 @@ export class LobbyService {
             return lobby;
         }
         if (lobby.mode === GameMode.INFINITY) {
-            return new SocketError();
+            return new SocketBadRequest();
         }
         const team = lobby.teams[index];
         if (!team) {
-            return new SocketError();
+            return new SocketBadRequest();
         }
         if (team.players.length === 4) {
-            return new SocketError();
+            return new SocketBadRequest();
         }
         const player = lobby.teams
             .flatMap((team) => team.players)
@@ -119,7 +118,7 @@ export class LobbyService {
     async createLobby(userId: string) {
         const user = await this.userRepository.get(userId);
         if (!user) {
-            return new HttpError(400, "User doesnt exist");
+            return new SocketBadRequest("User doesnt exist");
         }
         const lobby = await this.lobbyDataManager.addLobby({
             creatorId: userId,
@@ -178,7 +177,11 @@ export class LobbyService {
         );
     }
 
-    async setMasteries(lobbyId: string, userId: string, payload: UpdateMasteries) {
+    async setMasteries(
+        lobbyId: string,
+        userId: string,
+        payload: UpdateMasteries
+    ) {
         const lobby = await this.lobbyDataManager.getLobby(lobbyId);
         if (lobby instanceof NotFoundError) {
             return lobby;

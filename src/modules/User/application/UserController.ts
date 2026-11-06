@@ -1,8 +1,8 @@
 import { HttpController, HttpError, Provide } from "../../../core";
 import { PostListenerOptions } from "../../../core/app/Controller/HttpController";
-import { User } from "../data/User";
 import { UserService } from "../services/UserService";
 import { Authenticate } from "./interfaces/Authenticate";
+import { AuthenticateUserResponse } from "./interfaces/AuthenticateUserResponse";
 import { Register } from "./interfaces/Register";
 
 export class UserController extends HttpController {
@@ -11,19 +11,27 @@ export class UserController extends HttpController {
 
     constructor() {
         super();
-        this.post("/authenticate", this.authenticate.bind(this));
-        this.post("/register", this.register.bind(this));
+        this.post("/authenticate", this.authenticate.bind(this), {
+            authenticated: false,
+        });
+        this.post("/register", this.register.bind(this), {
+            authenticated: false,
+        });
     }
 
     async authenticate({
         body,
-    }: PostListenerOptions<object, Authenticate>): Promise<User | HttpError> {
+    }: PostListenerOptions<object, Authenticate>): Promise<
+        AuthenticateUserResponse | HttpError
+    > {
         return await this.userService.authenticate(body);
     }
 
     async register({
         body,
-    }: PostListenerOptions<object, Register>): Promise<User | HttpError> {
+    }: PostListenerOptions<object, Register>): Promise<
+        AuthenticateUserResponse | HttpError
+    > {
         return await this.userService.register(body);
     }
 }
