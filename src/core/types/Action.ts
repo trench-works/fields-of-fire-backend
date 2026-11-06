@@ -2,6 +2,7 @@ import { SocketError } from "../errors";
 
 export type InputAction<PayloadObject extends object = object> = {
     actionId: string;
+    token: string;
     payload: PayloadObject;
 };
 

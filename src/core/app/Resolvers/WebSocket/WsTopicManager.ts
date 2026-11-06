@@ -1,12 +1,10 @@
-import { WsController, Logger } from "../..";
+import { WsController, Logger, TokenService } from "../..";
 import { WebSocket } from "ws";
-import { UserInfos } from "../../Types/UserInfos";
-import { validateSync, ValidationError } from "class-validator";
+import { ValidationError } from "class-validator";
 import { InputAction } from "../../../types/Action";
 
 type SubcribePayload<RessourceKeyObject> = {
     key: RessourceKeyObject;
-    user: UserInfos;
 };
 
 export class WsTopicManager<
@@ -16,6 +14,7 @@ export class WsTopicManager<
     constructor(
         private readonly controllers: WsController<RessourceKeyObject>[],
         private readonly logger: Logger,
+        private readonly tokenService: TokenService,
         private readonly topic: string
     ) {}
 
@@ -23,30 +22,29 @@ export class WsTopicManager<
         socket.on("message", async (rawData: string) => {
             const {
                 actionId,
+                token,
                 payload,
             }: InputAction<SubcribePayload<RessourceKeyObject>> =
                 JSON.parse(rawData);
             if (actionId === "subscribe") {
-                await this.subscribe(socket, payload);
+                await this.subscribe(socket, token, payload);
             }
         });
     }
 
     async subscribe(
         socket: WebSocket,
+        rawToken: string,
         payload: SubcribePayload<RessourceKeyObject>
     ) {
-        const user = new UserInfos();
-        Object.assign(user, payload.user);
-        const validateUser = validateSync(user);
-        //TODO: verify as well that user is authenticated and authorized
-        if (validateUser?.length) {
-            socket.close(4000, JSON.stringify(validateUser));
+        const token = this.tokenService.decode(rawToken);
+        if (token instanceof Error) {
+            socket.close(4000, "TOKEN INVALID");
             return;
         }
 
         const validations = this.controllers.map((controller) =>
-            controller.subscribe(socket, { key: payload.key, user })
+            controller.subscribe(socket, { key: payload.key, token })
         );
         const errors = await Promise.all(validations);
 

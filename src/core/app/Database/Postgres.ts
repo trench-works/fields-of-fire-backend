@@ -13,6 +13,7 @@ import { Provide } from "../../decorators";
 import { Logger } from "../Providers";
 import { Instantiable } from "../Types/Instantiable";
 import { ColdRessource } from "./ColdDB";
+import { FindOptions } from "sequelize";
 
 export class PostgresEntity extends Model {
     @IsUUID(4)
@@ -74,6 +75,14 @@ export abstract class PostgresRepository<
         connector.getRepository(entity).then((repository) => {
             this.repository = repository;
         });
+    }
+
+    async findOne(options: FindOptions<any>): Promise<Entity | undefined> {
+        const entity = await this.repository.findOne(options);
+        if (!entity) {
+            return undefined;
+        }
+        return entity.dataValues;
     }
 
     async list(): Promise<Domain[]> {
