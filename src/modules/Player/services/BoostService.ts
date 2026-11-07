@@ -69,9 +69,14 @@ export class BoostService {
         );
         for (let i = 0; i < count; i++) {
             const random = Ran.int(total + 1);
-            boosts.push(
-                probabilityMap.filter((entry) => entry[0] >= random)[0][1]
-            );
+            const newBoost = probabilityMap.filter(
+                (entry) => entry[0] >= random
+            )[0][1];
+            if (boosts.some((boost) => boost.id === newBoost.id)) {
+                i--;
+                continue;
+            }
+            boosts.push(newBoost);
         }
         return boosts;
     }
