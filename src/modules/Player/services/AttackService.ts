@@ -96,7 +96,12 @@ export class AttackService {
                 (e) => e.action === EffectAction.VAMPIRISM
             ).length;
             if (vampireStacks > 0) {
-                const lifeSteal = Math.ceil((defenserDamage / 10) * vampireStacks);
+                let lifeSteal = 0;
+                if(action.zoneSize > 1){
+                    lifeSteal = Math.ceil((defenserDamage / 20) * vampireStacks);
+                }else {
+                    lifeSteal = Math.ceil((defenserDamage / 10) * vampireStacks);
+                }
                 attackerDamage -= lifeSteal;
             }
 
