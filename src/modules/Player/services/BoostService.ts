@@ -101,7 +101,9 @@ export class BoostService {
             const randomBoosts = await this.getRandomBoosts(
                 boostCount - boosts.length,
                 BoostType.AI,
-                mobCount === playerCount * 3 ? ["reinforcement"] : []
+                mobCount === playerCount * 3
+                    ? ["reinforcement", "heal"]
+                    : ["heal"]
             );
             boosts.push(...randomBoosts);
         }
