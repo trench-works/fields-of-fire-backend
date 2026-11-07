@@ -36,7 +36,7 @@
         "effects": [],
         "boosts": [
             {
-                "armor": 15
+                "armor": 20
             }
         ],
         "probability": 1
@@ -74,7 +74,8 @@
                 "precision": 10,
                 "dodging": 3,
                 "initiative": 15,
-                "armor": 5
+                "armor": 5,
+                "crit_chance": 2
             }
         ],
         "probability": 1
@@ -99,7 +100,7 @@
         "effects": [],
         "boosts": [
             {
-                "dodging": 4
+                "dodging": 5
             }
         ],
         "probability": 1
@@ -111,7 +112,6 @@
         "boosts": [
             {
                 "precision": 50,
-                "dodging": -3,
                 "totalMouvement": -1
             }
         ],
@@ -152,6 +152,7 @@
         "boosts": [
             {
                 "armor": -20,
+                "dodging": -3,
                 "strength": 50
             }
         ],
@@ -176,6 +177,30 @@
         "name": "Frappe Précise",
         "effects": ["crit_chance"],
         "boosts": [],
+        "probability": 1
+    },
+    {
+        "id": "anatomic_knowledge",
+        "name": "Connaissance de l'anatomie",
+        "effects": [],
+        "boosts": [
+            {
+                "intelligence": 30
+            }
+        ],
+        "probability": 1
+    },
+    {
+        "id": "peaceful",
+        "name": "pacifiste",
+        "effects": [],
+        "boosts": [
+            {
+                "intelligence": 50,
+                "strength" : -15,
+                "precision" : -15
+            }
+        ],
         "probability": 1
     },
     {
