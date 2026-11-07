@@ -100,6 +100,8 @@ export class PassiveService implements AsyncResolver {
                 }
                 return effect;
             },
+            changeLife: (entity, delta, sourceId) =>
+                this.changeLife(game, entity, delta, sourceId, "passive", depth + 1)
         };
     }
 
@@ -112,40 +114,106 @@ export class PassiveService implements AsyncResolver {
     ): Promise<void> {
         if (targets.length === 0) return;
 
+        const casterPreviousLife = caster.stats.life;
+
         const attackTargets: AttackTarget[] = targets.map((entity) => {
+            const previousLife = entity.stats.life; // avant applyDamage
             const { damage, isCritical } = this.attackService.applyDamage(
                 game,
                 action,
                 caster,
                 entity,
             );
-            return { entity, damage, isCritical, effects: [] };
+            return { entity, damage, isCritical, previousLife, effects: [] };
         });
 
-        const firstCell = game.plateau[targets[0].position.x][targets[0].position.y];
-        await this.animationService.animate(
+        // effets de l'action (cible, chance, onHit)
+        this.attackService.applyManagedEffects(
             game,
             caster,
-            action,
-            firstCell,
-            attackTargets,
+            targets[0],
+            action.effectList ?? [],
+            true,
         );
 
-        // les passifs peuvent réagir, mais avec origin "passive" et une profondeur +1
-        for (const { entity, damage, isCritical } of attackTargets) {
+        // 1. les passifs réagissent AVANT animate, pour que leurs effets
+        //    soient inclus dans la même mise à jour envoyée au client
+        for (const t of attackTargets) {
+            if (t.damage !== 0) {
+                await this.dispatch(
+                    game,
+                    {
+                        type: GameEventType.DAMAGE_DEALT,
+                        origin: "passive",
+                        sourceId: caster.id,
+                        targetId: t.entity.id,
+                        actionId: action.id,
+                        damage: t.damage,
+                        isCritical: t.isCritical ?? false,
+                    },
+                    depth + 1,
+                );
+            }
+            if (t.entity.stats.life !== t.previousLife) {
+                await this.dispatch(
+                    game,
+                    {
+                        type: GameEventType.HP_CHANGED,
+                        origin: "passive",
+                        entityId: t.entity.id,
+                        previous: t.previousLife,
+                        current: t.entity.stats.life,
+                    },
+                    depth + 1,
+                );
+            }
+        }
+        if (caster.stats.life !== casterPreviousLife) {
             await this.dispatch(
                 game,
                 {
-                    type: GameEventType.DAMAGE_DEALT,
+                    type: GameEventType.HP_CHANGED,
                     origin: "passive",
-                    sourceId: caster.id,
-                    targetId: entity.id,
-                    actionId: action.id,
-                    damage,
-                    isCritical,
+                    entityId: caster.id,
+                    previous: casterPreviousLife,
+                    current: caster.stats.life,
                 },
                 depth + 1,
             );
         }
+
+        // 2. animation + détection des morts
+        const firstCell = game.plateau[targets[0].position.x][targets[0].position.y];
+        await this.animationService.animate(game, caster, action, firstCell, attackTargets);
+    }
+
+   async changeLife(
+        game: Game,
+        entity: Entity,
+        delta: number,
+        sourceId?: string,
+        origin: "player" | "passive" = "player",
+        depth = 0,
+    ): Promise<void> {
+        const previous = entity.stats.life;
+        const current = Math.min(entity.stats.maxLife, Math.max(0, previous + delta));
+        if (current === previous) return;
+
+        entity.stats.life = current;
+        if (delta < 0 && sourceId && sourceId !== entity.id) {
+            entity.lastDamagedBy = sourceId;
+        }
+
+        await this.dispatch(
+            game,
+            {
+                type: GameEventType.HP_CHANGED,
+                origin,
+                entityId: entity.id,
+                previous,
+                current,
+            },
+            depth,
+        );
     }
 }

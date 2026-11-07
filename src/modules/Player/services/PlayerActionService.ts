@@ -47,6 +47,7 @@ export enum DashType {
 export type AttackTarget = {
     entity: Entity;
     damage: number;
+    previousLife: number;
     effects: ManagedEffect[];
     isCritical: boolean;
 };
@@ -255,7 +256,7 @@ export class PlayerActionService {
     ): Promise<void | SocketError | PlayerCancelAction> {
         const refusal = this.checkIfAllowed(playerEntity, action, destination);
         if (refusal) return refusal;
-
+        const attackerPreviousLife = playerEntity.stats.life;
         const targetEntities = this.getBoostTarget(
             game,
             playerEntity,
@@ -264,7 +265,7 @@ export class PlayerActionService {
         );
 
         const targets = targetEntities.map((entity) => {
-            const target: AttackTarget = { entity, damage: 0, effects: [], isCritical: false };
+            const target: AttackTarget = { entity, damage: 0, previousLife: playerEntity.stats.life, effects: [], isCritical: false };
             target.effects = action.effectList ?? [];
             return target;
         });
@@ -276,8 +277,8 @@ export class PlayerActionService {
 
         playerEntity.stats.energy -= action.cost;
         this.registerUse(playerEntity,action,destination);
-        await this.emitAttackEvents(game, playerEntity, action, destination, targets);
-        this.animationService.animate(
+        await this.emitAttackEvents(game, playerEntity, action, destination, targets, attackerPreviousLife);
+        await this.animationService.animate(
             game,
             playerEntity,
             action,
@@ -350,18 +351,23 @@ export class PlayerActionService {
         const refusal = this.checkIfAllowed(playerEntity, action, destination);
         if (refusal) return refusal;
 
-        const targets = this.dammageTargets(
+        const attackerPreviousLife = playerEntity.stats.life;
+        const targets = this.dammageTargets(game, playerEntity, action, destination);
+
+        playerEntity.stats.energy -= action.cost;
+        this.registerUse(playerEntity, action, destination);
+
+        await this.emitAttackEvents(
             game,
             playerEntity,
             action,
-            destination
+            destination,
+            targets,
+            attackerPreviousLife
         );
 
-        //to finalize
-        playerEntity.stats.energy -= action.cost;
-        this.registerUse(playerEntity,action,destination);
-        await this.emitAttackEvents(game, playerEntity, action, destination, targets);
-        this.animationService.animate(
+        // await ajouté : animate est async (emitUpdate + detectEntityDeath)
+        await this.animationService.animate(
             game,
             playerEntity,
             action,
@@ -370,7 +376,6 @@ export class PlayerActionService {
         );
 
         await this.gameDataManager.set(game.id, game);
-
         await this.gameTurnService.detectGameEnd(game);
     }
 
@@ -382,7 +387,7 @@ export class PlayerActionService {
     ): Promise<void | SocketError | PlayerCancelAction> {
         const refusal = this.checkIfAllowed(playerEntity, action, destination);
         if (refusal) return refusal;
-
+        const attackerPreviousLife = playerEntity.stats.life;
         const targets = this.dammageTargets(
             game,
             playerEntity,
@@ -412,8 +417,8 @@ export class PlayerActionService {
         await this.emitMoved(game, playerEntity, from, "dash");
         playerEntity.stats.energy -= action.cost;
         this.registerUse(playerEntity,action,destination);
-        await this.emitAttackEvents(game, playerEntity, action, destination, targets);
-        this.animationService.animate(
+        await this.emitAttackEvents(game, playerEntity, action, destination, targets, attackerPreviousLife);
+        await this.animationService.animate(
             game,
             playerEntity,
             action,
@@ -564,26 +569,18 @@ export class PlayerActionService {
         destination: Cell
     ) {
         const targetEntities = this.getAttackTarget(game, action, destination, playerEntity.position);
-
         const targets: AttackTarget[] = targetEntities.map<AttackTarget>(
             (entity) => {
-                const target: AttackTarget = {
-                    entity,
-                    damage: 0,
-                    effects: [],
-                    isCritical: false
-                };
+                const previousLife = entity.stats.life;
 
-                const result = this.attackService.applyDamage(
+                const { damage, isCritical } = this.attackService.applyDamage(
                     game,
                     action,
                     playerEntity,
                     entity
                 );
-                target.damage = result.damage;
-                target.isCritical = result.isCritical;
 
-                return target;
+                return { entity, damage, isCritical, previousLife, effects: [] };
             }
         );
         return targets;
@@ -638,6 +635,7 @@ export class PlayerActionService {
         action: Action,
         destination: Cell,
         targets: AttackTarget[],
+        casterPreviousLife: number,
     ): Promise<void> {
         await this.passiveService.dispatch(game, {
             type: GameEventType.ACTION_USED,
@@ -657,6 +655,27 @@ export class PlayerActionService {
                 actionId: action.id,
                 damage,
                 isCritical,
+            });
+        }
+
+        for (const t of targets) {
+            if (t.entity.stats.life !== t.previousLife) {
+                await this.passiveService.dispatch(game, {
+                    type: GameEventType.HP_CHANGED,
+                    origin: "player",
+                    entityId: t.entity.id,
+                    previous: t.previousLife,
+                    current: t.entity.stats.life,
+                });
+            }
+        }
+        if (caster.stats.life !== casterPreviousLife) {
+            await this.passiveService.dispatch(game, {
+                type: GameEventType.HP_CHANGED,
+                origin: "player",
+                entityId: caster.id,
+                previous: casterPreviousLife,
+                current: caster.stats.life,
             });
         }
     }
