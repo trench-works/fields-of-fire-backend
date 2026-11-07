@@ -125,6 +125,7 @@ export class GameTurnService implements AsyncResolver {
                 (effect) => effect.duration === null || effect.duration > 0
             );
 
+        playerEntity.actionUses = {};
         playerEntity.stats.mouvement =
             Stats.fromEntity(playerEntity).totalMouvement;
         playerEntity.stats.energy = Stats.fromEntity(playerEntity).totalEnergy;
