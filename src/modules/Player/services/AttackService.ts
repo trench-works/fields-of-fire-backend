@@ -10,6 +10,8 @@ import {
     ActionLevel,
     ActionType,
     ActionZoneType,
+    EffectTarget,
+    ManagedEffect,
 } from "../../Action/data/Action";
 import { Effect, EffectAction, EffectType } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
@@ -186,35 +188,28 @@ export class AttackService {
         if (attackerPlayer && defenserDamage < 0) {
             attackerPlayer.stats.heal += -defenserDamage; // count heal done to other
         }
+
         target.stats.life -= defenserDamage;
         target.stats.life = Math.min(
             target.stats.maxLife,
             Math.max(0, target.stats.life)
         );
+
+        // vérifier en cas de mort indirecte (maso,bleeding, etc...)
+        if (defenserDamage > 0 && attacker.id !== target.id) {
+            target.lastDamagedBy = attacker.id;
+        }
         if (target.stats.life === 0 && attackerPlayer) {
             attackerPlayer.stats.kills++; // count kills
         }
 
         //manage effect
         if ((action.effectList?.length ?? 0) > 0) {
-            for (const effect of action.effectList!) {
-                this.applyEffect(attacker.id, target, effect);
+            for (const managedEffect of action.effectList!) {
+                this.applyEffect(attacker.id, target, managedEffect.effect);
             }
             //target.effects = action.effectList!;
         }
-
-        if (action.selfEffectList) {
-            for (const effect of action.selfEffectList) {
-                this.applyEffect(attacker.id, attacker, effect);
-            }
-        }
-
-        if (action.onHitEffectList && target) {
-            for (const effect of action.onHitEffectList) {
-                this.applyEffect(attacker.id, attacker, effect);
-            }
-        }
-
 
         return {damage: defenserDamage, isCritical};
     }
@@ -223,10 +218,6 @@ export class AttackService {
         if (!target.stats) {
             return;
         }
-        // chance de ne pas appliquer l'effet
-        if (effect.chance !== undefined && Ran.int(100) >= effect.chance) {
-            return; 
-        }
         const effectCopy = { ...effect };
         if (caster) {
             effectCopy.author = caster;
@@ -234,6 +225,24 @@ export class AttackService {
 
         target.effects.push(effectCopy);
         target.stats = Stats.add(target.stats, effect.instant);
+    }
+    
+    applyManagedEffects(
+        game: Game,
+        caster: Entity,
+        hitTarget: Entity | undefined,
+        effects: ManagedEffect[],
+        hit: boolean,
+    ): void {
+        for (const managed of effects) {
+            if (managed.onHit && !hit) continue;
+            for (const entity of this.resolveEffectTargets(managed.target, game, caster, hitTarget)) {
+                if (managed.chanceToApply !== undefined && Ran.int(100) >= managed.chanceToApply) {
+                    continue; 
+                }
+                this.applyEffect(caster.id, entity, managed.effect);
+            }
+        }
     }
 
     getCellsInAttackRange(
@@ -313,5 +322,33 @@ export class AttackService {
             );
         }
         return result;
+    }
+
+    resolveEffectTargets(
+    target: EffectTarget,
+    game: Game,
+    caster: Entity,
+    hitTarget: Entity | undefined,
+    ): Entity[] {
+        const alive = game.entities.filter((e) => !e.dead);
+        const allies = alive.filter((e) => e.teamId === caster.teamId);
+        const foes = alive.filter((e) => e.teamId !== caster.teamId);
+
+        switch (target) {
+            case EffectTarget.SELF:
+                return [caster];
+            case EffectTarget.TARGET:
+                return hitTarget ? [hitTarget] : [];
+            case EffectTarget.RANDOM_ALLY:
+                return allies.length ? [allies[Ran.int(allies.length)]] : [];
+            case EffectTarget.RANDOM_FOE:
+                return foes.length ? [foes[Ran.int(foes.length)]] : [];
+            case EffectTarget.ALL_ALLY:
+                return allies;
+            case EffectTarget.ALL_FOE:
+                return foes;
+            case EffectTarget.ALL:
+                return alive;
+        }
     }
 }

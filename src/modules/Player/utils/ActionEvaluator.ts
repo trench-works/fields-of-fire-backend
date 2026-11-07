@@ -95,7 +95,7 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
             action,
             this.game.plateau
         )) {
-            this.calculateAttackNote(action, cell.position, pushEval);
+            this.calculateAttackNote(action, cell.position, this.entity.position, pushEval);
         }
     }
 
@@ -112,6 +112,7 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
     protected calculateAttackNote(
         action: Action,
         position: Position,
+        attackerPosition: Position,
         pushEval: (evaluation: Evaluation<EvaluatedAction>) => void
     ): void {
         const attackerStats = Stats.fromEntity(this.entity);
@@ -119,7 +120,8 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
         const targets = ActionUtils.getEntitiesInRange(
             action,
             this.game,
-            position
+            position,
+            attackerPosition,
         );
         if (!targets?.length) {
             return;

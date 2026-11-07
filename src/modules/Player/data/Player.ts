@@ -1,4 +1,5 @@
 import { Boost } from "../../Effect/data/Boost";
+import { MasterySelection } from "../../Mastery/data/Mastery";
 import { PlayerStats } from "./PlayerStats";
 
 export type Player = {
@@ -10,5 +11,6 @@ export type Player = {
     name: string;
     invocations: string[];
     randomBoost: Boost[];
+    masteries: MasterySelection
     stats: PlayerStats;
 };

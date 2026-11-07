@@ -144,7 +144,7 @@ export class MobService implements AsyncResolver {
                         },
                     });
                     animations.push(
-                        ...this.gameTurnService.detectEntityDeath(game)
+                        ...await this.gameTurnService.detectEntityDeath(game)
                     );
                 }
             }

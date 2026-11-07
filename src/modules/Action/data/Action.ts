@@ -15,19 +15,18 @@ export class Action {
     name!: string;
     description?: string;
     damage?: { min: number; max: number };
-    effectList?: Effect[];
-    selfEffectList?: Effect[];
-    onHitEffectList?: Effect[];
+    effectList?: ManagedEffect[];
     rangeType!: ActionZoneType;
     range!: { min: number; max: number };
     zoneType!: ActionZoneType[];
     zoneSize!: number;
     actionType!: ActionType;
-    mooveToTarget?: { x: number; y: number };
+    //mooveToTarget?: { x: number; y: number };
     maxUsePerTarget?: number;
-    pushValue?: number;
+    maxUsePerRound?: number;
+    //pushValue?: number;
     cost!: number;
-    isWalkAction?: boolean;
+    //isWalkAction?: boolean;
     targetRequired?: boolean;
     invocateClass?: string;
     level!: ActionLevel;
@@ -39,22 +38,45 @@ export class ActionEntity {
     name!: string;
     description?: string;
     damage?: { min: number; max: number };
-    effectList?: string[];
-    selfEffectList?: string[];
-    onHitEffectList?: string[];
+    effectList?: ManagedEffectEntity[];
     rangeType!: ActionZoneType;
     range!: { min: number; max: number };
     zoneType!: ActionZoneType[];
     zoneSize!: number;
     actionType!: ActionType;
-    mooveToTarget?: { x: number; y: number };
+    //mooveToTarget?: { x: number; y: number };
     maxUsePerTarget?: number;
-    pushValue?: number;
+    maxUsePerRound?: number;
+    //pushValue?: number;
     cost!: number;
-    isWalkAction?: boolean;
+    //isWalkAction?: boolean;
     targetRequired?: boolean;
     invocateClass?: string;
     level!: ActionLevel;
+}
+
+export class ManagedEffect {
+    effect!: Effect;
+    chanceToApply?: number;
+    target!: EffectTarget;
+    onHit?: boolean;
+}
+
+export class ManagedEffectEntity {
+    effect!: string;
+    chanceToApply?: number;
+    target!: EffectTarget;
+    onHit?: boolean;
+}
+
+export enum EffectTarget {
+    SELF = "SELF",
+    TARGET = "TARGET",
+    RANDOM_ALLY = "RANDOM_ALLY",
+    RANDOM_FOE = "RANDOM_FOE",
+    ALL_ALLY = "ALL_ALLY",
+    ALL_FOE = "ALL_FOE",
+    ALL = "ALL"
 }
 
 export enum ActionType {
@@ -70,13 +92,15 @@ export enum ActionZoneType {
     CIRCLE = "CIRCLE",
     PLUS = "PLUS",
     XCROSS = "XCROSS",
+    CONE = "CONE"
 }
 
 export class ActionUtils {
     static getEntitiesInRange(
         action: Action,
         game: Game,
-        target: Position
+        target: Position,
+        origin: Position
     ): Entity[] {
         const inBoundsConditions: ((position: Position) => boolean)[] = [];
         for (const zoneType of action.zoneType) {
@@ -110,6 +134,32 @@ export class ActionUtils {
                             action.zoneSize
                     );
                     break;
+                case ActionZoneType.CONE: {
+                    const dx = target.x - origin.x;
+                    const dy = target.y - origin.y;
+
+                    // pas de direction (cible sur le lanceur) : le cône ne touche rien
+                    if (dx === 0 && dy === 0) {
+                        inBoundsConditions.push(() => false);
+                        break;
+                    }
+
+                    // direction cardinale dominante vers la cible
+                    const horizontal = Math.abs(dx) >= Math.abs(dy);
+                    const sign = horizontal ? Math.sign(dx) : Math.sign(dy);
+
+                    inBoundsConditions.push((position) => {
+                        const depth = horizontal
+                            ? (position.x - origin.x) * sign
+                            : (position.y - origin.y) * sign;
+                        const lateral = horizontal
+                            ? Math.abs(position.y - origin.y)
+                            : Math.abs(position.x - origin.x);
+
+                        return depth >= 1 && depth <= action.zoneSize && lateral <= depth - 1;
+                    });
+                    break;
+                }
             }
         }
         const entities: Entity[] = [];
@@ -126,5 +176,13 @@ export class ActionUtils {
             }
         }
         return entities;
+    }
+
+    //à voir si il ne faut pas plutot le mettre dans Entity
+    static getEntityAction(entity: Entity, actionId: string, fallback: Action[]): Action | undefined {
+        return (
+            entity.modifiedActionList?.find((a) => a.id === actionId) ??
+            fallback.find((a) => a.id === actionId)
+        );
     }
 }

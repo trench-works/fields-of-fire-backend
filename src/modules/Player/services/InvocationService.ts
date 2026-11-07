@@ -7,15 +7,15 @@ import { Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { PlayerCancelAction } from "../application/interfaces/PlayerCancelAction";
 import { PlayerOutputActions } from "../web/PlayerSocketActions";
-import { ActioAnimationService } from "./ActionAnimationService";
+import { ActionAnimationService } from "./ActionAnimationService";
 
 export class InvocationService {
     @Provide(CharacterClassRepository)
     private readonly characterClassRepository!: CharacterClassRepository;
     @Provide(GameDataManager)
     private readonly gameDataManager!: GameDataManager;
-    @Provide(ActioAnimationService)
-    private readonly animationService!: ActioAnimationService;
+    @Provide(ActionAnimationService)
+    private readonly animationService!: ActionAnimationService;
 
     async createInvocation(
         game: Game,
@@ -50,6 +50,8 @@ export class InvocationService {
                 isInvocation: true,
                 isPlaying: charClass.isPlaying,
                 actionUses: {},
+                actionUsesPerRound: {},
+                passives: [],
             };
             game.teams
                 .find((team) => team.id === invoker.teamId)
