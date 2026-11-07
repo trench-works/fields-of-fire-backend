@@ -139,7 +139,7 @@ export class GameService {
                     dead: false,
                     isInvocation: false,
                     isPlaying: charClass.isPlaying,
-                    actionUses: {}
+                    actionUses: {},
                 });
                 gameTeam.entitiesIds.push(entityId);
                 gameTeam.playerIds.push(lobbyPlayer.playerId);
@@ -196,6 +196,7 @@ export class GameService {
             readyPlayers: [],
             round: 1,
             isStopped: false,
+            isFinished: false,
             winnerTeamId: undefined,
         };
         await this.lobbyDataManager.delete(lobbyId);
@@ -308,7 +309,7 @@ export class GameService {
                 dead: false,
                 isInvocation: false,
                 isPlaying: charClass.isPlaying,
-                actionUses: {}
+                actionUses: {},
             };
             team.entitiesIds.push(entity.id);
 
