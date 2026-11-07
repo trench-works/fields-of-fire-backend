@@ -20,7 +20,6 @@ export type PassiveContext = {
 export type PassiveDefinition = {
     id: string;
     triggers: GameEventType[];
-    /** true : le passif réagit aussi aux événements venant d'un autre passif */
     reactsToPassive?: boolean;
     run(ctx: PassiveContext): void | Promise<void>;
 };

@@ -366,7 +366,6 @@ export class PlayerActionService {
             attackerPreviousLife
         );
 
-        // await ajouté : animate est async (emitUpdate + detectEntityDeath)
         await this.animationService.animate(
             game,
             playerEntity,
@@ -600,8 +599,6 @@ export class PlayerActionService {
     ): Cell | null {
         const dx = destination.position.x - attacker.position.x;
         const dy = destination.position.y - attacker.position.y;
-
-        // Direction normalisée vers la cible
         const stepX = dx === 0 ? 0 : dx > 0 ? 1 : -1;
         const stepY = dy === 0 ? 0 : dy > 0 ? 1 : -1;
 
@@ -620,13 +617,13 @@ export class PlayerActionService {
         ) {
             const cell = game.plateau[checkX]?.[checkY];
             if (cell && this.checkMoveDestination(cell)) {
-                return cell; // première case libre adjacente à la cible
+                return cell;
             }
             checkX -= stepX;
             checkY -= stepY;
         }
 
-        return null; // pas de case libre trouvée
+        return null;
     }
 
     private async emitAttackEvents(
@@ -687,7 +684,6 @@ export class PlayerActionService {
         cause: "walk" | "push" | "dash",
         movedById?: string,
     ): Promise<void> {
-        // pas de déplacement réel : pas d'événement
         if (from.x === entity.position.x && from.y === entity.position.y) return;
 
         await this.passiveService.dispatch(game, {

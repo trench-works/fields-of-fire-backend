@@ -32,7 +32,6 @@ export class PassiveService implements AsyncResolver {
         this.attackService = resolver.getProvider(AttackService);
     }
 
-    /** Point d'entrée unique : annonce un événement à tous les porteurs de passifs. */
     async dispatch(game: Game, event: GameEvent, depth = 0): Promise<void> {
         if (depth > PassiveService.MAX_DEPTH) {
             this.logger.error(`Passive depth limit reached on ${event.type}`);
@@ -45,7 +44,6 @@ export class PassiveService implements AsyncResolver {
                 return; // attention pas d'erreur affichée
             }
 
-        // copie : un passif peut modifier game.entities pendant la boucle
         for (const owner of [...game.entities]) {
             if (owner.dead) continue;
 
@@ -135,9 +133,6 @@ export class PassiveService implements AsyncResolver {
             action.effectList ?? [],
             true,
         );
-
-        // 1. les passifs réagissent AVANT animate, pour que leurs effets
-        //    soient inclus dans la même mise à jour envoyée au client
         for (const t of attackTargets) {
             if (t.damage !== 0) {
                 await this.dispatch(
@@ -182,7 +177,6 @@ export class PassiveService implements AsyncResolver {
             );
         }
 
-        // 2. animation + détection des morts
         const firstCell = game.plateau[targets[0].position.x][targets[0].position.y];
         await this.animationService.animate(game, caster, action, firstCell, attackTargets);
     }
