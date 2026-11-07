@@ -59,7 +59,7 @@ export class AttackService {
                 defenserDamage = -(defenserStats.maxLife - defenserStats.life);
             }
         } else {
-            brutTotal = damage + statBonus;
+            brutTotal = Math.max(damage + statBonus, 1);
             defenserDamage = brutTotal * (100 / (100 + defenserStats.armor));
 
             //Crit Logik
