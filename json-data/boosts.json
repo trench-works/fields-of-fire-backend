@@ -75,7 +75,7 @@
                 "dodging": 3,
                 "initiative": 15,
                 "armor": 5,
-                "crit_chance": 2
+                "critical": 2
             }
         ],
         "probability": 1
