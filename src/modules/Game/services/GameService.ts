@@ -31,7 +31,6 @@ import { Stats } from "../../Stat/data/Stats";
 import { MasterySelection } from "../../Mastery/data/Mastery";
 import { MasteryTreeRepository } from "../../Mastery/repository/MasteryTreeRepository";
 import { MasteryService } from "../../Mastery/services/MasteryService";
-import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Action } from "../../Action/data/Action";
 
 export class GameService {
@@ -119,14 +118,22 @@ export class GameService {
                     (charClass) => charClass.id === lobbyPlayer.classId
                 )!;
 
-                const selection: MasterySelection = { ...(lobbyPlayer.masteries ?? {}) };
+                const selection: MasterySelection = {
+                    ...(lobbyPlayer.masteries ?? {}),
+                };
 
-                const tree = await this.masteryTreeRepository.get(lobbyPlayer.classId);
+                const tree = await this.masteryTreeRepository.get(
+                    lobbyPlayer.classId
+                );
                 const hasTree = tree && !(tree instanceof DBError);
 
                 if (hasTree) {
                     //etre sûr que le user n'est pas undefined
-                    const error = this.masteryService.validate(tree, selection, user!.masteryPoints);
+                    const error = this.masteryService.validate(
+                        tree,
+                        selection,
+                        user!.masteryPoints
+                    );
                     if (error) return new SocketError(error);
                 }
                 const baseActions: Action[] = charClass.actionList;
@@ -153,14 +160,18 @@ export class GameService {
 
                 if (hasTree) {
                     this.masteryService.applyToEntity(tree, selection, entity);
-                    const resolved = this.masteryService.resolveActions(tree, selection, baseActions);
+                    const resolved = this.masteryService.resolveActions(
+                        tree,
+                        selection,
+                        baseActions
+                    );
                     entity.actionList = resolved.map((a) => a.id);
                     // on ne stocke que ce qui diffère de la base (ou qui est nouveau)
                     entity.modifiedActionList = resolved.filter((a) => {
                         const base = baseActions.find((b) => b.id === a.id);
                         return !base || base !== a;
                     });
-                };
+                }
 
                 players.push({
                     id: lobbyPlayer.playerId,
@@ -179,8 +190,9 @@ export class GameService {
                         sustained: 0,
                         shielded: 0,
                     },
-                    masteries: lobbyPlayer.masteries ?? {}
+                    masteries: lobbyPlayer.masteries ?? {},
                 });
+                entities.push(entity);
                 gameTeam.entitiesIds.push(entityId);
                 gameTeam.playerIds.push(lobbyPlayer.playerId);
             }
@@ -236,6 +248,7 @@ export class GameService {
             readyPlayers: [],
             round: 1,
             isStopped: false,
+            isFinished: false,
             winnerTeamId: undefined,
         };
         await this.lobbyDataManager.delete(lobbyId);
@@ -416,7 +429,7 @@ export class GameService {
             entity.stats.energy = entity.stats.totalEnergy;
             entity.stats.mouvement = entity.stats.totalMouvement;
             entity.actionUses = {};
-            entity.actionUsesPerRound= {};
+            entity.actionUsesPerRound = {};
 
             const playerCell = await this.placeEntity(entity.id, game.plateau);
             entity.position = { ...playerCell.position };

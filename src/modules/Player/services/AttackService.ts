@@ -61,7 +61,12 @@ export class AttackService {
                 defenserDamage = -(defenserStats.maxLife - defenserStats.life);
             }
         } else {
-            brutTotal = damage + statBonus;
+            if (action.damage && action.damage.max > 0){
+                brutTotal = Math.max(damage + statBonus, 1);
+            }
+            else{
+                brutTotal = damage + statBonus
+            }
             defenserDamage = brutTotal * (100 / (100 + defenserStats.armor));
 
             //Crit Logik
@@ -156,13 +161,6 @@ export class AttackService {
             attacker,
             target
         );
-        target.effects = target.effects.filter(
-            (effect) =>
-                !(
-                    effect.type === EffectType.CONSUMABLE &&
-                    [EffectAction.WEAKNESS].includes(effect.action)
-                )
-        );
 
         // damagers to attacker
         if (attackerPlayer && attackerDamage > 0) {
@@ -181,6 +179,14 @@ export class AttackService {
         // damages to target
         if (attackerPlayer && defenserDamage > 0) {
             attackerPlayer.stats.damages += defenserDamage; // count damage done
+            this.logger.error(`!!! dammage done : ${defenserDamage}`);
+            target.effects = target.effects.filter(
+            (effect) =>
+                !(
+                    effect.type === EffectType.CONSUMABLE &&
+                    [EffectAction.WEAKNESS].includes(effect.action)
+                )
+        );
         }
         if (targetPlayer && defenserDamage > 0) {
             targetPlayer.stats.sustained += defenserDamage; // count damage taken
