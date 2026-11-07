@@ -38,6 +38,7 @@ export type Game = {
     readyPlayers: string[];
     round: number;
     isStopped: boolean;
+    isFinished: boolean;
     winnerTeamId: string | undefined;
 };
 

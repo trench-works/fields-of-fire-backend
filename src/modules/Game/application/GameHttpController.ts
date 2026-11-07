@@ -20,8 +20,10 @@ export class GameHttpController extends HttpController {
     }: HttpListenerOptions): Promise<GameListResponse[] | HttpError> {
         const data = await this.repository.findAll();
 
-        const myGames = data.filter((game) =>
-            game.players.some((player) => player.userId === token?.user.id)
+        const myGames = data.filter(
+            (game) =>
+                !game.isFinished &&
+                game.players.some((player) => player.userId === token?.user.id)
         );
 
         return myGames.map((game) => ({

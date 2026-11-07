@@ -67,8 +67,17 @@ export class GameTurnService implements AsyncResolver {
             })
         );
         if (aliveTeams.length <= 1) {
+            game.isStopped = true;
+            game.winnerTeamId = aliveTeams[0].id;
+
             const boostMap: Map<string, Boost[]> = new Map();
             if (game.mode === GameMode.INFINITY) {
+                const playersTeam = game.teams.find(
+                    (team) => team.playerIds.length
+                );
+                if (game.winnerTeamId !== playersTeam?.id) {
+                    game.isFinished = true;
+                }
                 for (const player of game.players) {
                     const entity = game.entities.find(
                         (entity) => entity.id === player.entityId
@@ -84,9 +93,9 @@ export class GameTurnService implements AsyncResolver {
                         player.randomBoost = boosts;
                     }
                 }
+            } else {
+                game.isFinished = true;
             }
-            game.isStopped = true;
-            game.winnerTeamId = aliveTeams[0].id;
             await this.gameDataManager.set(game.id, game);
             await this.playerSocketManager.emitGameEnd(game.id, (playerId) => ({
                 winnerTeamId: aliveTeams[0].id,
@@ -125,6 +134,7 @@ export class GameTurnService implements AsyncResolver {
                 (effect) => effect.duration === null || effect.duration > 0
             );
 
+        playerEntity.actionUses = {};
         playerEntity.stats.mouvement =
             Stats.fromEntity(playerEntity).totalMouvement;
         playerEntity.stats.energy = Stats.fromEntity(playerEntity).totalEnergy;
