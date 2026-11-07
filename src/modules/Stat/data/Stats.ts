@@ -16,6 +16,8 @@ export class Stats {
     armor!: number;
     initiative!: number;
     dodging!: number;
+    intelligence!: number;
+    critical!: number;
 
     static add<BaseStat extends Partial<Stats>>(
         baseStats: BaseStat,
@@ -57,6 +59,8 @@ export class Stats {
             armor: 0,
             initiative: 0,
             dodging: 0,
+            intelligence: 0,
+            critical: 0,
             energy: 0,
             totalEnergy: 0,
             mouvement: 0,

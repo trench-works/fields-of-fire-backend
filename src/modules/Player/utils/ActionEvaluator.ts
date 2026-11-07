@@ -124,6 +124,19 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
         if (!targets?.length) {
             return;
         }
+        if (action.maxUsePerTarget) {
+            const usesCounts = targets.map(
+                (target) =>
+                    this.entity.actionUses?.[action.id]?.[target.id] ?? 0
+            );
+            if (
+                usesCounts.some(
+                    (useCount) => useCount >= (action.maxUsePerTarget ?? 0)
+                )
+            ) {
+                return;
+            }
+        }
 
         let note = 0;
         // set note as average expected damage to ennemy divied by action cost minus damage to player itself

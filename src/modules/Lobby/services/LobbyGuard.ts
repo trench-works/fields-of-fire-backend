@@ -15,7 +15,7 @@ export class LobbyGuard implements IGuard {
     ) {}
 
     async validate({
-        user,
+        token: { user },
         key,
     }: WsListenerOptions<LobbyKeys>): Promise<RessourceAccessLevel> {
         const lobby = await this.lobbyDataManager.getLobby(key.lobbyId);

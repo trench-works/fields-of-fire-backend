@@ -16,6 +16,7 @@ export class BoostService {
     async applyBoost(entity: Entity, boostId: string): Promise<void> {
         const boost = await this.boostRepository.get(boostId);
         if (!boost) return;
+        entity.boosts.push({ ...boost });
         const effects = await Promise.all(
             boost.effects.map((effectId) => this.effectRepository.get(effectId))
         );
@@ -30,7 +31,6 @@ export class BoostService {
                         entity.effects.push({ ...effect });
                     }
                 }
-                this.logger.log("will apply boosts", boost.boosts);
                 // Applique immédiatement sur stats pour ce combat
                 entity.stats = Stats.add(entity.stats, ...boost.boosts);
 

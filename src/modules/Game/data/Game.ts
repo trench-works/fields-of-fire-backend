@@ -21,6 +21,7 @@ export enum GameMode {
 
 export type Game = {
     id: string;
+    name: string;
     mode: GameMode;
     creatorId: string;
     plateau: Cell[][];
@@ -37,6 +38,7 @@ export type Game = {
     readyPlayers: string[];
     round: number;
     isStopped: boolean;
+    isFinished: boolean;
     winnerTeamId: string | undefined;
 };
 

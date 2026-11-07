@@ -7,6 +7,7 @@ import { Effect } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
 import { Cell, CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
+import { GameDataLocker } from "../../Game/services/GameDataLocker";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { Stats } from "../../Stat/data/Stats";
@@ -46,6 +47,7 @@ export type AttackTarget = {
     entity: Entity;
     damage: number;
     effects: Effect[];
+    isCritical: boolean;
 };
 
 export class PlayerActionService {
@@ -65,6 +67,8 @@ export class PlayerActionService {
     private readonly animationService!: ActioAnimationService;
     @Provide(InvocationService)
     private readonly invocationService!: InvocationService;
+    @Provide(GameDataLocker)
+    private readonly gameDataLocker!: GameDataLocker;
 
     async finishTurn(
         gameId: string,
@@ -85,14 +89,38 @@ export class PlayerActionService {
         this.gameTurnService.finishTurn(game.id);
     }
 
-    async action(
+    private isActionPossible(action: Action, entity: Entity): boolean {
+        const stats = Stats.fromEntity(entity);
+        switch (action.id) {
+            case "WALK":
+                if (!stats.mouvement) {
+                    return false;
+                }
+                break;
+            default:
+                if (stats.energy < action.cost) {
+                    return false;
+                }
+                break;
+        }
+        return true;
+    }
+
+    private async checkBeforeAction(
         actionId: PlayerActionId,
         gameId: string,
         playerId: string,
-        target: { x: number; y: number }
-    ): Promise<void | SocketError | PlayerCancelAction> {
-        this.logger.log("PlayerActionService action method called");
-
+        target: Position
+    ): Promise<
+        | {
+              game: Game;
+              player: Player;
+              playerEntity: Entity;
+              destination: Cell;
+              action: Action;
+          }
+        | SocketError
+    > {
         const game = await this.gameDataManager.get(gameId);
         if (!game) {
             return new SocketError("Game not found");
@@ -105,6 +133,9 @@ export class PlayerActionService {
         if (!playerEntity) {
             return new SocketError("Entity not found");
         }
+        if (playerEntity.id !== game.playerTurns[0]) {
+            return new SocketError("Not player turn");
+        }
 
         const listActions = await this.actionRepository.list();
         const action = listActions.find((a) => a.id === actionId);
@@ -112,9 +143,53 @@ export class PlayerActionService {
             return new SocketError("Action not found");
         }
 
+        if (!this.isActionPossible(action, playerEntity)) {
+            return new SocketError("Can't do this action");
+        }
+        return { game, player, playerEntity, destination, action };
+    }
+
+    async action(
+        actionId: PlayerActionId,
+        gameId: string,
+        playerId: string,
+        target: Position
+    ): Promise<void | SocketError | PlayerCancelAction> {
+        const precheckResult = await this.checkBeforeAction(
+            actionId,
+            gameId,
+            playerId,
+            target
+        );
+        if (precheckResult instanceof SocketError) {
+            return precheckResult;
+        }
+
+        await this.gameDataLocker.waitLock(gameId); //WAIT FOR DATA IS UNLOCK
+        this.gameDataLocker.lock(gameId); //LOCK THE GAME ID
+
+        const checkResult = await this.checkBeforeAction(
+            actionId,
+            gameId,
+            playerId,
+            target
+        );
+        if (checkResult instanceof SocketError) {
+            return checkResult;
+        }
+        const { game, player, playerEntity, destination, action } = checkResult;
+
+        let result: void | SocketError | PlayerCancelAction = undefined;
+
         switch (actionId) {
             case PlayerActionId.WALK:
-                return await this.move(game, player, playerEntity, destination);
+                result = await this.move(
+                    game,
+                    player,
+                    playerEntity,
+                    destination
+                );
+                break;
             case PlayerActionId.AMPUTATE:
             case PlayerActionId.ARTILLERY_SUPPORT:
             case PlayerActionId.BAYONET:
@@ -123,51 +198,58 @@ export class PlayerActionService {
             case PlayerActionId.SABER:
             case PlayerActionId.BREAK:
             case PlayerActionId.INTIMIDATION:
-                return await this.attack(
+                result = await this.attack(
                     game,
                     playerEntity,
                     action,
                     destination
                 );
+                break;
             case PlayerActionId.PROVOK:
             case PlayerActionId.DOPAGE:
             case PlayerActionId.SNEAKY:
             case PlayerActionId.FIGHTING_DRUG:
             case PlayerActionId.CHARGE:
-                return await this.boost(
+                result = await this.boost(
                     game,
                     player,
                     playerEntity,
                     action,
                     destination
                 );
+                break;
             case PlayerActionId.BARRICADE:
-                return await this.invocationService.createInvocation(
+                result = await this.invocationService.createInvocation(
                     game,
                     playerEntity,
                     action,
                     destination.position
                 );
+                break;
             case PlayerActionId.SHIELD_RUSH:
-                return await this.attackAndDash(
+                result = await this.attackAndDash(
                     game,
                     playerEntity,
                     action,
                     destination
                 );
+                break;
             default:
-                this.logger.error("Unknown action ID");
+                this.logger.error("Unknown action ID " + actionId);
         }
+        this.gameDataLocker.unlock(gameId); //UNLOCK THE GAME ID
+        return result;
     }
 
-    async boost(
+    private async boost(
         game: Game,
         player: Player,
         playerEntity: Entity,
         action: Action,
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
-        this.checkIfAllowed(playerEntity, action, destination);
+        const refusal = this.checkIfAllowed(playerEntity, action, destination);
+        if (refusal) return refusal;
 
         const targetEntities = this.getBoostTarget(
             game,
@@ -181,6 +263,7 @@ export class PlayerActionService {
                 entity,
                 damage: 0,
                 effects: [],
+                isCritical : false
             };
             if (action.effectList) {
                 for (const effect of action.effectList) {
@@ -192,6 +275,7 @@ export class PlayerActionService {
         });
 
         playerEntity.stats.energy -= action.cost;
+        this.registerUse(playerEntity,action,destination);
         this.animationService.animate(
             game,
             playerEntity,
@@ -202,7 +286,7 @@ export class PlayerActionService {
         await this.gameDataManager.set(game.id, game);
     }
 
-    async move(
+    private async move(
         game: Game,
         player: Player,
         playerEntity: Entity,
@@ -253,13 +337,14 @@ export class PlayerActionService {
         ]);
     }
 
-    async attack(
+    private async attack(
         game: Game,
         playerEntity: Entity,
         action: Action,
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
-        this.checkIfAllowed(playerEntity, action, destination);
+        const refusal = this.checkIfAllowed(playerEntity, action, destination);
+        if (refusal) return refusal;
 
         const targets = this.dammageTargets(
             game,
@@ -270,10 +355,7 @@ export class PlayerActionService {
 
         //to finalize
         playerEntity.stats.energy -= action.cost;
-
-        this.logger.log(
-            `Player ${playerEntity.id} performed action ${action.name} on cell (${destination.position.x}, ${destination.position.y}) with damage ${action.damage?.min}-${action.damage?.max}`
-        );
+        this.registerUse(playerEntity,action,destination);
         this.animationService.animate(
             game,
             playerEntity,
@@ -287,12 +369,15 @@ export class PlayerActionService {
         await this.gameTurnService.detectGameEnd(game);
     }
 
-    async attackAndDash(
+    private async attackAndDash(
         game: Game,
         playerEntity: Entity,
         action: Action,
         destination: Cell
     ): Promise<void | SocketError | PlayerCancelAction> {
+        const refusal = this.checkIfAllowed(playerEntity, action, destination);
+        if (refusal) return refusal;
+
         const targets = this.dammageTargets(
             game,
             playerEntity,
@@ -319,6 +404,7 @@ export class PlayerActionService {
         }
 
         playerEntity.stats.energy -= action.cost;
+        this.registerUse(playerEntity,action,destination);
         this.animationService.animate(
             game,
             playerEntity,
@@ -331,11 +417,11 @@ export class PlayerActionService {
         await this.gameTurnService.detectGameEnd(game);
     }
 
-    checkMoveDestination(cell: Cell): boolean {
+    private checkMoveDestination(cell: Cell): boolean {
         return Boolean(!cell.entityId && !cell.isHole && !cell.isWall);
     }
 
-    getTarget(game: Game, action: Action, destination: Cell): Entity[] {
+    private getTarget(game: Game, action: Action, destination: Cell): Entity[] {
         const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
             action,
             game,
@@ -344,11 +430,11 @@ export class PlayerActionService {
         return targetEntity;
     }
 
-    getAttackTarget(game: Game, action: Action, destination: Cell) {
+    private getAttackTarget(game: Game, action: Action, destination: Cell) {
         return this.getTarget(game, action, destination);
     }
 
-    getBoostTarget(
+    private getBoostTarget(
         game: Game,
         playerEntity: Entity,
         action: Action,
@@ -359,7 +445,11 @@ export class PlayerActionService {
         );
     }
 
-    checkIfAllowed(playerEntity: Entity, action: Action, destination: Cell) {
+    private checkIfAllowed(
+        playerEntity: Entity,
+        action: Action,
+        destination: Cell
+    ): PlayerCancelAction | undefined {
         if (Stats.fromEntity(playerEntity).energy < action.cost) {
             return {
                 actionId: PlayerOutputActions.CANCEL_ACTION,
@@ -369,7 +459,8 @@ export class PlayerActionService {
             };
         }
 
-        this.checkRange(playerEntity, action, destination);
+        const rangeError = this.checkRange(playerEntity, action, destination);
+        if (rangeError) return rangeError;
 
         if (action.targetRequired && !destination?.entityId) {
             return {
@@ -379,9 +470,23 @@ export class PlayerActionService {
                 },
             };
         }
+
+        if (action.maxUsePerTarget && destination.entityId ) {
+            const used = playerEntity.actionUses?.[action.id]?.[destination.entityId] ?? 0;
+            if (used >= action.maxUsePerTarget) {
+                return {
+                    actionId: PlayerOutputActions.CANCEL_ACTION,
+                    payload: {
+                        reason: "max-use-per-target",
+                    },
+                };
+            }
+        }
+
+        return undefined;
     }
 
-    checkRange(
+    private checkRange(
         playerEntity: Entity,
         action: Action,
         destination: Cell
@@ -430,14 +535,13 @@ export class PlayerActionService {
         }
     }
 
-    dammageTargets(
+    private dammageTargets(
         game: Game,
         playerEntity: Entity,
         action: Action,
         destination: Cell
     ) {
         const targetEntities = this.getAttackTarget(game, action, destination);
-        this.logger.debug(`action : ${JSON.stringify(action)}`);
 
         const targets: AttackTarget[] = targetEntities.map<AttackTarget>(
             (entity) => {
@@ -445,21 +549,31 @@ export class PlayerActionService {
                     entity,
                     damage: 0,
                     effects: [],
+                    isCritical: false
                 };
 
-                const damage = this.attackService.applyDamage(
+                const result = this.attackService.applyDamage(
                     game,
                     action,
                     playerEntity,
                     entity
                 );
-                target.damage = damage;
+                target.damage = result.damage;
+                target.isCritical = result.isCritical;
 
                 return target;
             }
         );
         return targets;
     }
+
+    private registerUse(entity: Entity, action: Action, destination: Cell) {
+        if (!action.maxUsePerTarget || !destination.entityId) return;
+        const uses = (entity.actionUses ??= {});
+        const byTarget = (uses[action.id] ??= {});
+        byTarget[destination.entityId] = (byTarget[destination.entityId] ?? 0) + 1;
+    }
+
     private findGapClosePosition(
         game: Game,
         attacker: Entity,

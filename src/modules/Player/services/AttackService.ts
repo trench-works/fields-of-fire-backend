@@ -26,12 +26,13 @@ export class AttackService {
         action: Action,
         attacker: Entity,
         defenser: Entity
-    ): { defenserDamage: number; attackerDamage: number } {
+    ): { defenserDamage: number; attackerDamage: number, isCritical: boolean } {
         const attackerStats = Stats.fromEntity(attacker);
         const defenserStats = Stats.fromEntity(defenser);
 
         let attackerDamage: number = 0;
         let defenserDamage: number;
+        let isCritical : boolean = false;
 
         let statBonus: number = 0;
         // calculate stats bonus
@@ -39,41 +40,43 @@ export class AttackService {
             case ActionType.MELEE:
                 {
                     statBonus += attackerStats.strength / 10;
-                    this.logger.debug(
-                        `Calculated : ${statBonus} because strength = ${attacker.stats!.strength}`
-                    );
                 }
                 break;
             case ActionType.RANGED:
                 {
                     statBonus += attackerStats.precision / 10;
-                    this.logger.debug("range : ", statBonus);
                 }
                 break;
         }
 
         let brutTotal: number;
+
+        //cas du soin
         if (damage < 0) {
-            brutTotal = damage - statBonus;
+            brutTotal = damage - attackerStats.intelligence;
             defenserDamage = brutTotal;
             if (defenserStats.life - defenserDamage > defenserStats.maxLife) {
                 defenserDamage = -(defenserStats.maxLife - defenserStats.life);
             }
         } else {
-            brutTotal = damage + statBonus;
+            if (action.damage && action.damage.max > 0){
+                brutTotal = Math.max(damage + statBonus, 1);
+            }
+            else{
+                brutTotal = damage + statBonus
+            }
             defenserDamage = brutTotal * (100 / (100 + defenserStats.armor));
 
             //Crit Logik
             const critRoll = Ran.int(100);
-            const critChanceBuff = attacker.effects.filter(
-                (e) => e.action === EffectAction.CRIT_CHANCE
-            ).length;
+            const critChanceBuff = attackerStats.critical;
             const critDammageBuff = attacker.effects.filter(
                 (e) => e.action === EffectAction.CRIT_DAMMAGE
             ).length;
-            const critChance = 1 + critChanceBuff * 3;
+            const critChance = 1 + critChanceBuff;
             if (critRoll < critChance) {
-                defenserDamage *= 2 + 0.25 * critDammageBuff;
+                defenserDamage *= 2 + 0.33 * critDammageBuff;
+                isCritical = true;
             }
         }
 
@@ -82,7 +85,7 @@ export class AttackService {
                 1 +
                 (PositionUtils.distance(attacker.position, defenser.position) -
                     1) *
-                    0.1;
+                    0.15;
         }
 
         // Vampire : vol de vie par stack
@@ -93,7 +96,7 @@ export class AttackService {
                 (e) => e.action === EffectAction.VAMPIRISM
             ).length;
             if (vampireStacks > 0) {
-                const lifeSteal = (defenserDamage / 10) * vampireStacks;
+                const lifeSteal = Math.ceil((defenserDamage / 10) * vampireStacks);
                 attackerDamage -= lifeSteal;
             }
 
@@ -119,6 +122,7 @@ export class AttackService {
         return {
             attackerDamage: Math.ceil(attackerDamage),
             defenserDamage: Math.ceil(defenserDamage),
+            isCritical,
         };
     }
 
@@ -127,7 +131,7 @@ export class AttackService {
         action: Action,
         attacker: Entity,
         target: Entity
-    ): number {
+    ): {damage: number, isCritical: boolean} {
         const attackerPlayer: Player | undefined = game.players.find(
             (player) => player.entityId === attacker.id
         );
@@ -140,7 +144,7 @@ export class AttackService {
             const isDodged = target.stats.dodging > diceRoll ? true : false;
 
             if (isDodged) {
-                return 0;
+                return { damage: 0, isCritical: false };
             }
         }
 
@@ -149,18 +153,11 @@ export class AttackService {
             : 0;
 
         // calculate damages
-        const { attackerDamage, defenserDamage } = this.calculateFinalDamage(
+        const { attackerDamage, defenserDamage, isCritical } = this.calculateFinalDamage(
             randomDamage,
             action,
             attacker,
             target
-        );
-        target.effects = target.effects.filter(
-            (effect) =>
-                !(
-                    effect.type === EffectType.CONSUMABLE &&
-                    [EffectAction.WEAKNESS].includes(effect.action)
-                )
         );
 
         // damagers to attacker
@@ -180,6 +177,14 @@ export class AttackService {
         // damages to target
         if (attackerPlayer && defenserDamage > 0) {
             attackerPlayer.stats.damages += defenserDamage; // count damage done
+            this.logger.error(`!!! dammage done : ${defenserDamage}`);
+            target.effects = target.effects.filter(
+            (effect) =>
+                !(
+                    effect.type === EffectType.CONSUMABLE &&
+                    [EffectAction.WEAKNESS].includes(effect.action)
+                )
+        );
         }
         if (targetPlayer && defenserDamage > 0) {
             targetPlayer.stats.sustained += defenserDamage; // count damage taken
@@ -198,31 +203,36 @@ export class AttackService {
 
         //manage effect
         if ((action.effectList?.length ?? 0) > 0) {
-            this.logger.debug(
-                `action.effectList : ${JSON.stringify(action.effectList)}`
-            );
             for (const effect of action.effectList!) {
                 this.applyEffect(attacker.id, target, effect);
             }
-            target.effects = action.effectList!;
+            //target.effects = action.effectList!;
         }
 
         if (action.selfEffectList) {
-            this.logger.debug(`action.effectList : ${action.effectList}`);
             for (const effect of action.selfEffectList) {
                 this.applyEffect(attacker.id, attacker, effect);
             }
         }
 
-        return defenserDamage;
+        if (action.onHitEffectList && target) {
+            for (const effect of action.onHitEffectList) {
+                this.applyEffect(attacker.id, attacker, effect);
+            }
+        }
+
+
+        return {damage: defenserDamage, isCritical};
     }
 
     applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
         if (!target.stats) {
-            this.logger.error("Target entity has no stats");
             return;
         }
-        this.logger.log(`target is ${JSON.stringify(target)}`);
+        // chance de ne pas appliquer l'effet
+        if (effect.chance !== undefined && Ran.int(100) >= effect.chance) {
+            return; 
+        }
         const effectCopy = { ...effect };
         if (caster) {
             effectCopy.author = caster;
@@ -293,10 +303,20 @@ export class AttackService {
             }
         }
         if (action.level === ActionLevel.GROUND) {
-            return applyFovToGroundAttack(start, result, board);
+            return applyFovToGroundAttack(
+                start,
+                result,
+                board,
+                action.range.max
+            );
         }
         if (action.level === ActionLevel.UNDERGROUND) {
-            return applyFovToUndergroundAttack(start, result, board);
+            return applyFovToUndergroundAttack(
+                start,
+                result,
+                board,
+                action.range.max
+            );
         }
         return result;
     }

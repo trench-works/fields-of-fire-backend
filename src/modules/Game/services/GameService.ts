@@ -52,11 +52,14 @@ export class GameService {
     @Provide(MapService)
     private readonly mapService!: MapService;
 
-    async getPlayerCurrentGame(
+    async getPlayerGame(
+        gameId: string,
         userId: string
     ): Promise<JoinGameResponse | null> {
-        const game = (await this.gameDataManager.findAll()).find((game) =>
-            game.players.some((player) => player.userId === userId)
+        const game = (await this.gameDataManager.findAll()).find(
+            (game) =>
+                game.players.some((player) => player.userId === userId) &&
+                game.id === gameId
         );
         if (!game) {
             return null;
@@ -98,7 +101,6 @@ export class GameService {
                 npcIds: [],
                 entitiesIds: [],
             };
-            this.logger.log(team.players);
             for (const lobbyPlayer of team.players) {
                 const entityId = Id.get();
                 const playerCell = await this.placeEntity(entityId, plateau);
@@ -133,9 +135,11 @@ export class GameService {
                     type: EntityType.PLAYER,
                     stats: charClass.stats,
                     effects: [],
+                    boosts: [],
                     dead: false,
                     isInvocation: false,
                     isPlaying: charClass.isPlaying,
+                    actionUses: {},
                 });
                 gameTeam.entitiesIds.push(entityId);
                 gameTeam.playerIds.push(lobbyPlayer.playerId);
@@ -176,6 +180,7 @@ export class GameService {
         }
         const game: Game = {
             id: gameId,
+            name: lobby.name,
             mode: lobby.mode,
             creatorId: userId,
             plateau: plateau,
@@ -191,6 +196,7 @@ export class GameService {
             readyPlayers: [],
             round: 1,
             isStopped: false,
+            isFinished: false,
             winnerTeamId: undefined,
         };
         await this.lobbyDataManager.delete(lobbyId);
@@ -299,9 +305,11 @@ export class GameService {
                 type: EntityType.NPC,
                 stats: charClass.stats,
                 effects: [],
+                boosts: [],
                 dead: false,
                 isInvocation: false,
                 isPlaying: charClass.isPlaying,
+                actionUses: {},
             };
             team.entitiesIds.push(entity.id);
 

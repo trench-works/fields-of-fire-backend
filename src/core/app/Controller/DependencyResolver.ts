@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { Controllable, Instantiable } from "../Types/Instantiable";
-import { WsController } from "..";
+import { TokenService, WsController } from "..";
 import { Configurable } from "../Types/Configurable";
 import {
     ConfigService,
@@ -94,9 +94,11 @@ export class DependencyResolver<
     constructor(
         { controllers, providers }: DependencyResolverOptions<Config>,
         private readonly configService: ConfigService<Config>,
-        private readonly logger: Logger
+        private readonly logger: Logger,
+        tokenService: TokenService
     ) {
         this.resolvedProviders.set("ConfigService", this.configService);
+        this.resolvedProviders.set("TokenService", tokenService);
         this.resolvedProviders.set("Logger", logger);
         this.logger.debug("Building dependencies tree...");
         this.controllerClasses = controllers;

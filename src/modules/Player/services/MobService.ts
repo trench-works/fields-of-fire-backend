@@ -59,7 +59,6 @@ export class MobService implements AsyncResolver {
         }
         let didAction = true;
         while (didAction) {
-            this.logger.debug("Mob calculating a turn");
             const animations: GameEventAnimation[] = [];
             didAction = false;
 
@@ -121,16 +120,17 @@ export class MobService implements AsyncResolver {
                     entity.stats.energy -= action.action.cost;
                     const hits: (Position & {
                         damage: number;
+                        isCritical: boolean;
                     })[] = [];
                     if (action?.targets) {
                         for (const target of action?.targets ?? []) {
-                            const damage = this.attackService.applyDamage(
+                            const result = this.attackService.applyDamage(
                                 game,
                                 action.action,
                                 entity,
                                 target
                             );
-                            hits.push({ ...action.position, damage });
+                            hits.push({ ...action.position, damage: result.damage, isCritical: result.isCritical});
                         }
                     }
                     animations.push({
