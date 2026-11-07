@@ -53,7 +53,7 @@ export class AttackService {
 
         //cas du soin
         if (damage < 0) {
-            brutTotal = damage - attackerStats.intelligence;
+            brutTotal = damage - attackerStats.intelligence/10;
             defenserDamage = brutTotal;
             if (defenserStats.life - defenserDamage > defenserStats.maxLife) {
                 defenserDamage = -(defenserStats.maxLife - defenserStats.life);
