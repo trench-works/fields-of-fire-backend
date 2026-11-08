@@ -38,6 +38,8 @@ export enum PlayerActionId {
     BARRICADE = "barricade",
     GRENADE = "grenade",
     FLAME_GRENADE = "flame_grenade",
+    IMPOSSIBLE_SHOOT = "impossible_shoot",
+    BRUTALIZE = "brutalize",
 }
 
 export enum DashType {
@@ -208,6 +210,8 @@ export class PlayerActionService {
             case PlayerActionId.INTIMIDATION:
             case PlayerActionId.GRENADE:
             case PlayerActionId.FLAME_GRENADE:
+            case PlayerActionId.IMPOSSIBLE_SHOOT:
+            case PlayerActionId.BRUTALIZE:
                 result = await this.attack(
                     game,
                     playerEntity,
