@@ -11,7 +11,7 @@ import { LobbyDataManager } from "../data/LobbyDataManager";
 import { Lobby } from "../data/Lobby";
 import { LobbyResponse } from "../../Menu/application/interfaces/UpdateLobbyListResponse";
 import { MenuWebSocketManager } from "../../Menu/web/MenuWebSocketManager";
-import { UserRepository } from "../../User/data/UserRepository";
+import { UserRepository } from "../../User/data/repository/UserRepository";
 import { LobbyWebSocketManager } from "../web/LobbyWebSocketManager";
 import { GameMode } from "../../Game/data/Game";
 import { LobbyTeam } from "../data/LobbyTeam";

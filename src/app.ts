@@ -14,6 +14,7 @@ import { PostgresConnector } from "./core/app/Database/Postgres";
 import { UserEntity } from "./modules/User/data/UserEntity";
 import { MasteryModule } from "./modules/Mastery/MasteryModule";
 import { PassiveModule } from "./modules/Passive/PassiveModule";
+import { UserMasteriesEntity } from "./modules/User/data/UserMasteriesEntity";
 
 if (process.env.ENV !== "PROD") {
     dotenv.config({ path: [__dirname + "/../env/.env.local"] });
@@ -39,7 +40,7 @@ const server = new App({
             provider: (configService) =>
                 new PostgresConnector(
                     configService.getConfig().postgres
-                ).getClient([UserEntity]),
+                ).getClient([UserEntity, UserMasteriesEntity]),
         },
     ],
     modules: [

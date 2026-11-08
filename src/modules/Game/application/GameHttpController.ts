@@ -1,6 +1,6 @@
 import { HttpController, HttpError, Provide } from "../../../core";
 import { HttpListenerOptions } from "../../../core/app/Controller/HttpController";
-import { UserRepository } from "../../User/data/UserRepository";
+import { UserRepository } from "../../User/data/repository/UserRepository";
 import { GameDataManager } from "../data/GameRepository";
 import { GameListResponse } from "./interfaces/GameListResponse";
 

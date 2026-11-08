@@ -17,7 +17,7 @@ import { Entity, EntityType } from "../data/Entity";
 import { Player } from "../../Player/data/Player";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { GameCreationError } from "./errors/GameCreationError";
-import { UserRepository } from "../../User/data/UserRepository";
+import { UserRepository } from "../../User/data/repository/UserRepository";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
 import { BoostService } from "../../Player/services/BoostService";
 import { Team, TeamColor } from "../data/Team";
@@ -32,6 +32,7 @@ import { MasterySelection } from "../../Mastery/data/Mastery";
 import { MasteryTreeRepository } from "../../Mastery/repository/MasteryTreeRepository";
 import { MasteryService } from "../../Mastery/services/MasteryService";
 import { Action } from "../../Action/data/Action";
+import { getClassPoints } from "../../User/data/User";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -113,7 +114,7 @@ export class GameService {
             for (const lobbyPlayer of team.players) {
                 const entityId = Id.get();
                 const playerCell = await this.placeEntity(entityId, plateau);
-                const user = await this.userRepository.get(lobbyPlayer.userId);
+                const user = await this.userRepository.getWithMasteries(lobbyPlayer.userId);
                 const charClass = classes.find(
                     (charClass) => charClass.id === lobbyPlayer.classId
                 )!;
@@ -128,12 +129,10 @@ export class GameService {
                 const hasTree = tree && !(tree instanceof DBError);
 
                 if (hasTree) {
-                    //etre sûr que le user n'est pas undefined
-                    const error = this.masteryService.validate(
-                        tree,
-                        selection,
-                        user!.masteryPoints
-                    );
+                    const availablePoints = user
+                        ? getClassPoints(user, lobbyPlayer.classId)
+                        : 0;
+                    const error = this.masteryService.validate(tree, selection, availablePoints);
                     if (error) return new SocketError(error);
                 }
                 const baseActions: Action[] = charClass.actionList;

@@ -2,7 +2,7 @@ import { Id, Logger, NotFoundError, Provide, SocketError } from "../../../core";
 import { LobbyDataManager } from "../data/LobbyDataManager";
 import { Lobby } from "../data/Lobby";
 import { MenuWebSocketManager } from "../../Menu/web/MenuWebSocketManager";
-import { UserRepository } from "../../User/data/UserRepository";
+import { UserRepository } from "../../User/data/repository/UserRepository";
 import { LobbyService } from "./LobbyService";
 import { LobbyWebSocketManager } from "../web/LobbyWebSocketManager";
 
