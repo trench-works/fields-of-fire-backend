@@ -84,7 +84,7 @@
         "name": "Dopage",
         "description": "Buff sur soi",
         "cost": 1,
-        "range": { "min": 0, "max": 0 },
+        "range": { "min": 0, "max": 1 },
         "rangeType": "DIAMOND",
         "actionType": "SUPPORT",
         "zoneType": ["DIAMOND"],
