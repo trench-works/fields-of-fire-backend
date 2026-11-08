@@ -4,7 +4,7 @@ import { Action } from "../../Action/data/Action";
 import { ActionModification } from "../../Action/data/ActionModifier";
 import { Entity } from "../../Game/data/Entity";
 import { Stats } from "../../Stat/data/Stats";
-import { Mastery, MasterySelection, MasteryTree } from "../data/Mastery";
+import { Mastery, MasterySelection, MasteryTree, MasteryRequirement } from "../data/Mastery";
 
 export class MasteryService {
 
@@ -45,12 +45,34 @@ export class MasteryService {
         for (const id of Object.keys(selection)) {
             const mastery = byId.get(id)!;
             for (const req of mastery.masteryRequirements ?? []) {
-                if (levelOf(req.masteryId) < req.level) {
-                    return `${req.masteryId} doit avoir au minimum ${req.level} points`;
+                if (!this.isRequirementMet(req, levelOf)) {
+                    return `${id}: prérequis non rempli (${this.describeRequirement(req)})`;
+                }
+            }
+            for (const otherId of mastery.exclusiveWith ?? []) {
+                if (levelOf(otherId) > 0) {
+                    return `${id} est incompatible avec ${otherId}`;
                 }
             }
         }
         return undefined;
+    }
+
+    private isRequirementMet(
+            req: MasteryRequirement,
+            levelOf: (id: string) => number,
+        ): boolean {
+            if ("anyOf" in req) {
+                return req.anyOf.some((r) => this.isRequirementMet(r, levelOf));
+            }
+            return levelOf(req.masteryId) >= req.level;
+        }
+
+    private describeRequirement(req: MasteryRequirement): string {
+        if ("anyOf" in req) {
+            return req.anyOf.map((r) => this.describeRequirement(r)).join(" ou ");
+        }
+        return `${req.masteryId} niveau ${req.level} minimum`;
     }
 
     pointsInBranch(branch: Mastery, selection: MasterySelection): number {

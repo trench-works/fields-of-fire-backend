@@ -9,7 +9,8 @@ export class Mastery {
     description?: string;
     maxLevel!: number;
     statsPerLevel?: Partial<Stats>;
-    masteryRequirements?: {masteryId:string, level:number}[];
+    masteryRequirements?: MasteryRequirement[];
+    exclusiveWith?: string[];
     newActions?: Action[];
     actionModified?: ActionModification[]
     subMasteries?: Mastery[];
@@ -24,7 +25,8 @@ export class MasteryEntity {
     description?: string;
     maxLevel!: number;
     statsPerLevel?: Partial<Stats>;
-    masteryRequirements?: { masteryId: string; level: number }[];
+    masteryRequirements?: MasteryRequirement[];
+    exclusiveWith?: string[];
     newActions?: string[];
     actionModified?: ActionModificationEntity[];
     subMasteries?: MasteryEntity[];
@@ -32,6 +34,9 @@ export class MasteryEntity {
     masteringPointsRequired?: number;
 }
 
+export type SimpleRequirement = { masteryId: string; level: number };
+export type AnyOfRequirement = { anyOf: SimpleRequirement[] };
+export type MasteryRequirement  = SimpleRequirement | AnyOfRequirement;
 export class MasteryTree {
     id!: string;
     classId!: string;

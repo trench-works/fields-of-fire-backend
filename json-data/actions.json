@@ -1,7 +1,7 @@
 [
     {
         "id": "walk",
-        "name": "Marcher",
+        "name": "Déplacement",
         "description": "Se déplacer vers une position ciblée",
         "cost": 0,
         "range": { "min": 0, "max": 0 },
@@ -14,8 +14,8 @@
     },
     {
         "id": "shoot",
-        "name": "Attaquer",
-        "description": "Attaquer un ennemi à portée",
+        "name": "Tir",
+        "description": "Tirer sur un ennemi à portée",
         "cost": 2,
         "range": { "min": 0, "max": 3 },
         "rangeType": "DIAMOND",
@@ -27,7 +27,7 @@
     },
     {
         "id": "heal",
-        "name": "Soigner",
+        "name": "Soin",
         "description": "buff un allié",
         "cost": 1,
         "range": { "min": 0, "max": 1 },
@@ -42,7 +42,7 @@
     },
     {
         "id": "bayonet",
-        "name": "Baïonnette",
+        "name": "Coup de Baïonnette",
         "description": "Attaque de mêlée",
         "cost": 2,
         "range": { "min": 0, "max": 1 },
@@ -207,7 +207,7 @@
         "damage": { "min": 3, "max": 6 },
         "rangeType": "DIAMOND",
         "actionType": "OTHER",
-        "zoneType": ["PLUS"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 2,
         "maxUsePerRound": 0,
         "level": "GROUND"
@@ -221,10 +221,41 @@
         "damage": { "min": 3, "max": 6 },
         "rangeType": "DIAMOND",
         "actionType": "OTHER",
-        "zoneType": ["PLUS"],
+        "zoneType": ["DIAMOND"],
         "zoneSize": 2,
         "maxUsePerRound": 0,
         "level": "GROUND",
         "effectList": [{"effect" : "burned", "target": "TARGET", "chanceToApply": 75}]
+    },
+    {
+        "id": "impossible_shoot",
+        "name": "Attaquer",
+        "description": "Effectue un tir sans ligne de vue",
+        "cost": 3,
+        "range": { "min": 0, "max": 4},
+        "rangeType": "DIAMOND",
+        "damage": { "min": 3, "max": 6 },
+        "actionType": "RANGED",
+        "zoneType": ["DIAMOND"],
+        "zoneSize": 1,
+        "level": "OVERGROUND"
+    },
+    {
+        "id": "brutalize",
+        "name": "Brutaliser",
+        "description": "Frappe monocible",
+        "cost": 2,
+        "range": { "min": 0, "max": 1 },
+        "rangeType": "DIAMOND",
+        "damage": { "min": 1, "max": 10 },
+        "actionType": "MELEE",
+        "zoneType": ["DIAMOND"],
+        "zoneSize": 1,
+        "effectList": [
+            {"effect" :"weakness", "target": "TARGET", "chanceToApply": "50"},
+            {"effect" :"angered", "target": "SELF", "chanceToApply": "25"}
+        ],
+        "level": "GROUND"
     }
 ]
+

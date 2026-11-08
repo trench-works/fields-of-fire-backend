@@ -36,6 +36,7 @@ export class InvocationService {
             const charClass = (await this.characterClassRepository.get(
                 action.invocateClass
             ))!;
+            const baseActions = charClass.actionList;
             const entity: Entity = {
                 id: Id.get(),
                 classId: charClass.id,
@@ -51,6 +52,7 @@ export class InvocationService {
                 isPlaying: charClass.isPlaying,
                 actionUses: {},
                 actionUsesPerRound: {},
+                actionList: baseActions.map((a) => a.id),
                 passives: [],
             };
             game.teams

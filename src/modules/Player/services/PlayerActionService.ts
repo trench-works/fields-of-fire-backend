@@ -36,6 +36,8 @@ export enum PlayerActionId {
     PROVOK = "provok",
     SHIELD_RUSH = "shield_rush",
     BARRICADE = "barricade",
+    GRENADE = "grenade",
+    FLAME_GRENADE = "flame_grenade",
 }
 
 export enum DashType {
@@ -204,6 +206,8 @@ export class PlayerActionService {
             case PlayerActionId.SABER:
             case PlayerActionId.BREAK:
             case PlayerActionId.INTIMIDATION:
+            case PlayerActionId.GRENADE:
+            case PlayerActionId.FLAME_GRENADE:
                 result = await this.attack(
                     game,
                     playerEntity,
@@ -497,14 +501,12 @@ export class PlayerActionService {
         }
 
         // pour les utilisation max par fight, voir pour grisé l'action une fois le maximum d'utilisation atteint
-        if (action.maxUsePerRound && destination.entityId ) {
-            const used = playerEntity.actionUsesPerRound?.[action.id]?.[destination.entityId] ?? 0;
+        if (action.maxUsePerRound !== undefined) {
+            const used = playerEntity.actionUsesPerRound[action.id] ?? 0;
             if (used >= action.maxUsePerRound) {
                 return {
                     actionId: PlayerOutputActions.CANCEL_ACTION,
-                    payload: {
-                        reason: "max-use-per-round",
-                    },
+                    payload: { reason: "max-use-per-round" },
                 };
             }
         }

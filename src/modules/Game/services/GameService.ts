@@ -122,12 +122,10 @@ export class GameService {
                 const selection: MasterySelection = {
                     ...(lobbyPlayer.masteries ?? {}),
                 };
-
-                const tree = await this.masteryTreeRepository.get(
-                    lobbyPlayer.classId
-                );
+                
+                const tree = await this.masteryTreeRepository.getByClass(lobbyPlayer.classId);
                 const hasTree = tree && !(tree instanceof DBError);
-
+                
                 if (hasTree) {
                     const availablePoints = user
                         ? getClassPoints(user, lobbyPlayer.classId)
@@ -338,6 +336,7 @@ export class GameService {
                 (charClass) => !charClass.playable && charClass.isPlaying
             );
             const charClass = mobClasses[Ran.int(mobClasses.length)];
+            const baseActions: Action[] = charClass.actionList;
             const npc: NPC = {
                 id: Id.get(),
                 entityId,
@@ -362,6 +361,7 @@ export class GameService {
                 isPlaying: charClass.isPlaying,
                 actionUses: {},
                 actionUsesPerRound: {},
+                actionList: baseActions.map((a) => a.id),
                 passives: [],
             };
             team.entitiesIds.push(entity.id);

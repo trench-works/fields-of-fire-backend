@@ -41,9 +41,9 @@ export class ActionEntity {
     effectList?: ManagedEffectEntity[];
     rangeType!: ActionZoneType;
     range!: { min: number; max: number };
+    actionType!: ActionType;
     zoneType!: ActionZoneType[];
     zoneSize!: number;
-    actionType!: ActionType;
     //mooveToTarget?: { x: number; y: number };
     maxUsePerTarget?: number;
     maxUsePerRound?: number;
@@ -137,26 +137,22 @@ export class ActionUtils {
                 case ActionZoneType.CONE: {
                     const dx = target.x - origin.x;
                     const dy = target.y - origin.y;
-
-                    // pas de direction (cible sur le lanceur) : le cône ne touche rien
                     if (dx === 0 && dy === 0) {
                         inBoundsConditions.push(() => false);
                         break;
                     }
-
-                    // direction cardinale dominante vers la cible
                     const horizontal = Math.abs(dx) >= Math.abs(dy);
                     const sign = horizontal ? Math.sign(dx) : Math.sign(dy);
 
                     inBoundsConditions.push((position) => {
                         const depth = horizontal
-                            ? (position.x - origin.x) * sign
-                            : (position.y - origin.y) * sign;
+                            ? (position.x - target.x) * sign
+                            : (position.y - target.y) * sign;
                         const lateral = horizontal
-                            ? Math.abs(position.y - origin.y)
-                            : Math.abs(position.x - origin.x);
+                            ? Math.abs(position.y - target.y)
+                            : Math.abs(position.x - target.x);
 
-                        return depth >= 1 && depth <= action.zoneSize && lateral <= depth - 1;
+                        return depth >= 0 && depth <= action.zoneSize - 1 && lateral <= depth;
                     });
                     break;
                 }

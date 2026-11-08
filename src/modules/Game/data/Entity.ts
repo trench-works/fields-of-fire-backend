@@ -20,7 +20,7 @@ export class Entity {
     name?: string;
 
     position!: { x: number; y: number };
-    actionList?: string[];
+    actionList!: string[];
     modifiedActionList?:Action[];
 
     stats!: Stats;
@@ -36,5 +36,5 @@ export class Entity {
     isPlaying!: boolean;
 
     actionUses!: Record<string, Record<string, number>>;
-    actionUsesPerRound!: Record<string, Record<string, number>>;
+    actionUsesPerRound!: Record<string, number>;
 }
