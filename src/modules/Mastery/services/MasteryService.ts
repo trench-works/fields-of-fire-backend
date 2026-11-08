@@ -67,6 +67,11 @@ export class MasteryService {
 
     applyToEntity(tree: MasteryTree, selection: MasterySelection, entity: Entity): void {
         for (const mastery of this.collect(tree).values()) {
+            const required = mastery.masteringPointsRequired ?? 0;
+            if (mastery.passive && this.pointsInBranch(mastery, selection) >= required) {
+                entity.passives.push(mastery.passive);
+            }
+
             const level = selection[mastery.id] ?? 0;
             if (level < 1) continue;
 
@@ -74,11 +79,6 @@ export class MasteryService {
                 for (let i = 0; i < level; i++) {
                     entity.stats = Stats.add(entity.stats, mastery.statsPerLevel);
                 }
-            }
-
-            const required = mastery.masteringPointsRequired ?? 0;
-            if (mastery.passive && this.pointsInBranch(mastery, selection) >= required) {
-                entity.passives.push(mastery.passive.id);
             }
         }
     }  

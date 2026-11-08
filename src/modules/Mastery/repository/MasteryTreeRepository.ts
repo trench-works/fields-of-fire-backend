@@ -5,6 +5,7 @@ import { Effect } from "../../Effect/data/Effect";
 import { EffectRepository } from "../../Effect/data/EffectRepository";
 import { ActionModificationEntity, ActionModification } from "../../Action/data/ActionModifier";
 import { MasteryTree, Mastery, MasteryEntity, MasteryTreeEntity } from "../data/Mastery";
+import { PassiveDefinition } from "../../Passive/data/Passive";
 
 export class MasteryTreeRepository extends FolderRepository<MasteryTree, MasteryTreeEntity> {
     @Provide(ActionRepository)
@@ -13,14 +14,19 @@ export class MasteryTreeRepository extends FolderRepository<MasteryTree, Mastery
     private readonly effectRepository!: ColdRessource<Effect>;
 
     async entityToRessource(entity: MasteryTreeEntity): Promise<MasteryTree> {
-        const masteries: Mastery[] = [];
-        for (const m of entity.masteries) {
-            masteries.push(await this.resolveMastery(m));
+        try {
+            const masteries: Mastery[] = [];
+            for (const m of entity.masteries) {
+                masteries.push(await this.resolveMastery(m));
+            }
+            const rootMastery = entity.rootMastery
+                ? await this.resolveMastery(entity.rootMastery)
+                : undefined;
+            return { ...entity, rootMastery, masteries };
+        } catch (e) {
+            console.error("[MasteryTreeRepository] échec sur", entity?.id, e);
+            throw e;
         }
-        const rootMastery = entity.rootMastery
-            ? await this.resolveMastery(entity.rootMastery)
-            : undefined;
-        return { ...entity, rootMastery, masteries };
     }
 
     private async resolveManagedEffects(list: ManagedEffectEntity[]): Promise<ManagedEffect[]> {
@@ -50,6 +56,7 @@ export class MasteryTreeRepository extends FolderRepository<MasteryTree, Mastery
         for (const id of entity.newActions ?? []) {
             const action = await this.actionRepository.get(id);
             if (action && !(action instanceof DBError)) newActions.push(action);
+            else console.warn("[MasteryTreeRepository] newAction introuvable :", id, "dans", entity.id);
         }
 
         const actionModified: ActionModification[] = [];
@@ -57,19 +64,18 @@ export class MasteryTreeRepository extends FolderRepository<MasteryTree, Mastery
             actionModified.push(await this.resolveModification(mod));
         }
 
-        let passive: Effect | undefined;
-        if (entity.passive) {
-            const effect = await this.effectRepository.get(entity.passive);
-            if (effect && !(effect instanceof DBError)) passive = effect;
-        }
-
         const subMasteries: Mastery[] = [];
         for (const sub of entity.subMasteries ?? []) {
             subMasteries.push(await this.resolveMastery(sub));
         }
 
-        const { newActions: _a, actionModified: _e, passive: _p, subMasteries: _s, ...rest } = entity;
-        return { ...rest, newActions, actionModified, passive, subMasteries };
+        const { newActions: _a, actionModified: _e, subMasteries: _s, ...rest } = entity;
+        return { ...rest, newActions, actionModified, subMasteries };
+    }
+
+    async getByClass(classId: string): Promise<MasteryTree | undefined> {
+        const trees = await this.list();
+        return trees.find((t) => t.classId === classId);
     }
 
     constructor() {

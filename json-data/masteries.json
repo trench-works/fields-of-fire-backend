@@ -80,7 +80,7 @@
                         "maxLevel": 3,
                         "actionModified": [{
                             "id": "shoot",
-                            "effectList": {}
+                             "effectList": []
                         }],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1", "level": 2}]
                     },
@@ -93,7 +93,7 @@
                         },
                         "actionModified": [{
                             "id": "shoot",
-                            "effectList": {}
+                             "effectList": []
                         }],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1", "level": 2}]
                     },
@@ -103,7 +103,7 @@
                         "maxLevel": 1,
                         "actionModified": [{
                             "id": "shoot",
-                            "effectList": {}
+                             "effectList": []
                         }],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b2_m2a", "level": 1}, { "masteryId" : "fantassin_b2_m2b", "level": 1}]
                     }
