@@ -55,11 +55,12 @@ export class AttackService {
 
         //cas du soin
         if (damage < 0) {
-            brutTotal = damage - attackerStats.intelligence;
+            brutTotal = damage - attackerStats.intelligence/10;
             defenserDamage = brutTotal;
             if (defenserStats.life - defenserDamage > defenserStats.maxLife) {
                 defenserDamage = -(defenserStats.maxLife - defenserStats.life);
             }
+            
         } else {
             if (action.damage && action.damage.max > 0){
                 brutTotal = Math.max(damage + statBonus, 1);
@@ -68,18 +69,17 @@ export class AttackService {
                 brutTotal = damage + statBonus
             }
             defenserDamage = brutTotal * (100 / (100 + defenserStats.armor));
-
-            //Crit Logik
-            const critRoll = Ran.int(100);
-            const critChanceBuff = attackerStats.critical;
-            const critDammageBuff = attacker.effects.filter(
-                (e) => e.action === EffectAction.CRIT_DAMMAGE
-            ).length;
-            const critChance = 1 + critChanceBuff;
-            if (critRoll < critChance) {
-                defenserDamage *= 2 + 0.33 * critDammageBuff;
-                isCritical = true;
-            }
+        }
+        //Crit Logik
+        const critRoll = Ran.int(100);
+        const critChanceBuff = attackerStats.critical;
+        const critDammageBuff = attacker.effects.filter(
+            (e) => e.action === EffectAction.CRIT_DAMMAGE
+        ).length;
+        const critChance = 1 + critChanceBuff;
+        if (critRoll < critChance) {
+            defenserDamage *= 2 + 0.33 * critDammageBuff;
+            isCritical = true;
         }
 
         if (action.id === "shield_rush") {
@@ -98,7 +98,12 @@ export class AttackService {
                 (e) => e.action === EffectAction.VAMPIRISM
             ).length;
             if (vampireStacks > 0) {
-                const lifeSteal = Math.ceil((defenserDamage / 10) * vampireStacks);
+                let lifeSteal = 0;
+                if(action.zoneSize > 1){
+                    lifeSteal = Math.ceil((defenserDamage / 20) * vampireStacks);
+                }else {
+                    lifeSteal = Math.ceil((defenserDamage / 10) * vampireStacks);
+                }
                 attackerDamage -= lifeSteal;
             }
 
