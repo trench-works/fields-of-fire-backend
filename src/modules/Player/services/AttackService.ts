@@ -232,7 +232,7 @@ export class AttackService {
         }
 
         target.effects.push(effectCopy);
-        if (!effect.instant) this.logger.warn('the effect is badly written and will not apply !')
+        if (effect.instant === undefined) this.logger.warn('the effect is badly written and will not apply !')
         target.stats = Stats.add(target.stats, effect.instant ?? {});
     }
     

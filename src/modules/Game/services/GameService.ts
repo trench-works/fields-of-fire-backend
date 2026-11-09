@@ -121,13 +121,12 @@ export class GameService {
 
                 const selection: MasterySelection = {
                     //...(lobbyPlayer.masteries ?? {}),
-                    "fantassin_b0_m1" : 2,
-                    "fantassin_b3_m1" : 1,
-                    "fantassin_b1_m1a" : 2,
-                    "fantassin_b1_m2a" : 2,
-                    "fantassin_b1_m1b" : 1, 
-                    "fantassin_b1_m2b" : 1,  
-                    "fantassin_b1_m3" : 1
+                    //"fantassin_b0_m1" : 2,
+                    // "fantassin_b2_m1" : 2,
+                    // "fantassin_b2_m2c" : 2,
+                    // "fantassin_b2_m3c" : 1,
+                    // "fantassin_b2_m4" : 1,
+                    // "fantassin_b2_m2b" : 2,
                 };
                 
                 const tree = await this.masteryTreeRepository.getByClass(lobbyPlayer.classId);
@@ -138,7 +137,10 @@ export class GameService {
                         ? getClassPoints(user, lobbyPlayer.classId)
                         : 0;
                     const error = this.masteryService.validate(tree, selection, availablePoints);
-                    if (error) return new SocketError(error);
+                    if (error) {
+                        this.logger.error(error);
+                        return new SocketError(error); 
+                    }
                 }
                 const baseActions: Action[] = charClass.actionList;
                 const entity: Entity = {

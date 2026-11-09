@@ -142,7 +142,7 @@
                         "masteryRequirements": [ { "masteryId" : "fantassin_b2_m2c", "level": 1}]
                     },
                     {
-                        "id": "fantassin_b2_m3a",
+                        "id": "fantassin_b2_m4",
                         "name": "Feu nourri",
                         "maxLevel": 1,
                         "actionModified": [{
@@ -153,7 +153,7 @@
                         "masteryRequirements": [{ "anyOf" : [
                             { "masteryId" : "fantassin_b2_m2a", "level": 2}, 
                             { "masteryId" : "fantassin_b2_m2b", "level": 2},
-                            { "masteryId" : "fantassin_b2_m2c", "level": 2}
+                            { "masteryId" : "fantassin_b2_m3c", "level": 1}
                         ]}]
                     }
                 ]
