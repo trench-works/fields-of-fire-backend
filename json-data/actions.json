@@ -247,13 +247,13 @@
         "cost": 2,
         "range": { "min": 0, "max": 1 },
         "rangeType": "DIAMOND",
-        "damage": { "min": 1, "max": 10 },
+        "damage": { "min": 2, "max": 5 },
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
         "effectList": [
-            {"effect" :"weakness", "target": "TARGET", "chanceToApply": "50"},
-            {"effect" :"angered", "target": "SELF", "chanceToApply": "25"}
+            {"effect" :"weakness", "target": "TARGET", "chanceToApply": 50},
+            {"effect" :"angered", "target": "SELF", "chanceToApply": 25}
         ],
         "level": "GROUND"
     }

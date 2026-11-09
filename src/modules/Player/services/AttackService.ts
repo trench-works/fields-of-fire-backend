@@ -121,7 +121,7 @@ export class AttackService {
                 (e) => e.action === EffectAction.WEAKNESS
             ).length;
             if (weaknessStacks > 0) {
-                const weaknessDamage = defenserDamage * (0.2 * weaknessStacks);
+                const weaknessDamage = defenserDamage * (0.25 * weaknessStacks);
                 defenserDamage += weaknessDamage;
             }
         }
@@ -216,10 +216,7 @@ export class AttackService {
 
         //manage effect
         if ((action.effectList?.length ?? 0) > 0) {
-            for (const managedEffect of action.effectList!) {
-                this.applyEffect(attacker.id, target, managedEffect.effect);
-            }
-            //target.effects = action.effectList!;
+            this.applyManagedEffects(game, attacker, target, action.effectList!, true);
         }
 
         return {damage: defenserDamage, isCritical};
@@ -235,7 +232,8 @@ export class AttackService {
         }
 
         target.effects.push(effectCopy);
-        target.stats = Stats.add(target.stats, effect.instant);
+        if (!effect.instant) this.logger.warn('the effect is badly written and will not apply !')
+        target.stats = Stats.add(target.stats, effect.instant ?? {});
     }
     
     applyManagedEffects(
@@ -251,6 +249,7 @@ export class AttackService {
                 if (managed.chanceToApply !== undefined && Ran.int(100) >= managed.chanceToApply) {
                     continue; 
                 }
+                this.logger.warn(` effect : ${managed.effect.name} is going to be applied to ${entity}`)
                 this.applyEffect(caster.id, entity, managed.effect);
             }
         }

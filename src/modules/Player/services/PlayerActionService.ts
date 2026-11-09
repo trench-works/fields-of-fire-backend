@@ -381,7 +381,6 @@ export class PlayerActionService {
             destination,
             targets
         );
-
         await this.gameDataManager.set(game.id, game);
         await this.gameTurnService.detectGameEnd(game);
     }
@@ -584,7 +583,6 @@ export class PlayerActionService {
                     playerEntity,
                     entity
                 );
-
                 return { entity, damage, isCritical, previousLife, effects: [] };
             }
         );

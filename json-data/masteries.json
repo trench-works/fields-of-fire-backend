@@ -45,7 +45,7 @@
                             "id": "bayonet",
                             "damage": { "min": "+1", "max": "+1" }
                         }],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1", "level": 1}]
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1a", "level": 1}]
                     },
                     {
                         "id": "fantassin_b1_m1b",
@@ -63,7 +63,7 @@
                         "newActions": ["brutalize"],
                         "actionModified": [{
                             "id": "brutalize",
-                            "dammage" : {"min" : "+2", "max" : "+1"}
+                            "damage" : {"min" : "+2", "max" : "+1"}
                         }],
                         "masteryRequirements": [{ "masteryId" : "fantassin_b1_m1b", "level": 1}]
                     },
@@ -109,7 +109,7 @@
                             "life" : 3,
                             "maxLife" : 3
                         },
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1", "level": 2}]
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b2_m1", "level": 2}]
                     },
                     {
                         "id": "fantassin_b2_m2b",
@@ -120,9 +120,9 @@
                         },
                         "actionModified": [{
                             "id": "shoot",
-                            "dammage" : {"min" : "+1", "max" : "+1"}
+                            "damage" : {"min" : "+1", "max" : "+1"}
                         }],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1", "level": 2}]
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b2_m1", "level": 2}]
                     },
                     {
                         "id": "fantassin_b2_m2c",
@@ -130,19 +130,19 @@
                         "maxLevel": 2,
                         "actionModified": [{
                             "id": "shoot",
-                            "range" : "+1"
+                            "range" : {"max" : "+1"}
                         }],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1", "level": 2}]
+                        "masteryRequirements": [ { "masteryId" : "fantassin_b2_m1", "level": 2}]
                     },
                     {
-                        "id": "fantassin_b2_m2c",
+                        "id": "fantassin_b2_m3c",
                         "name": "Tir impossible",
                         "maxLevel": 1,
                         "newActions": ["impossible_shoot"],
                         "masteryRequirements": [ { "masteryId" : "fantassin_b2_m2c", "level": 1}]
                     },
                     {
-                        "id": "fantassin_b2_m3",
+                        "id": "fantassin_b2_m3a",
                         "name": "Feu nourri",
                         "maxLevel": 1,
                         "actionModified": [{

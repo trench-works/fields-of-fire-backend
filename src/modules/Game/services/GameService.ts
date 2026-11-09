@@ -120,7 +120,14 @@ export class GameService {
                 )!;
 
                 const selection: MasterySelection = {
-                    ...(lobbyPlayer.masteries ?? {}),
+                    //...(lobbyPlayer.masteries ?? {}),
+                    "fantassin_b0_m1" : 2,
+                    "fantassin_b3_m1" : 1,
+                    "fantassin_b1_m1a" : 2,
+                    "fantassin_b1_m2a" : 2,
+                    "fantassin_b1_m1b" : 1, 
+                    "fantassin_b1_m2b" : 1,  
+                    "fantassin_b1_m3" : 1
                 };
                 
                 const tree = await this.masteryTreeRepository.getByClass(lobbyPlayer.classId);

@@ -82,6 +82,7 @@
         "modifier": {
             "strength": 15
         },
+        "instant": {},
         "action": "NONE"
     },
     {
@@ -135,14 +136,14 @@
     },
     {
         "id": "weakness",
-        "name": "Weakness",
+        "name": "Affaibli",
         "duration": 3,
         "type": "CONSUMABLE",
         "modifier": {},
         "instant": {},
         "action": "WEAKNESS"
     },
-        {
+    {
         "id": "regain2PE",
         "name": "+2PE",
         "duration": 0,
