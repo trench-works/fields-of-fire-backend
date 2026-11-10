@@ -216,6 +216,7 @@
                         "maxLevel": 1,
                         "actionModified": [{
                             "id": "shoot",
+                            "name": "Vaporiseur",
                             "actionType": "MELEE",
                             "range": {"max":1},
                             "damage":{"min" : "+2","max" : "+1"}
@@ -229,6 +230,7 @@
                         "maxLevel": 1,
                         "actionModified": [{
                             "id": "shoot",
+                            "name": "Dissuadeur",
                             "range": {"max": "+1"},
                             "damage":{"max" : "+1"}
                         }],
