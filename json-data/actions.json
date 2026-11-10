@@ -229,7 +229,7 @@
     },
     {
         "id": "impossible_shot",
-        "name": "Attaquer",
+        "name": "Tir impossible",
         "description": "Effectue un tir sans ligne de vue",
         "cost": 3,
         "range": { "min": 0, "max": 4},
