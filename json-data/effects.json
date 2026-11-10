@@ -151,5 +151,16 @@
         "modifier": {},
         "instant": {"energy": 2},
         "action": "NONE"
+    },
+    {
+        "id": "burned",
+        "name": "Brûlé",
+        "duration": 2,
+        "type": "POISON",
+        "modifier": {
+            "life": 3
+        },
+        "instant": {},
+        "action": "FLAME_GRENADE"
     }
 ]

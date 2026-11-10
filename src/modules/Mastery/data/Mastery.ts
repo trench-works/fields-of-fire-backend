@@ -14,7 +14,6 @@ export class Mastery {
     newActions?: Action[];
     actionModified?: ActionModification[]
     subMasteries?: Mastery[];
-    //ici le type Effect sert uniquement à remonter la description, le nom etc
     passive?: string;
     masteringPointsRequired?: number;
 }
