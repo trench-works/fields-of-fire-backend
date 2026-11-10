@@ -162,5 +162,18 @@
         },
         "instant": {},
         "action": "FLAME_GRENADE"
+    },
+    {
+        "id": "revengefull",
+        "name": "Revenchard",
+        "duration": 1,
+        "type": "APPLY",
+        "modifier": {
+            "strength": 20,
+            "precision": 20
+        },
+        "instant": {},
+        "action": "FLAME_GRENADE"
     }
+
 ]

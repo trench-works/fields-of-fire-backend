@@ -3,7 +3,7 @@
         "id":"masteries_fantassin",
         "classId":"entente_fantassin",
         "rootMastery": {
-            "id" : "fantassin_b0_m1",
+            "id" : "INDOCTRINATION",
             "name": "Endoctrinement",
             "maxLevel": 3,
             "statsPerLevel": {
@@ -22,7 +22,7 @@
                 "masteringPointsRequired": 5,
                 "subMasteries": [
                     {
-                        "id": "fantassin_b1_m1a",
+                        "id": "CANNON_FODDER",
                         "name": "Chair à Canon",
                         "maxLevel": 3,
                         "statsPerLevel": {
@@ -30,10 +30,10 @@
                             "maxLife" : 8,
                             "armor" : 10
                         },
-                        "masteryRequirements": [{ "masteryId" : "fantassin_b0_m1", "level": 2}]
+                        "masteryRequirements": [{ "masteryId" : "INDOCTRINATION", "level": 2}]
                     },
                     {
-                        "id": "fantassin_b1_m2a",
+                        "id": "BAYONET_FIXED",
                         "name": "Baïonnette au canon",
                         "maxLevel": 3,
                         "statsPerLevel": {
@@ -45,19 +45,19 @@
                             "id": "bayonet",
                             "damage": { "min": "+1", "max": "+1" }
                         }],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b1_m1a", "level": 1}]
+                        "masteryRequirements": [ { "masteryId" : "CANNON_FODDER", "level": 1}]
                     },
                     {
-                        "id": "fantassin_b1_m1b",
+                        "id": "INNATE_STRENGTH",
                         "name": "Force innée",
                         "maxLevel": 3,
                         "statsPerLevel": {
                             "strength" : 10
                         },
-                        "masteryRequirements": [{ "masteryId" : "fantassin_b0_m1", "level": 2}]
+                        "masteryRequirements": [{ "masteryId" : "INDOCTRINATION", "level": 2}]
                     },
                     {
-                        "id": "fantassin_b1_m2b",
+                        "id": "TRENCH_BRUTE",
                         "name": "Brute des tranchées",
                         "maxLevel": 2,
                         "newActions": ["brutalize"],
@@ -65,10 +65,10 @@
                             "id": "brutalize",
                             "damage" : {"min" : "+2", "max" : "+1"}
                         }],
-                        "masteryRequirements": [{ "masteryId" : "fantassin_b1_m1b", "level": 1}]
+                        "masteryRequirements": [{ "masteryId" : "INNATE_STRENGTH", "level": 1}]
                     },
                     {
-                        "id": "fantassin_b1_m3",
+                        "id": "STRAIGHT_TOWARD_DEATH",
                         "name": "Droit vers la mort",
                         "maxLevel": 1,
                         "statsPerLevel": {
@@ -77,8 +77,8 @@
                             "life" : 5
                         },
                         "masteryRequirements": [ {"anyOf" : [
-                            {"masteryId" : "fantassin_b1_m2a", "level": 2},
-                            {"masteryId" : "fantassin_b1_m2b", "level": 1}
+                            {"masteryId" : "BAYONET_FIXED", "level": 2},
+                            {"masteryId" : "TRENCH_BRUTE", "level": 1}
                             ]}]
                     }
                 ]
@@ -91,16 +91,16 @@
                 "masteringPointsRequired": 5,
                 "subMasteries": [
                     {
-                        "id": "fantassin_b2_m1",
+                        "id": "WELL_MAINTAINED_GUN",
                         "name": "Fusil entretenu",
                         "maxLevel": 3,
                         "statsPerLevel": {
                             "precision" : 15
                         },
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b0_m1", "level": 2}]
+                        "masteryRequirements": [ { "masteryId" : "INDOCTRINATION", "level": 2}]
                     },
                     {
-                        "id": "fantassin_b2_m2a",
+                        "id": "HEAVY_GUNNER",
                         "name": "Tireur lourd",
                         "maxLevel": 3,
                         "statsPerLevel": {
@@ -109,10 +109,10 @@
                             "life" : 3,
                             "maxLife" : 3
                         },
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b2_m1", "level": 2}]
+                        "masteryRequirements": [ { "masteryId" : "WELL_MAINTAINED_GUN", "level": 2}]
                     },
                     {
-                        "id": "fantassin_b2_m2b",
+                        "id": "DEADLY_SHOOTER",
                         "name": "Tireur mortel",
                         "maxLevel": 3,
                         "statsPerLevel": {
@@ -122,27 +122,27 @@
                             "id": "shoot",
                             "damage" : {"min" : "+1", "max" : "+1"}
                         }],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b2_m1", "level": 2}]
+                        "masteryRequirements": [ { "masteryId" : "WELL_MAINTAINED_GUN", "level": 2}]
                     },
                     {
-                        "id": "fantassin_b2_m2c",
+                        "id": "ACCURATE_SHOOTER",
                         "name": "Tireur précis",
                         "maxLevel": 2,
                         "actionModified": [{
                             "id": "shoot",
                             "range" : {"max" : "+1"}
                         }],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b2_m1", "level": 2}]
+                        "masteryRequirements": [ { "masteryId" : "WELL_MAINTAINED_GUN", "level": 2}]
                     },
                     {
-                        "id": "fantassin_b2_m3c",
+                        "id": "IMPOSSIBLE_SHOT",
                         "name": "Tir impossible",
                         "maxLevel": 1,
-                        "newActions": ["impossible_shoot"],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b2_m2c", "level": 1}]
+                        "newActions": ["impossible_shot"],
+                        "masteryRequirements": [ { "masteryId" : "ACCURATE_SHOOTER", "level": 1}]
                     },
                     {
-                        "id": "fantassin_b2_m4",
+                        "id": "HEAVY_FIRE",
                         "name": "Feu nourri",
                         "maxLevel": 1,
                         "actionModified": [{
@@ -151,9 +151,9 @@
                             "maxUsePerTarget": 3
                         }],
                         "masteryRequirements": [{ "anyOf" : [
-                            { "masteryId" : "fantassin_b2_m2a", "level": 2}, 
-                            { "masteryId" : "fantassin_b2_m2b", "level": 2},
-                            { "masteryId" : "fantassin_b2_m3c", "level": 1}
+                            { "masteryId" : "HEAVY_GUNNER", "level": 2}, 
+                            { "masteryId" : "DEADLY_SHOOTER", "level": 2},
+                            { "masteryId" : "IMPOSSIBLE_SHOT", "level": 1}
                         ]}]
                     }
                 ]
@@ -166,16 +166,16 @@
                 "masteringPointsRequired": 5,
                 "subMasteries": [
                     {
-                        "id": "fantassin_b3_m1",
+                        "id": "BULLET_PROOF_VEST",
                         "name": "Gilet pare-balles",
                         "maxLevel": 3,
                         "statsPerLevel": {
                             "armor" : 15
                         },
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b0_m1", "level": 2}]
+                        "masteryRequirements": [ { "masteryId" : "INDOCTRINATION", "level": 2}]
                     },
                     {
-                        "id": "fantassin_b3_m2",
+                        "id": "BUCKSHOT",
                         "name": "Chevrotine",
                         "maxLevel": 1,
                         "actionModified": [{
@@ -187,20 +187,20 @@
                             "zoneSize": 2,
                             "range": {"max" : 2}
                         }],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m1", "level": 2}]
+                        "masteryRequirements": [ { "masteryId" : "BULLET_PROOF_VEST", "level": 2}]
                     },
                     {
-                        "id": "fantassin_b3_m3a",
+                        "id": "SAWED_OFF_GUN",
                         "name": "Canon scié",
                         "maxLevel": 2,
                         "actionModified": [{
                             "id": "shoot",
                             "damage": { "min" : "+2", "max" : "+2"}
                         }],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m2", "level": 1}]
+                        "masteryRequirements": [ { "masteryId" : "BUCKSHOT", "level": 1}]
                     },
                     {
-                        "id": "fantassin_b3_m3b",
+                        "id": "GRENADE",
                         "name": "Suréquipé",
                         "maxLevel": 2,
                         "newActions": ["grenade"],
@@ -208,10 +208,10 @@
                             "id": "grenade",
                             "maxUsePerRound": "+1"
                         }],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m2", "level": 1}]
+                        "masteryRequirements": [ { "masteryId" : "BUCKSHOT", "level": 1}]
                     },
                     {
-                        "id": "fantassin_b3_m4a1",
+                        "id": "VAPORIZER",
                         "name": "Vaporiseur",
                         "maxLevel": 1,
                         "actionModified": [{
@@ -221,10 +221,10 @@
                             "damage":{"min" : "+2","max" : "+1"}
                         }],
                         "exclusiveWith": ["fantassin_b3_m4a2"],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m3a", "level": 1}]
+                        "masteryRequirements": [ { "masteryId" : "SAWED_OFF_GUN", "level": 1}]
                     },
                     {
-                        "id": "fantassin_b3_m4a2",
+                        "id": "DETERRENT",
                         "name": "Dissuadeur",
                         "maxLevel": 1,
                         "actionModified": [{
@@ -233,10 +233,10 @@
                             "damage":{"max" : "+1"}
                         }],
                         "exclusiveWith": ["fantassin_b3_m4a1"],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m3a", "level": 1}]
+                        "masteryRequirements": [ { "masteryId" : "SAWED_OFF_GUN", "level": 1}]
                     },
                     {
-                        "id": "fantassin_b3_m4b",
+                        "id": "FLAME_GRENADE",
                         "name": "Grenade Incendiaire",
                         "maxLevel": 2,
                         "newActions": ["flame_grenade"],
@@ -244,7 +244,7 @@
                             "id": "flame_grenade",
                             "maxUsePerRound": "+1"
                         }],
-                        "masteryRequirements": [ { "masteryId" : "fantassin_b3_m3a", "level": 1}]
+                        "masteryRequirements": [ { "masteryId" : "GRENADE", "level": 1}]
                     }
                 ]
             }

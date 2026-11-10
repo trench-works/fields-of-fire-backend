@@ -119,15 +119,7 @@ export class GameService {
                     (charClass) => charClass.id === lobbyPlayer.classId
                 )!;
 
-                const selection: MasterySelection = {
-                    //...(lobbyPlayer.masteries ?? {}),
-                    //"fantassin_b0_m1" : 2,
-                    // "fantassin_b2_m1" : 2,
-                    // "fantassin_b2_m2c" : 2,
-                    // "fantassin_b2_m3c" : 1,
-                    // "fantassin_b2_m4" : 1,
-                    // "fantassin_b2_m2b" : 2,
-                };
+                const selection: MasterySelection = { ...(lobbyPlayer.masteries ?? {}) };
                 
                 const tree = await this.masteryTreeRepository.getByClass(lobbyPlayer.classId);
                 const hasTree = tree && !(tree instanceof DBError);

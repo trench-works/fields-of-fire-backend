@@ -6,7 +6,7 @@ export enum LobbyInputActions {
     UPDATE = "update",
     ADD_TEAM = "add-team",
     JOIN_TEAM = "join-team",
-    SET_MASTERIES = "set_masteries",
+    SET_MASTERIES = "set-masteries",
 }
 
 export enum LobbyOutputActions {

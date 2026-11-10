@@ -228,7 +228,7 @@
         "effectList": [{"effect" : "burned", "target": "TARGET", "chanceToApply": 75}]
     },
     {
-        "id": "impossible_shoot",
+        "id": "impossible_shot",
         "name": "Attaquer",
         "description": "Effectue un tir sans ligne de vue",
         "cost": 3,
