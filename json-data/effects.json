@@ -164,8 +164,8 @@
         "action": "FLAME_GRENADE"
     },
     {
-        "id": "revengefull",
-        "name": "Revenchard",
+        "id": "revenge",
+        "name": "Vengeance",
         "duration": 1,
         "type": "APPLY",
         "modifier": {
@@ -173,7 +173,7 @@
             "precision": 20
         },
         "instant": {},
-        "action": "FLAME_GRENADE"
+        "action": "NONE"
     }
 
 ]

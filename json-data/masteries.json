@@ -95,7 +95,7 @@
                         "name": "Fusil entretenu",
                         "maxLevel": 3,
                         "statsPerLevel": {
-                            "precision" : 15
+                            "precision" : 10
                         },
                         "masteryRequirements": [ { "masteryId" : "INDOCTRINATION", "level": 2}]
                     },

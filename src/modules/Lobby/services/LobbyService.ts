@@ -194,7 +194,8 @@ export class LobbyService {
             return new SocketError("Player not in lobby");
         }
 
-        const tree = await this.masteryTreeRepository.get(player.classId);
+        const tree = await this.masteryTreeRepository.getByClass(player.classId);
+        this.logger.warn(JSON.stringify(tree))
         if (!tree || tree instanceof DBError) {
             return new SocketError("No mastery tree for this class");
         }

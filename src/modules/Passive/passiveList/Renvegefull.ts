@@ -2,7 +2,7 @@ import { EffectTarget } from "../../Action/data/Action";
 import { GameEventType } from "../data/GameEvent";
 import { PassiveDefinition } from "../data/Passive";
 
-export const revengeful: PassiveDefinition = {
+export const revengefull: PassiveDefinition = {
     id: "REVENGEFULL",
     triggers: [GameEventType.DAMAGE_DEALT],
 
@@ -10,9 +10,8 @@ export const revengeful: PassiveDefinition = {
         if (event.type !== GameEventType.DAMAGE_DEALT) return;
         if (event.targetId !== owner.id) return;
         if (event.damage <= 0) return;
-
-        const revengeEffect = await getEffect("revengefull");
-        if (!revengeEffect) return; // déjà loggué par getEffect
+        const revengeEffect = await getEffect("revenge");
+        if (!revengeEffect) return; 
 
         applyEffects(owner, owner, [
             { effect: revengeEffect, target: EffectTarget.SELF },
