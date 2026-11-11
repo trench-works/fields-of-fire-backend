@@ -1,5 +1,5 @@
 import { FolderRepository, Provide, ColdRessource, DBError } from "../../../core";
-import { Action, ManagedEffect, ManagedEffectEntity } from "../../Action/data/Action";
+import { Action, AllyOverride, ManagedEffect, ManagedEffectEntity } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Effect } from "../../Effect/data/Effect";
 import { EffectRepository } from "../../Effect/data/EffectRepository";
@@ -52,12 +52,24 @@ export class MasteryTreeRepository extends FolderRepository<MasteryTree, Mastery
     }
 
     private async resolveModification(entity: ActionModificationEntity): Promise<ActionModification> {
-        const { effectList, effectModified, ...rest } = entity;
+        const { effectList, effectModified, onAlly, ...rest } = entity;
+        let resolvedOnAlly: AllyOverride | undefined;
+        if (onAlly) {
+            resolvedOnAlly = {
+                damage: onAlly.damage,
+                effectList: onAlly.effectList
+                    ? await this.resolveManagedEffects(onAlly.effectList)
+                    : undefined,
+            };
+        }
         return {
             ...rest,
             ...(effectList && {
                 effectList: await this.resolveManagedEffects(effectList),
                 ...(effectModified && { effectModified: await this.resolveEffectModifiers(effectModified) }),
+            }),
+            ...(resolvedOnAlly && {
+                onAlly: resolvedOnAlly,
             }),
         };
     }

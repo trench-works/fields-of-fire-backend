@@ -576,10 +576,10 @@ export class PlayerActionService {
         const targets: AttackTarget[] = targetEntities.map<AttackTarget>(
             (entity) => {
                 const previousLife = entity.stats.life;
-
+                const actionSelect = this.attackService.actionFor(action, playerEntity, entity);
                 const { damage, isCritical } = this.attackService.applyDamage(
                     game,
-                    action,
+                    actionSelect,
                     playerEntity,
                     entity
                 );

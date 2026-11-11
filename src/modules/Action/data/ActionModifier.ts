@@ -1,5 +1,5 @@
 import { EffectModifier, EffectModifierEntity } from "../../Effect/data/EffectModifier";
-import { ActionZoneType, ActionType, ActionLevel, Action, ManagedEffect, ManagedEffectEntity, EffectTarget } from "./Action";
+import { ActionZoneType, ActionType, ActionLevel, Action, ManagedEffect, ManagedEffectEntity, EffectTarget, AllyOverride, AllyOverrideEntity } from "./Action";
 
 export type ActionModification = { id: string } & ActionModifier;
 
@@ -20,6 +20,7 @@ export class ActionModifier {
         cost?: number | string;
         targetRequired?: boolean;
         invocateClass?: string;
+        onAlly?: AllyOverride
         level?: ActionLevel;
         effectModified?: EffectModifier[];
 }
@@ -40,6 +41,7 @@ export class ActionModifierEntity {
         maxUsePerRound?: number | string;
         cost?: number | string;
         targetRequired?: boolean;
+        onAlly?: AllyOverrideEntity;
         invocateClass?: string;
         level?: ActionLevel;
         effectModified?: EffectModifierEntity[];

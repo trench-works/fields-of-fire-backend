@@ -28,6 +28,7 @@ export class Action {
     cost!: number;
     //isWalkAction?: boolean;
     targetRequired?: boolean;
+    onAlly?: AllyOverride;
     invocateClass?: string;
     level!: ActionLevel;
 }
@@ -51,6 +52,7 @@ export class ActionEntity {
     cost!: number;
     //isWalkAction?: boolean;
     targetRequired?: boolean;
+    onAlly?: AllyOverrideEntity;
     invocateClass?: string;
     level!: ActionLevel;
 }
@@ -67,6 +69,16 @@ export class ManagedEffectEntity {
     chanceToApply?: number;
     target!: EffectTarget;
     onHit?: boolean;
+}
+
+export type AllyOverride = {
+    damage?: { min: number; max: number };
+    effectList?: ManagedEffect[];
+}
+
+export type AllyOverrideEntity = {
+    damage?: { min: number; max: number };
+    effectList?: ManagedEffectEntity[];
 }
 
 export enum EffectTarget {

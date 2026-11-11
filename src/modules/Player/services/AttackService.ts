@@ -41,35 +41,38 @@ export class AttackService {
         switch (action.actionType) {
             case ActionType.MELEE:
                 {
-                    statBonus += attackerStats.strength / 10;
+                    damage > 0 ? 
+                        statBonus += attackerStats.strength / 10:
+                        statBonus -= attackerStats.strength / 10
                 }
                 break;
             case ActionType.RANGED:
                 {
-                    statBonus += attackerStats.precision / 10;
+                    damage > 0 ? 
+                        statBonus += attackerStats.precision / 10:
+                        statBonus -= attackerStats.precision / 10
+                }
+                break;
+            case ActionType.SUPPORT:
+                {
+                    damage > 0 ? 
+                        statBonus += attackerStats.intelligence / 10:
+                        statBonus -= attackerStats.intelligence / 10
                 }
                 break;
         }
 
         let brutTotal: number;
 
-        //cas du soin
-        if (damage < 0) {
-            brutTotal = damage - attackerStats.intelligence/10;
-            defenserDamage = brutTotal;
-            if (defenserStats.life - defenserDamage > defenserStats.maxLife) {
-                defenserDamage = -(defenserStats.maxLife - defenserStats.life);
-            }
-            
-        } else {
-            if (action.damage && action.damage.max > 0){
-                brutTotal = Math.max(damage + statBonus, 1);
-            }
-            else{
-                brutTotal = damage + statBonus
-            }
-            defenserDamage = brutTotal * (100 / (100 + defenserStats.armor));
+        //cas ou le malus donne un stat d'attaque négative
+        if (action.damage){
+            brutTotal = Math.max(damage + statBonus, action.damage.max > 0 ? 1 : -1);
         }
+        else{
+            brutTotal = damage + statBonus
+        }
+        defenserDamage = brutTotal * (100 / (100 + defenserStats.armor));
+        
         //Crit Logik
         const critRoll = Ran.int(100);
         const critChanceBuff = attackerStats.critical;
@@ -365,5 +368,10 @@ export class AttackService {
             case EffectTarget.ALL:
                 return alive;
         }
+    }
+
+    actionFor(action: Action, attacker: Entity, target: Entity): Action {
+        if (!action.onAlly || attacker.teamId !== target.teamId) return action;
+        return { ...action, ...action.onAlly };
     }
 }
