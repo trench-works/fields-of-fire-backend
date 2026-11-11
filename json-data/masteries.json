@@ -45,7 +45,7 @@
                             "id": "bayonet",
                             "damage": { "min": "+1", "max": "+1" }
                         }],
-                        "masteryRequirements": [ { "masteryId" : "CANNON_FODDER", "level": 1}]
+                        "masteryRequirements": [ { "masteryId" : "CANNON_FODDER", "level": 2}]
                     },
                     {
                         "id": "INNATE_STRENGTH",
@@ -65,7 +65,7 @@
                             "id": "brutalize",
                             "damage" : {"min" : "+2", "max" : "+1"}
                         }],
-                        "masteryRequirements": [{ "masteryId" : "INNATE_STRENGTH", "level": 1}]
+                        "masteryRequirements": [{ "masteryId" : "INNATE_STRENGTH", "level": 2}]
                     },
                     {
                         "id": "STRAIGHT_TOWARD_DEATH",
@@ -150,6 +150,7 @@
                             "cost": 1,
                             "maxUsePerTarget": 3
                         }],
+                        "exclusiveWith": ["BUCKSHOT"],
                         "masteryRequirements": [{ "anyOf" : [
                             { "masteryId" : "HEAVY_GUNNER", "level": 2}, 
                             { "masteryId" : "DEADLY_SHOOTER", "level": 2},
@@ -170,7 +171,7 @@
                         "name": "Gilet pare-balles",
                         "maxLevel": 3,
                         "statsPerLevel": {
-                            "armor" : 15
+                            "armor" : 10
                         },
                         "masteryRequirements": [ { "masteryId" : "INDOCTRINATION", "level": 2}]
                     },
@@ -187,6 +188,7 @@
                             "zoneSize": 2,
                             "range": {"max" : 2}
                         }],
+                        "exclusiveWith": ["HEAVY_FIRE"],
                         "masteryRequirements": [ { "masteryId" : "BULLET_PROOF_VEST", "level": 2}]
                     },
                     {
@@ -221,7 +223,7 @@
                             "range": {"max":1},
                             "damage":{"min" : "+2","max" : "+1"}
                         }],
-                        "exclusiveWith": ["fantassin_b3_m4a2"],
+                        "exclusiveWith": ["DETERRENT"],
                         "masteryRequirements": [ { "masteryId" : "SAWED_OFF_GUN", "level": 1}]
                     },
                     {
@@ -234,7 +236,7 @@
                             "range": {"max": "+1"},
                             "damage":{"max" : "+1"}
                         }],
-                        "exclusiveWith": ["fantassin_b3_m4a1"],
+                        "exclusiveWith": ["VAPORIZER"],
                         "masteryRequirements": [ { "masteryId" : "SAWED_OFF_GUN", "level": 1}]
                     },
                     {
@@ -247,6 +249,200 @@
                             "maxUsePerRound": "+1"
                         }],
                         "masteryRequirements": [ { "masteryId" : "GRENADE", "level": 1}]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id":"masteries_medic",
+        "classId":"entente_medic",
+        "rootMastery": {
+            "id" : "EDUCATED",
+            "name": "Instruit",
+            "maxLevel": 3,
+            "statsPerLevel": {
+                "intelligence" : 5,
+                "precision" : 5,
+                "life" : 2,
+                "maxLife" : 2
+            }
+        },
+        "masteries": [
+            {
+                "id" : "medic_branch_1",
+                "name": "Voie du secouriste",
+                "maxLevel": 1,
+                "passive": "BLOODTHIRSTY",
+                "masteringPointsRequired": 5,
+                "subMasteries": [
+                    {
+                        "id": "STRONG_CONSTITUTION",
+                        "name": "Forte constitution",
+                        "maxLevel": 3,
+                        "statsPerLevel": {
+                            "strength" : 5,
+                            "life" : 5,
+                            "maxLife" : 5
+                        },
+                        "masteryRequirements": [ { "masteryId" : "EDUCATED", "level": 2}]
+                    },
+                    {
+                        "id": "MEAT_CLEAVER",
+                        "name": "Couperet à viande",
+                        "maxLevel": 1,
+                        "newActions": ["meat_cleaver"],
+                        "masteryRequirements": [ { "masteryId" : "STRONG_CONSTITUTION", "level": 2}]
+                    },
+                    {
+                        "id": "MUSCULAR_INTELLIGENCE",
+                        "name": "Intelligence musculaire",
+                        "maxLevel": 1,
+                        "statsPerLevel": {
+                            "intelligence" : -5,
+                            "strength" : 15
+                        },
+                        "masteryRequirements": [{ "masteryId" : "STRONG_CONSTITUTION", "level": 2}]
+                    },
+                    {
+                        "id": "SOILED_CLEAVER",
+                        "name": "Couperet souillé",
+                        "maxLevel": 2,
+                        "actionModified": [{
+                            "id": "meat_cleaver",
+                            "effectModified": [
+                                { "effect": "infected", "target": "TARGET", "chanceToApply": "+20", "create": true }
+                            ]
+                        }],
+                        "masteryRequirements": [ { "masteryId" : "MEAT_CLEAVER", "level": 2}]
+                    },
+                    {
+                        "id": "SHARP_CLEAVER",
+                        "name": "Couperet tranchant",
+                        "maxLevel": 2,
+                        "actionModified": [{
+                            "id": "meat_cleaver",
+                            "effectModified": [
+                                { "effect": "bleeding", "target": "TARGET", "chanceToApply": "+20", "create": true }
+                            ]
+                        }],
+                        "masteryRequirements": [ { "masteryId" : "MEAT_CLEAVER", "level": 2}]
+                    },
+                    {
+                        "id": "BRUTAL_TREATMENT",
+                        "name": "Traitement brutal",
+                        "maxLevel": 1,
+                        "actionModified": [{
+                            "id": "meat_cleaver",
+                            "damage" : {"min" : 2, "max":5 },
+                            "effectModified": [
+                                { "effect": "amputated", "chanceToApply": 100}
+                            ]
+                        }],
+                        "masteryRequirements": [{ "anyOf" : [
+                            { "masteryId" : "SOILED_CLEAVER", "level": 1}, 
+                            { "masteryId" : "SHARP_CLEAVER", "level": 1}
+                        ]}]
+                    }
+                ]
+            },
+            {
+                "id" : "medic_branch_2",
+                "name": "Voie du secouriste",
+                "maxLevel": 1,
+                "passive": "EMERGENCY_DEPLOYMENT",
+                "masteringPointsRequired": 5,
+                "subMasteries": [
+                    {
+                        "id": "BETWEEN_BULLET",
+                        "name": "Entre les balles",
+                        "maxLevel": 3,
+                        "statsPerLevel": {
+                            "dodging" : 5
+                        },
+                        "masteryRequirements": [ { "masteryId" : "EDUCATED", "level": 2}]
+                    },
+                    {
+                        "id": "FIRST_AID",
+                        "name": "Premiers soins",
+                        "maxLevel": 3,
+                        "statsPerLevel": {
+                            "intelligence" : 10
+                        },
+                        "masteryRequirements": [ { "masteryId" : "BETWEEN_BULLET", "level": 2}]
+                    },
+                    {
+                        "id": "RESCUE_SPRINT",
+                        "name": "Sprint de sauvetage",
+                        "maxLevel": 3,
+                        "statsPerLevel": {
+                            "mouvement" : 1
+                        },
+                        "masteryRequirements": [ { "masteryId" : "FIRST_AID", "level": 2}]
+                    },
+                     {
+                        "id": "ACT_FAST",
+                        "name": "Agir vite",
+                        "maxLevel": 1,
+                        "statsPerLevel": {
+                            "energy" : 1
+                        },
+                        "masteryRequirements": [ { "masteryId" : "FIRST_AID", "level": 2}]
+                    }
+                ]
+            },
+            {
+                "id" : "medic_branch_3",
+                "name": "Voie du soutien",
+                "maxLevel": 1,
+                "passive": "EMERGENCY_DOSE",
+                "masteringPointsRequired": 5,
+                "subMasteries": [
+                    {
+                        "id": "UPGRADED_KIT",
+                        "name": "kit amélioré",
+                        "maxLevel": 3,
+                        "actionModified": [{
+                            "id": "heal",
+                            "damage" : {"min" : "-2", "max": "-2" }
+                        }],
+                        "masteryRequirements": [ { "masteryId" : "EDUCATED", "level": 2}]
+                    },
+                    {
+                        "id": "DOPING",
+                        "name": "Dopage",
+                        "maxLevel": 2,
+                        "statsPerLevel": {
+                            "intelligence" : 5,
+                            "strength" : 5,
+                            "precision" : 5,
+                            "dodging" : 2
+                        },
+                        "masteryRequirements": [ { "masteryId" : "UPGRADED_KIT", "level": 2}]
+                    },
+                    {
+                        "id": "DRUGS",
+                        "name": "Médicaments",
+                        "maxLevel": 1,
+                        "newActions": ["drugs"],
+                        "masteryRequirements": [ { "masteryId" : "DOPING", "level": 1}]
+                    },
+                    {
+                        "id": "HIPPOCRATE_TREASON",
+                        "name": "Trahison d'Hippocrate",
+                        "maxLevel": 1,
+                        "newActions": ["wrong_medication"],
+                        "masteryRequirements": [ { "masteryId" : "DRUGS", "level": 1}]
+                    },
+                    {
+                        "id": "PHARMACOLOGIST",
+                        "name": "Pharmacologue",
+                        "maxLevel": 1,
+                        "actionModified": [{
+                            "id": "drugs",
+                            "damage" : {"min" : "-2", "max": "-2" }
+                        }],
+                        "masteryRequirements": [ { "masteryId" : "DRUGS", "level": 1}]
                     }
                 ]
             }

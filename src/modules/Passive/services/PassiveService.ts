@@ -78,8 +78,8 @@ export class PassiveService implements AsyncResolver {
             getCellsInRange: (start, action, board) =>
                 this.attackService.getCellsInAttackRange(start, action, board),
 
-            castFree: (caster, action, targets) =>
-                this.castFree(game, caster, action, targets, depth),
+            castFree: (caster, action, targets, reduction) =>
+                this.castFree(game, caster, action, targets, depth, reduction),
 
             applyEffects: (caster, hitTarget, effects) =>
                 this.attackService.applyManagedEffects(
@@ -109,6 +109,7 @@ export class PassiveService implements AsyncResolver {
         action: Action,
         targets: Entity[],
         depth: number,
+        reduction?: number
     ): Promise<void> {
         if (targets.length === 0) return;
 
@@ -121,6 +122,7 @@ export class PassiveService implements AsyncResolver {
                 action,
                 caster,
                 entity,
+                reduction
             );
             return { entity, damage, isCritical, previousLife, effects: [] };
         });

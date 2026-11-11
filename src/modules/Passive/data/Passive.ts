@@ -11,7 +11,7 @@ export type PassiveContext = {
     event: GameEvent;
     baseActions: Action[];
     getCellsInRange: (start: Position, action: Action, board: Cell[][]) => Cell[];
-    castFree: (caster: Entity, action: Action, targets: Entity[]) => Promise<void>;
+    castFree: (caster: Entity, action: Action, targets: Entity[], reduction?: number) => Promise<void>;
     applyEffects: (caster: Entity, hitTarget: Entity | undefined, effects: ManagedEffect[]) => void;
     getEffect: (id: string) => Promise<Effect | undefined>;
     changeLife: (entity: Entity, delta: number, sourceId?: string) => Promise<void>;

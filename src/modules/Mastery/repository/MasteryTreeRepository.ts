@@ -5,7 +5,7 @@ import { Effect } from "../../Effect/data/Effect";
 import { EffectRepository } from "../../Effect/data/EffectRepository";
 import { ActionModificationEntity, ActionModification } from "../../Action/data/ActionModifier";
 import { MasteryTree, Mastery, MasteryEntity, MasteryTreeEntity } from "../data/Mastery";
-import { PassiveDefinition } from "../../Passive/data/Passive";
+import { EffectModifier, EffectModifierEntity } from "../../Effect/data/EffectModifier";
 
 export class MasteryTreeRepository extends FolderRepository<MasteryTree, MasteryTreeEntity> {
     @Provide(ActionRepository)
@@ -41,12 +41,23 @@ export class MasteryTreeRepository extends FolderRepository<MasteryTree, Mastery
         return result;
     }
 
+    private async resolveEffectModifiers(list: EffectModifierEntity[]): Promise<EffectModifier[]> {
+        const result: EffectModifier[] = [];
+        for (const m of list) {
+            const effect = await this.effectRepository.get(m.effect);
+            if (effect && !(effect instanceof DBError)) result.push({ ...m, effect });
+            else console.warn("[MasteryTreeRepository] effet introuvable :", m.effect);
+        }
+        return result;
+    }
+
     private async resolveModification(entity: ActionModificationEntity): Promise<ActionModification> {
-        const { effectList, ...rest } = entity;
+        const { effectList, effectModified, ...rest } = entity;
         return {
             ...rest,
             ...(effectList && {
                 effectList: await this.resolveManagedEffects(effectList),
+                ...(effectModified && { effectModified: await this.resolveEffectModifiers(effectModified) }),
             }),
         };
     }

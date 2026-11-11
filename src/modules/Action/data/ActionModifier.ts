@@ -1,4 +1,5 @@
-import { ActionZoneType, ActionType, ActionLevel, Action, ManagedEffect, ManagedEffectEntity } from "./Action";
+import { EffectModifier, EffectModifierEntity } from "../../Effect/data/EffectModifier";
+import { ActionZoneType, ActionType, ActionLevel, Action, ManagedEffect, ManagedEffectEntity, EffectTarget } from "./Action";
 
 export type ActionModification = { id: string } & ActionModifier;
 
@@ -20,6 +21,7 @@ export class ActionModifier {
         targetRequired?: boolean;
         invocateClass?: string;
         level?: ActionLevel;
+        effectModified?: EffectModifier[];
 }
 
 export class ActionModifierEntity {
@@ -40,6 +42,7 @@ export class ActionModifierEntity {
         targetRequired?: boolean;
         invocateClass?: string;
         level?: ActionLevel;
+        effectModified?: EffectModifierEntity[];
 }
 
 const DELTA = /^([+\-*])(\d+(?:\.\d+)?)$/;
@@ -62,13 +65,14 @@ function resolveValue(base: number, mod?: number | string): number {
 }
 
 export function applyModification(action: Action, mod: ActionModification): Action {
-    const { id: _id, damage, range, effectList, zoneSize, maxUsePerTarget, maxUsePerRound, cost, ...simple } = mod;
+    const { id: _id, damage, range, effectList, effectModified, zoneSize, maxUsePerTarget, maxUsePerRound, cost, ...simple } = mod;
 
     const defined = Object.fromEntries(
         Object.entries(simple).filter(([, v]) => v !== undefined),
     );
 
     const result: Action = { ...action, ...defined };
+    const clampChance = (n: number) => Math.min(100, Math.max(0, Math.round(n)));
 
     if (range) {
         const min = Math.max(0, resolveValue(action.range.min, range.min));
@@ -93,6 +97,40 @@ export function applyModification(action: Action, mod: ActionModification): Acti
         result.maxUsePerRound = resolveOptionalValue(action.maxUsePerRound, maxUsePerRound);
     }
     if (effectList) result.effectList = effectList;
+
+    if (effectModified?.length) {
+        const list = [...(result.effectList ?? action.effectList ?? [])];
+        for (const p of effectModified) {
+            const index = list.findIndex(
+                (m) =>
+                    m.effect.id === p.effect.id &&
+                    (p.target === undefined || p.target === m.target),
+            );
+            if (index >= 0) {
+                const current = list[index];
+                list[index] = {
+                    ...current,
+                    chanceToApply:
+                        p.chanceToApply === undefined
+                            ? current.chanceToApply
+                            : clampChance(resolveValue(current.chanceToApply ?? 100, p.chanceToApply)),
+                };
+            } else if (p.create) {
+                list.push({
+                    effect: p.effect,
+                    target: p.target ?? EffectTarget.TARGET,
+                    onHit: p.onHit,
+                    // un effet créé part de 0 % : le delta s'ajoute dessus
+                    chanceToApply:
+                        p.chanceToApply === undefined
+                            ? undefined
+                            : clampChance(resolveValue(0, p.chanceToApply)),
+                });
+            }
+        }
+        result.effectList = list;
+    }
+    
     return result;
 }
 

@@ -19,15 +19,12 @@ export const reflexShot: PassiveDefinition = {
         const shoot = ActionUtils.getEntityAction(owner, "shoot", baseActions);
         if (!shoot) return;
 
-        // -50 % de dégâts, par le même mécanisme que les maîtrises
-        const reflex = applyModification(shoot, { id: shoot.id, rangeType: ActionZoneType.PLUS, damage: { min: "*0.5", max: "*0.5" } });
-
+        const reflex = applyModification(shoot, { id: shoot.id, rangeType: ActionZoneType.PLUS});
         // ennemis alignés et visibles : on réutilise la portée + la ligne de vue existantes
         const targets = getCellsInRange(owner.position, reflex, game.plateau)
             .filter((cell) => cell.entityId)
             .map((cell) => game.entities.find((e) => e.id === cell.entityId)!)
             .filter((e) => !e.dead && e.teamId !== owner.teamId);
-
-        await castFree(owner, reflex, targets);
+        await castFree(owner, reflex, targets, 50);
     },
 };

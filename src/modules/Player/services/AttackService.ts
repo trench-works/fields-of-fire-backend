@@ -137,7 +137,8 @@ export class AttackService {
         game: Game,
         action: Action,
         attacker: Entity,
-        target: Entity
+        target: Entity,
+        reduction?: number
     ): {damage: number, isCritical: boolean} {
         const attackerPlayer: Player | undefined = game.players.find(
             (player) => player.entityId === attacker.id
@@ -160,13 +161,17 @@ export class AttackService {
             : 0;
 
         // calculate damages
-        const { attackerDamage, defenserDamage, isCritical } = this.calculateFinalDamage(
+        let { attackerDamage, defenserDamage, isCritical } = this.calculateFinalDamage(
             randomDamage,
             action,
             attacker,
             target
         );
-
+        // ajouter pour le cas du passif REFLEXSHOT
+        if (reduction){
+            defenserDamage = Math.round(defenserDamage / 100) * reduction;
+            console.log(`reduced dammage : ${defenserDamage}`)
+        } 
         // damagers to attacker
         if (attackerPlayer && attackerDamage > 0) {
             attackerPlayer.stats.damages += attackerDamage; // count damage on itself
