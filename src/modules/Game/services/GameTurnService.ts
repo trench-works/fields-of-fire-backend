@@ -4,6 +4,7 @@ import {
     AsyncResolver,
 } from "../../../core/app/Controller/DependencyResolver";
 import { Boost } from "../../Effect/data/Boost";
+import { EffectType } from "../../Effect/data/Effect";
 import { GameEventType } from "../../Passive/data/GameEvent";
 import { PassiveService } from "../../Passive/services/PassiveService";
 import { BoostService } from "../../Player/services/BoostService";
@@ -11,7 +12,7 @@ import { MobService } from "../../Player/services/MobService";
 import { PlayerWebSocketManager } from "../../Player/web/PlayerWebSocketManager";
 import { Stats } from "../../Stat/data/Stats";
 import { GameEventAnimation } from "../application/interfaces/GameUpdateEvent";
-import { EntityType } from "../data/Entity";
+import { Entity, EntityType } from "../data/Entity";
 import { Game, GameMode } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
@@ -146,21 +147,22 @@ export class GameTurnService implements AsyncResolver {
         const playerEntity = game.entities.find(
             (entity) => entity.id === playingEntityId
         )!;
-        playerEntity.effects = playerEntity.effects
-            .map((effect) => ({
-                ...effect,
-                duration: effect.duration
-                    ? effect.duration - 1
-                    : effect.duration,
-            }))
-            .filter(
-                (effect) => effect.duration === null || effect.duration > 0
-            );
+        //cas classique: reduction de durée des effet
+        this.reduceEffectDuration(playerEntity, 1)
 
         playerEntity.actionUses = {};
-        playerEntity.stats.mouvement =
-            Stats.fromEntity(playerEntity).totalMouvement;
+        playerEntity.stats.mouvement = Stats.fromEntity(playerEntity).totalMouvement;
         playerEntity.stats.energy = Stats.fromEntity(playerEntity).totalEnergy;
+
+        //console.log(JSON.stringify(playerEntity.stats))
+        //POISON LOGIK
+        const poisonAppliedStats = Stats.add(playerEntity.stats, ...playerEntity.effects
+            .filter((effect) => effect.type === EffectType.POISON)
+            .map((effect) => effect.modifier)
+        );
+        playerEntity.stats = poisonAppliedStats;
+
+        console.log("poison applied ", JSON.stringify(poisonAppliedStats))
 
         //on remet le compte des actions utilisées dans le tour a 0
         playerEntity.actionUses = {};
@@ -174,7 +176,6 @@ export class GameTurnService implements AsyncResolver {
         if (await this.detectGameEnd(game)) {
             return;
         }
-
 
         await this.gameDataManager.set(game.id, game);
 
@@ -191,5 +192,18 @@ export class GameTurnService implements AsyncResolver {
             //     this.finishTurn(game.id)
             // );
         }
+    }
+
+    reduceEffectDuration(entity : Entity, reduction : number){
+        entity.effects = entity.effects
+            .map((effect) => ({
+                ...effect,
+                duration: effect.duration
+                    ? effect.duration - reduction
+                    : effect.duration,
+            }))
+            .filter(
+                (effect) => effect.duration === null || effect.duration > 0
+            );
     }
 }

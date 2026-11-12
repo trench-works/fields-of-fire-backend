@@ -311,10 +311,10 @@
                         "actionModified": [{
                             "id": "meat_cleaver",
                             "effectModified": [
-                                { "effect": "infected", "target": "TARGET", "chanceToApply": "+20", "create": true }
+                                { "effect": "infected", "target": "TARGET", "chanceToApply": "+25", "create": true }
                             ]
                         }],
-                        "masteryRequirements": [ { "masteryId" : "MEAT_CLEAVER", "level": 2}]
+                        "masteryRequirements": [ { "masteryId" : "MEAT_CLEAVER", "level": 1}]
                     },
                     {
                         "id": "SHARP_CLEAVER",
@@ -322,11 +322,12 @@
                         "maxLevel": 2,
                         "actionModified": [{
                             "id": "meat_cleaver",
+                            "damage" : {"min": "+1", "max": "+1"},
                             "effectModified": [
-                                { "effect": "bleeding", "target": "TARGET", "chanceToApply": "+20", "create": true }
+                                { "effect": "bleeding", "target": "TARGET", "chanceToApply": "+15", "create": true }
                             ]
                         }],
-                        "masteryRequirements": [ { "masteryId" : "MEAT_CLEAVER", "level": 2}]
+                        "masteryRequirements": [ { "masteryId" : "MEAT_CLEAVER", "level": 1}]
                     },
                     {
                         "id": "BRUTAL_TREATMENT",
@@ -374,7 +375,7 @@
                     {
                         "id": "RESCUE_SPRINT",
                         "name": "Sprint de sauvetage",
-                        "maxLevel": 3,
+                        "maxLevel": 1,
                         "statsPerLevel": {
                             "mouvement" : 1
                         },
@@ -431,18 +432,26 @@
                         "id": "HIPPOCRATE_TREASON",
                         "name": "Trahison d'Hippocrate",
                         "maxLevel": 1,
-                        "newActions": ["wrong_medication"],
+                        "actionModified": [{
+                            "id": "drugs",
+                            "damage" : {"min" : 1, "max": 3}
+                        }],
                         "masteryRequirements": [ { "masteryId" : "DRUGS", "level": 1}]
                     },
                     {
                         "id": "PHARMACOLOGIST",
                         "name": "Pharmacologue",
                         "maxLevel": 1,
-                        "actionModified": [{
-                            "id": "drugs",
-                            "damage" : {"min" : "1", "max": "3" },
-                            "onAlly": { "damage" : { "min": -3, "max": -1}}
-                        }],
+                        "actionModified": [
+                            {
+                                "id": "drugs",
+                                "onAlly": { "damage" : { "min": "-2", "max": "-2"}}
+                            },
+                            {
+                                "id": "heal",
+                                "damage" : { "min": "-2", "max": "-2"}
+                            }
+                        ],
                         "masteryRequirements": [ { "masteryId" : "DRUGS", "level": 1}]
                     }
                 ]

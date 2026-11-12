@@ -33,46 +33,40 @@ export class AttackService {
         const defenserStats = Stats.fromEntity(defenser);
 
         let attackerDamage: number = 0;
-        let defenserDamage: number;
+        let defenserDamage: number = 0;
         let isCritical : boolean = false;
 
         let statBonus: number = 0;
         // calculate stats bonus
+        const sign = Math.sign(damage); // 1 : dégâts, -1 : soin
         switch (action.actionType) {
             case ActionType.MELEE:
-                {
-                    damage > 0 ? 
-                        statBonus += attackerStats.strength / 10:
-                        statBonus -= attackerStats.strength / 10
-                }
+                statBonus += sign * (attackerStats.strength / 10);
                 break;
             case ActionType.RANGED:
-                {
-                    damage > 0 ? 
-                        statBonus += attackerStats.precision / 10:
-                        statBonus -= attackerStats.precision / 10
-                }
+                statBonus += sign * (attackerStats.precision / 10);
                 break;
             case ActionType.SUPPORT:
-                {
-                    damage > 0 ? 
-                        statBonus += attackerStats.intelligence / 10:
-                        statBonus -= attackerStats.intelligence / 10
-                }
+                statBonus += sign * (attackerStats.intelligence / 10);
                 break;
         }
 
         let brutTotal: number;
 
-        //cas ou le malus donne un stat d'attaque négative
-        if (action.damage){
-            brutTotal = Math.max(damage + statBonus, action.damage.max > 0 ? 1 : -1);
+        //Appliquer le bonus sur les soins et les frappes
+        if (action.damage) {
+            const raw = damage + statBonus;
+            brutTotal = damage > 0 ? Math.max(raw, 1) : Math.min(raw, -1);
+        } else {
+            brutTotal = damage + statBonus;
         }
-        else{
-            brutTotal = damage + statBonus
+        if (damage === 0) {
+            return { attackerDamage: 0, defenserDamage: 0, isCritical: false };
         }
-        defenserDamage = brutTotal * (100 / (100 + defenserStats.armor));
-        
+
+        //appliquer l'armure sur les frappe
+        defenserDamage = brutTotal > 0 ? brutTotal * (100 / (100 + defenserStats.armor)): brutTotal;  
+
         //Crit Logik
         const critRoll = Ran.int(100);
         const critChanceBuff = attackerStats.critical;
@@ -128,7 +122,7 @@ export class AttackService {
                 defenserDamage += weaknessDamage;
             }
         }
-
+        console.log("[calc]", { damage, statBonus, brutTotal, defenserDamage });
         return {
             attackerDamage: Math.ceil(attackerDamage),
             defenserDamage: Math.ceil(defenserDamage),
@@ -149,8 +143,13 @@ export class AttackService {
         const targetPlayer: Player | undefined = game.players.find(
             (player) => player.entityId === target.id
         );
+
+        const isHeal = (action.damage?.max ?? 0) <= 0 && action.damage !== undefined;
+        const isSelf = attacker.id === target.id;
+        const canDodge = !isHeal && !isSelf && (action.damage?.min ?? -1) >= 0;
         //dodging - à voir si on peut dire au front que l'action à été dodge
-        if (action.damage?.min ?? -1 >= 0) {
+        if (canDodge) {
+            console.log("dodgeLogik");  
             const diceRoll = Ran.int(100);
             const isDodged = target.stats.dodging > diceRoll ? true : false;
 
@@ -158,7 +157,7 @@ export class AttackService {
                 return { damage: 0, isCritical: false };
             }
         }
-
+        console.log("[applyDamage] avant roll", action.id, JSON.stringify(action.damage));
         const randomDamage = action.damage
             ? action.damage.min + Ran.int(action.damage.max - action.damage.min)
             : 0;
@@ -223,6 +222,7 @@ export class AttackService {
         }
 
         //manage effect
+        console.log("number of effect to apply ",action.effectList?.length)
         if ((action.effectList?.length ?? 0) > 0) {
             this.applyManagedEffects(game, attacker, target, action.effectList!, true);
         }
@@ -252,6 +252,7 @@ export class AttackService {
         hit: boolean,
     ): void {
         for (const managed of effects) {
+            console.log("applying effect : ", managed.effect.name);
             if (managed.onHit && !hit) continue;
             for (const entity of this.resolveEffectTargets(managed.target, game, caster, hitTarget)) {
                 if (managed.chanceToApply !== undefined && Ran.int(100) >= managed.chanceToApply) {
@@ -371,6 +372,7 @@ export class AttackService {
     }
 
     actionFor(action: Action, attacker: Entity, target: Entity): Action {
+        console.log("[actionFor]", action.id, attacker.teamId, target.teamId);
         if (!action.onAlly || attacker.teamId !== target.teamId) return action;
         return { ...action, ...action.onAlly };
     }

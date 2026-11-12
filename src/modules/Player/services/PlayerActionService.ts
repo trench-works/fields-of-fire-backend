@@ -40,6 +40,8 @@ export enum PlayerActionId {
     FLAME_GRENADE = "flame_grenade",
     IMPOSSIBLE_SHOT = "impossible_shot",
     BRUTALIZE = "brutalize",
+    DRUGS = "drugs",
+    MEAT_CLEAVER = "meat_cleaver",
 }
 
 export enum DashType {
@@ -205,6 +207,7 @@ export class PlayerActionService {
             case PlayerActionId.BAYONET:
             case PlayerActionId.SHOOT:
             case PlayerActionId.HEAL:
+            case PlayerActionId.DRUGS:
             case PlayerActionId.SABER:
             case PlayerActionId.BREAK:
             case PlayerActionId.INTIMIDATION:
@@ -212,6 +215,7 @@ export class PlayerActionService {
             case PlayerActionId.FLAME_GRENADE:
             case PlayerActionId.IMPOSSIBLE_SHOT:
             case PlayerActionId.BRUTALIZE:
+            case PlayerActionId.MEAT_CLEAVER:
                 result = await this.attack(
                     game,
                     playerEntity,
@@ -583,6 +587,10 @@ export class PlayerActionService {
                     playerEntity,
                     entity
                 );
+                //cas spécial réduction de durée des effets
+                if (action.id === PlayerActionId.DRUGS){
+                    this.gameTurnService.reduceEffectDuration(entity, 1);
+                }
                 return { entity, damage, isCritical, previousLife, effects: [] };
             }
         );
@@ -590,10 +598,18 @@ export class PlayerActionService {
     }
 
     private registerUse(entity: Entity, action: Action, destination: Cell) {
-        if (!action.maxUsePerTarget || !destination.entityId) return;
-        const uses = (entity.actionUses ??= {});
-        const byTarget = (uses[action.id] ??= {});
-        byTarget[destination.entityId] = (byTarget[destination.entityId] ?? 0) + 1;
+        // Compteur par tour
+        if (action.maxUsePerRound !== undefined) {
+            const perRound = (entity.actionUsesPerRound ??= {});
+            perRound[action.id] = (perRound[action.id] ?? 0) + 1;
+        }
+
+        // Compteur par cible
+        if (action.maxUsePerTarget !== undefined && destination.entityId) {
+            const uses = (entity.actionUses ??= {});
+            const byTarget = (uses[action.id] ??= {});
+            byTarget[destination.entityId] = (byTarget[destination.entityId] ?? 0) + 1;
+        }
     }
 
     private findGapClosePosition(

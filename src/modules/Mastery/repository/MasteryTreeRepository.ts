@@ -3,7 +3,7 @@ import { Action, AllyOverride, ManagedEffect, ManagedEffectEntity } from "../../
 import { ActionRepository } from "../../Action/data/ActionRepository";
 import { Effect } from "../../Effect/data/Effect";
 import { EffectRepository } from "../../Effect/data/EffectRepository";
-import { ActionModificationEntity, ActionModification } from "../../Action/data/ActionModifier";
+import { ActionModificationEntity, ActionModification, AllyModifier, AllyModifierEntity } from "../../Action/data/ActionModifier";
 import { MasteryTree, Mastery, MasteryEntity, MasteryTreeEntity } from "../data/Mastery";
 import { EffectModifier, EffectModifierEntity } from "../../Effect/data/EffectModifier";
 
@@ -54,14 +54,6 @@ export class MasteryTreeRepository extends FolderRepository<MasteryTree, Mastery
     private async resolveModification(entity: ActionModificationEntity): Promise<ActionModification> {
         const { effectList, effectModified, onAlly, ...rest } = entity;
         let resolvedOnAlly: AllyOverride | undefined;
-        if (onAlly) {
-            resolvedOnAlly = {
-                damage: onAlly.damage,
-                effectList: onAlly.effectList
-                    ? await this.resolveManagedEffects(onAlly.effectList)
-                    : undefined,
-            };
-        }
         return {
             ...rest,
             ...(effectList && {
@@ -71,6 +63,16 @@ export class MasteryTreeRepository extends FolderRepository<MasteryTree, Mastery
             ...(resolvedOnAlly && {
                 onAlly: resolvedOnAlly,
             }),
+            ...(onAlly && { onAlly: await this.resolveAllyModifier(onAlly) }),
+        };
+    }
+
+    private async resolveAllyModifier(entity: AllyModifierEntity): Promise<AllyModifier> {
+        const { effectList, effectModified, ...rest } = entity;
+        return {
+            ...rest,
+            ...(effectList && { effectList: await this.resolveManagedEffects(effectList) }),
+            ...(effectModified && { effectModified: await this.resolveEffectModifiers(effectModified) }),
         };
     }
 

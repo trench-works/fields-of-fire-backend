@@ -1,5 +1,5 @@
 import { EffectModifier, EffectModifierEntity } from "../../Effect/data/EffectModifier";
-import { ActionZoneType, ActionType, ActionLevel, Action, ManagedEffect, ManagedEffectEntity, EffectTarget, AllyOverride, AllyOverrideEntity } from "./Action";
+import { ActionZoneType, ActionType, ActionLevel, Action, ManagedEffect, ManagedEffectEntity, EffectTarget, AllyOverride } from "./Action";
 
 export type ActionModification = { id: string } & ActionModifier;
 
@@ -20,7 +20,7 @@ export class ActionModifier {
         cost?: number | string;
         targetRequired?: boolean;
         invocateClass?: string;
-        onAlly?: AllyOverride
+        onAlly?: AllyModifier
         level?: ActionLevel;
         effectModified?: EffectModifier[];
 }
@@ -41,11 +41,25 @@ export class ActionModifierEntity {
         maxUsePerRound?: number | string;
         cost?: number | string;
         targetRequired?: boolean;
-        onAlly?: AllyOverrideEntity;
+        onAlly?: AllyModifierEntity;
         invocateClass?: string;
         level?: ActionLevel;
         effectModified?: EffectModifierEntity[];
 }
+
+type DamageModifier = { min?: number | string; max?: number | string };
+
+export type AllyModifier = {
+    damage?: DamageModifier;
+    effectList?: ManagedEffect[];
+    effectModified?: EffectModifier[];
+};
+
+export type AllyModifierEntity = {
+    damage?: DamageModifier;
+    effectList?: ManagedEffectEntity[];
+    effectModified?: EffectModifierEntity[];
+};
 
 const DELTA = /^([+\-*])(\d+(?:\.\d+)?)$/;
 
@@ -67,7 +81,7 @@ function resolveValue(base: number, mod?: number | string): number {
 }
 
 export function applyModification(action: Action, mod: ActionModification): Action {
-    const { id: _id, damage, range, effectList, effectModified, zoneSize, maxUsePerTarget, maxUsePerRound, cost, ...simple } = mod;
+    const { id: _id, damage, range, effectList, effectModified, zoneSize, maxUsePerTarget, maxUsePerRound, cost, onAlly, ...simple } = mod;
 
     const defined = Object.fromEntries(
         Object.entries(simple).filter(([, v]) => v !== undefined),
@@ -82,9 +96,9 @@ export function applyModification(action: Action, mod: ActionModification): Acti
         result.range = { min, max };
     }
     if (damage) {
-        const min = Math.max(0, resolveValue(action.damage?.min ?? 0, damage.min));
-        const max = Math.max(min, resolveValue(action.damage?.max ?? 0, damage.max));
-        result.damage = { min, max };
+        const a = resolveValue(action.damage?.min ?? 0, damage.min);
+        const b = resolveValue(action.damage?.max ?? 0, damage.max);
+        result.damage = { min: Math.min(a, b), max: Math.max(a, b) };
     }
     if (zoneSize !== undefined) {
         result.zoneSize = Math.max(0, resolveValue(action.zoneSize, zoneSize));
@@ -101,39 +115,53 @@ export function applyModification(action: Action, mod: ActionModification): Acti
     if (effectList) result.effectList = effectList;
 
     if (effectModified?.length) {
-        const list = [...(result.effectList ?? action.effectList ?? [])];
-        for (const p of effectModified) {
-            const index = list.findIndex(
-                (m) =>
-                    m.effect.id === p.effect.id &&
-                    (p.target === undefined || p.target === m.target),
-            );
-            if (index >= 0) {
-                const current = list[index];
-                list[index] = {
-                    ...current,
-                    chanceToApply:
-                        p.chanceToApply === undefined
-                            ? current.chanceToApply
-                            : clampChance(resolveValue(current.chanceToApply ?? 100, p.chanceToApply)),
-                };
-            } else if (p.create) {
-                list.push({
-                    effect: p.effect,
-                    target: p.target ?? EffectTarget.TARGET,
-                    onHit: p.onHit,
-                    // un effet créé part de 0 % : le delta s'ajoute dessus
-                    chanceToApply:
-                        p.chanceToApply === undefined
-                            ? undefined
-                            : clampChance(resolveValue(0, p.chanceToApply)),
-                });
-            }
-        }
-        result.effectList = list;
+        result.effectList = patchEffects(result.effectList ?? action.effectList ?? [], effectModified);
     }
-    
-    return result;
+    if (onAlly) {
+        const base = action.onAlly ?? {};
+        const next: AllyOverride = { ...base };
+        if (onAlly.damage) {
+            const ref = base.damage ?? action.damage ?? { min: 0, max: 0 };
+            const a = resolveValue(ref.min, onAlly.damage.min);
+            const b = resolveValue(ref.max, onAlly.damage.max);
+            next.damage = { min: Math.min(a, b), max: Math.max(a, b) };
+        }
+        if (onAlly.effectList) next.effectList = onAlly.effectList;
+        if (onAlly.effectModified?.length) {
+            next.effectList = patchEffects(next.effectList ?? action.effectList ?? [], onAlly.effectModified);
+        }
+        result.onAlly = next;
+    }
+        return result;
+    }
+
+function patchEffects(list: ManagedEffect[], patches: EffectModifier[]): ManagedEffect[] {
+    const clampChance = (n: number) => Math.min(100, Math.max(0, Math.round(n)));
+    const out = [...list];
+    for (const p of patches) {
+        const index = out.findIndex(
+            (m) => m.effect.id === p.effect.id && (p.target === undefined || p.target === m.target),
+        );
+        if (index >= 0) {
+            const current = out[index];
+            out[index] = {
+                ...current,
+                chanceToApply:
+                    p.chanceToApply === undefined
+                        ? current.chanceToApply
+                        : clampChance(resolveValue(current.chanceToApply ?? 100, p.chanceToApply)),
+            };
+        } else if (p.create) {
+            out.push({
+                effect: p.effect,
+                target: p.target ?? EffectTarget.TARGET,
+                onHit: p.onHit,
+                chanceToApply:
+                    p.chanceToApply === undefined ? undefined : clampChance(resolveValue(0, p.chanceToApply)),
+            });
+        }
+    }
+    return out;
 }
 
 function resolveOptionalValue(base: number | undefined,mod: number | string,): number | undefined {

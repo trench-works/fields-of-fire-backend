@@ -18,8 +18,8 @@
         "duration": 3,
         "type": "APPLY",
         "modifier": {
-            "strength": -20,
-            "precision": -20
+            "strength": -15,
+            "precision": -15
         },
         "instant": {},
         "action": "NONE"
@@ -155,10 +155,10 @@
     {
         "id": "burned",
         "name": "Brûlé",
-        "duration": 2,
-        "type": "APPLY",
+        "duration": 3,
+        "type": "POISON",
         "modifier": {
-            "life": -5
+            "life": -3
         },
         "instant": {},
         "action": "FLAME_GRENADE"
@@ -175,5 +175,4 @@
         "instant": {},
         "action": "NONE"
     }
-
 ]

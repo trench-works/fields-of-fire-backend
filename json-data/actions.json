@@ -103,7 +103,7 @@
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "effectList": [{"effect" : "amputated", "target": "TARGET", "chanceToApply": 66}],
+        "effectList": [{"effect" : "amputated", "target": "TARGET", "chanceToApply": 100}],
         "level": "GROUND"
     },
     {
@@ -255,6 +255,35 @@
             {"effect" :"weakness", "target": "TARGET", "chanceToApply": 50},
             {"effect" :"angered", "target": "SELF", "chanceToApply": 25}
         ],
+        "level": "GROUND"
+    },
+    {
+        "id": "drugs",
+        "name": "Médicaments",
+        "description": "Reduits la durée des effets",
+        "cost": 1,
+        "range": { "min": 0, "max": 1 },
+        "rangeType": "DIAMOND",
+        "actionType": "SUPPORT",
+        "zoneType": ["DIAMOND"],
+        "zoneSize": 1,
+        "onAlly":{
+            "damage" : { "min" : -2, "max": -1}
+        },
+        "maxUsePerTarget": 3,
+        "level": "GROUND"
+    },
+    {
+        "id": "meat_cleaver",
+        "name": "Couperet",
+        "description": "Une frappe chirurgicale",
+        "cost": 2,
+        "range": { "min": 0, "max": 1 },
+        "rangeType": "DIAMOND",
+        "damage" : { "min" : 3, "max": 5},
+        "actionType": "MELEE",
+        "zoneType": ["DIAMOND"],
+        "zoneSize": 1,
         "level": "GROUND"
     }
 ]

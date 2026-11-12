@@ -140,6 +140,13 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
             }
         }
 
+        if (action.maxUsePerRound !== undefined) {
+            const used = this.entity.actionUsesPerRound?.[action.id] ?? 0;
+            if (used >= action.maxUsePerRound) {
+                return;
+            }
+        }
+
         let note = 0;
         // set note as average expected damage to ennemy divied by action cost minus damage to player itself
         const averageDamage = action.damage
