@@ -391,8 +391,8 @@
                         "masteryRequirements": [ { "masteryId" : "FIRST_AID", "level": 2}]
                     },
                     {
-                        "id": "ACT_FAST",
-                        "name": "Agir vite",
+                        "id": "TRENCH_SURGEON",
+                        "name": "Chirurgien des tranchées",
                         "maxLevel": 1,
                         "newActions": ["organ_donation"],
                         "masteryRequirements": [{ "anyOf" : [
