@@ -23,6 +23,7 @@ export type GameEvent = BaseEvent &
               actionId: string;
               damage: number;          // dégâts finaux (négatif = soin)
               isCritical: boolean;
+              targetEffectIdsBefore?: string[];
           }
         | {
               type: GameEventType.ENTITY_MOVED;

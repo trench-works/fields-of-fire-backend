@@ -300,7 +300,7 @@
                         "maxLevel": 1,
                         "statsPerLevel": {
                             "intelligence" : -5,
-                            "strength" : 15
+                            "strength" : 20
                         },
                         "masteryRequirements": [{ "masteryId" : "STRONG_CONSTITUTION", "level": 2}]
                     },

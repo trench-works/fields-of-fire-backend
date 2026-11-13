@@ -151,7 +151,7 @@ export class AttackService {
         attacker: Entity,
         target: Entity,
         reduction?: number
-    ): {damage: number, isCritical: boolean} {
+    ): {damage: number, isCritical: boolean, effectIdsBeforeAttack : string[]} {
         const attackerPlayer: Player | undefined = game.players.find(
             (player) => player.entityId === attacker.id
         );
@@ -159,6 +159,7 @@ export class AttackService {
             (player) => player.entityId === target.id
         );
 
+        const effectIdsBeforeAttack = target.effects.map((e) => e.id);
         const isHeal = (action.damage?.max ?? 0) <= 0 && action.damage !== undefined;
         const isSelf = attacker.id === target.id;
         const canDodge = !isHeal && !isSelf && (action.damage?.min ?? -1) >= 0;
@@ -169,7 +170,7 @@ export class AttackService {
             const isDodged = target.stats.dodging > diceRoll ? true : false;
 
             if (isDodged) {
-                return { damage: 0, isCritical: false };
+                return { damage: 0, isCritical: false, effectIdsBeforeAttack};
             }
         }
         console.log("[applyDamage] avant roll", action.id, JSON.stringify(action.damage));
@@ -247,7 +248,7 @@ export class AttackService {
             this.applyManagedEffects(game, attacker, target, action.effectList!, true);
         }
 
-        return {damage: defenserDamage, isCritical};
+        return {damage: defenserDamage, isCritical, effectIdsBeforeAttack};
     }
 
     applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
