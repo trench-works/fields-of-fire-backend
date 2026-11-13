@@ -20,6 +20,7 @@ import { LobbyPlayerService } from "../services/LobbysPlayerService";
 import { PlayerReady } from "./interfaces/PlayerReady";
 import { UpdateLobby } from "./interfaces/UpdateLobby";
 import { JoinTeam } from "./interfaces/JoinTeam";
+import { UpdateMasteries } from "./interfaces/UpdateMastery"
 
 export class LobbyController extends WsController<
     LobbyKeys,
@@ -52,6 +53,9 @@ export class LobbyController extends WsController<
         this.on(LobbyInputActions.ADD_TEAM, this.addTeam.bind(this));
         this.on(LobbyInputActions.UPDATE, this.update.bind(this), {
             payloadType: UpdateLobby,
+        });
+        this.on(LobbyInputActions.SET_MASTERIES, this.setMasteries.bind(this), {
+            payloadType: UpdateMasteries,
         });
     }
 
@@ -92,6 +96,14 @@ export class LobbyController extends WsController<
         token: { user },
     }: WsListenerOptions<LobbyKeys>): Promise<void | SingleClientOutputError> {
         return await this.lobbyService.addTeam(lobbyId, user.id);
+    }
+
+    async setMasteries({ 
+        key: { lobbyId },
+        token: { user },
+        payload 
+    }: WsListenerOptions<LobbyKeys, UpdateMasteries>) {
+        return await this.lobbyService.setMasteries(lobbyId, user.id, payload);
     }
 
     async handleLeave({

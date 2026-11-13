@@ -1,7 +1,7 @@
 import { Stats } from "../../Stat/data/Stats";
 
 export enum EffectType {
-    POSON = "POISON",
+    POISON = "POISON",
     APPLY = "APPLY",
     CONSUMABLE = "CONSUMABLE",
 }
@@ -24,7 +24,7 @@ export class Effect {
     duration!: number | null;
     modifier!: Partial<Stats>;
     instant!: Partial<Stats>;
-    chance?: number;
+    maxStacks?: number;
     author?: string;
     description?: string;
 }

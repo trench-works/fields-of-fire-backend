@@ -10,7 +10,6 @@
         "instant": {
             "energy": -1
         },
-        "chance": 66,
         "action": "NONE"
     },
     {
@@ -19,10 +18,11 @@
         "duration": 3,
         "type": "APPLY",
         "modifier": {
-            "strength": -20,
-            "precision": -20
+            "strength": -15,
+            "precision": -15
         },
         "instant": {},
+        "maxStacks": 3,
         "action": "NONE"
     },
     {
@@ -49,12 +49,13 @@
         "instant": {
             "mouvement": 2
         },
+        "maxStaks" : 2,
         "action": "NONE"
     },
     {
         "id": "enhanced_drug",
         "name": "Drogue de combat",
-        "duration": 2,
+        "duration": 3,
         "type": "APPLY",
         "modifier": {
             "strength": 10,
@@ -64,6 +65,7 @@
         "instant": {
             "energy": 2
         },
+        "maxStacks": 1,
         "action": "NONE"
     },
     {
@@ -81,12 +83,9 @@
         "duration": 3,
         "type": "APPLY",
         "modifier": {
-            "strength": 15,
-            "totalMouvement": -1
+            "strength": 15
         },
-        "instant": {
-            "mouvement": -1
-        },
+        "instant": {},
         "action": "NONE"
     },
     {
@@ -140,20 +139,95 @@
     },
     {
         "id": "weakness",
-        "name": "Weakness",
+        "name": "Affaibli",
         "duration": 3,
         "type": "CONSUMABLE",
         "modifier": {},
         "instant": {},
         "action": "WEAKNESS"
     },
-        {
+    {
         "id": "regain2PE",
         "name": "+2PE",
         "duration": 0,
         "type": "APPLY",
         "modifier": {},
         "instant": {"energy": 2},
+        "action": "NONE"
+    },
+    {
+        "id": "burned",
+        "name": "Brûlé",
+        "duration": 3,
+        "type": "POISON",
+        "modifier": {
+            "life": -3
+        },
+        "instant": {},
+        "action": "FLAME_GRENADE"
+    },
+    {
+        "id": "revenge",
+        "name": "Vengeance",
+        "duration": 1,
+        "type": "APPLY",
+        "modifier": {
+            "strength": 10,
+            "precision": 10
+        },
+        "instant": {},
+        "maxStaks" : 5,
+        "action": "NONE"
+    },
+    {
+        "id": "infected",
+        "name": "Infecté",
+        "duration": -4,
+        "type": "POISON",
+        "modifier": {
+            "life": -1
+        },
+        "instant": {},
+        "maxStaks" : 3,
+        "action": "NONE"
+    },
+    {
+        "id": "bleeding",
+        "name": "Saignement",
+        "duration": 3,
+        "type": "POISON",
+        "modifier": {
+            "life": -2
+        },
+        "instant": {},
+        "maxStaks" : 3,
+        "action": "NONE"
+    },
+    {
+        "id": "emergency_deployment",
+        "name": "Déploiement d'urgence",
+        "duration": null,
+        "type": "APPLY",
+        "modifier": { "totalMouvement": 1 },
+        "instant": { "mouvement": 1 },
+        "action": "NONE"
+    },
+    {
+        "id": "difficult_recovery",
+        "name": "Récupération difficile",
+        "duration": 3,
+        "type": "POISON",
+        "modifier": { "life" : -5 },
+        "instant": {},
+        "action": "NONE"
+    },
+    {
+        "id": "untreatable",
+        "name": "Insoignable",
+        "duration": 2,
+        "type": "APPLY",
+        "modifier": {},
+        "instant": {},
         "action": "NONE"
     }
 ]

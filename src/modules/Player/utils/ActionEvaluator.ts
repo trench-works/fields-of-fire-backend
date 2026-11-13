@@ -95,7 +95,7 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
             action,
             this.game.plateau
         )) {
-            this.calculateAttackNote(action, cell.position, pushEval);
+            this.calculateAttackNote(action, cell.position, this.entity.position, pushEval);
         }
     }
 
@@ -112,6 +112,7 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
     protected calculateAttackNote(
         action: Action,
         position: Position,
+        attackerPosition: Position,
         pushEval: (evaluation: Evaluation<EvaluatedAction>) => void
     ): void {
         const attackerStats = Stats.fromEntity(this.entity);
@@ -119,7 +120,8 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
         const targets = ActionUtils.getEntitiesInRange(
             action,
             this.game,
-            position
+            position,
+            attackerPosition,
         );
         if (!targets?.length) {
             return;
@@ -138,16 +140,27 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
             }
         }
 
+        if (action.maxUsePerRound !== undefined) {
+            const used = this.entity.actionUsesPerRound?.[action.id] ?? 0;
+            if (used >= action.maxUsePerRound) {
+                return;
+            }
+        }
+
         let note = 0;
         // set note as average expected damage to ennemy divied by action cost minus damage to player itself
         const averageDamage = action.damage
             ? (action.damage.max - action.damage.min) / 2 + action.damage.min
+            : 0;
+        const averageSelfDamage = action.backlash
+            ? (action.backlash.max - action.backlash.min) / 2 + action.backlash.min
             : 0;
         for (const target of targets) {
             const targetStats = Stats.fromEntity(target);
             const { attackerDamage, defenserDamage } =
                 this.attackService.calculateFinalDamage(
                     averageDamage,
+                    averageSelfDamage,
                     action,
                     this.entity,
                     target

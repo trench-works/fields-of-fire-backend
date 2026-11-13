@@ -1,20 +1,21 @@
 import { Logger, Provide, SocketError } from "../../../core";
 
 import { Position, PositionUtils } from "../../../game-lib/Utils";
-import { Action, ActionUtils, ActionZoneType } from "../../Action/data/Action";
+import { Action, ActionUtils, ActionZoneType, ManagedEffect } from "../../Action/data/Action";
 import { ActionRepository } from "../../Action/data/ActionRepository";
-import { Effect } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
 import { Cell, CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameDataLocker } from "../../Game/services/GameDataLocker";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
+import { GameEventType } from "../../Passive/data/GameEvent";
+import { PassiveService } from "../../Passive/services/PassiveService";
 import { Stats } from "../../Stat/data/Stats";
 import { PlayerCancelAction } from "../application/interfaces/PlayerCancelAction";
 import { Player } from "../data/Player";
 import { PlayerOutputActions } from "../web/PlayerSocketActions";
-import { ActioAnimationService } from "./ActionAnimationService";
+import { ActionAnimationService } from "./ActionAnimationService";
 import { AttackService } from "./AttackService";
 import { InvocationService } from "./InvocationService";
 
@@ -35,6 +36,12 @@ export enum PlayerActionId {
     PROVOK = "provok",
     SHIELD_RUSH = "shield_rush",
     BARRICADE = "barricade",
+    GRENADE = "grenade",
+    FLAME_GRENADE = "flame_grenade",
+    IMPOSSIBLE_SHOT = "impossible_shot",
+    BRUTALIZE = "brutalize",
+    DRUGS = "drugs",
+    MEAT_CLEAVER = "meat_cleaver",
 }
 
 export enum DashType {
@@ -46,7 +53,8 @@ export enum DashType {
 export type AttackTarget = {
     entity: Entity;
     damage: number;
-    effects: Effect[];
+    previousLife: number;
+    effects: ManagedEffect[];
     isCritical: boolean;
 };
 
@@ -63,12 +71,14 @@ export class PlayerActionService {
     private readonly gameTurnService!: GameTurnService;
     @Provide(AttackService)
     private readonly attackService!: AttackService;
-    @Provide(ActioAnimationService)
-    private readonly animationService!: ActioAnimationService;
+    @Provide(ActionAnimationService)
+    private readonly animationService!: ActionAnimationService;
     @Provide(InvocationService)
     private readonly invocationService!: InvocationService;
     @Provide(GameDataLocker)
     private readonly gameDataLocker!: GameDataLocker;
+    @Provide(PassiveService)
+    private readonly passiveService!: PassiveService;
 
     async finishTurn(
         gameId: string,
@@ -138,7 +148,7 @@ export class PlayerActionService {
         }
 
         const listActions = await this.actionRepository.list();
-        const action = listActions.find((a) => a.id === actionId);
+        const action = ActionUtils.getEntityAction(playerEntity, actionId, listActions);
         if (!action) {
             return new SocketError("Action not found");
         }
@@ -179,6 +189,8 @@ export class PlayerActionService {
         }
         const { game, player, playerEntity, destination, action } = checkResult;
 
+
+
         let result: void | SocketError | PlayerCancelAction = undefined;
 
         switch (actionId) {
@@ -195,9 +207,15 @@ export class PlayerActionService {
             case PlayerActionId.BAYONET:
             case PlayerActionId.SHOOT:
             case PlayerActionId.HEAL:
+            case PlayerActionId.DRUGS:
             case PlayerActionId.SABER:
             case PlayerActionId.BREAK:
             case PlayerActionId.INTIMIDATION:
+            case PlayerActionId.GRENADE:
+            case PlayerActionId.FLAME_GRENADE:
+            case PlayerActionId.IMPOSSIBLE_SHOT:
+            case PlayerActionId.BRUTALIZE:
+            case PlayerActionId.MEAT_CLEAVER:
                 result = await this.attack(
                     game,
                     playerEntity,
@@ -250,7 +268,7 @@ export class PlayerActionService {
     ): Promise<void | SocketError | PlayerCancelAction> {
         const refusal = this.checkIfAllowed(playerEntity, action, destination);
         if (refusal) return refusal;
-
+        const attackerPreviousLife = playerEntity.stats.life;
         const targetEntities = this.getBoostTarget(
             game,
             playerEntity,
@@ -259,24 +277,20 @@ export class PlayerActionService {
         );
 
         const targets = targetEntities.map((entity) => {
-            const target: AttackTarget = {
-                entity,
-                damage: 0,
-                effects: [],
-                isCritical : false
-            };
-            if (action.effectList) {
-                for (const effect of action.effectList) {
-                    this.attackService.applyEffect(player.name, entity, effect);
-                }
-                target.effects = action.effectList;
-            }
+            const target: AttackTarget = { entity, damage: 0, previousLife: playerEntity.stats.life, effects: [], isCritical: false };
+            target.effects = action.effectList ?? [];
             return target;
         });
 
+        this.attackService.applyManagedEffects(
+            game, playerEntity, targetEntities[0], action.effectList ?? [], true,
+        );
+
+
         playerEntity.stats.energy -= action.cost;
         this.registerUse(playerEntity,action,destination);
-        this.animationService.animate(
+        await this.emitAttackEvents(game, playerEntity, action, destination, targets, attackerPreviousLife);
+        await this.animationService.animate(
             game,
             playerEntity,
             action,
@@ -297,6 +311,8 @@ export class PlayerActionService {
             playerEntity.position,
             destination.position
         );
+        
+        const startPosition = { ...playerEntity.position};
 
         const mouvement = Stats.fromEntity(playerEntity).mouvement;
         if (range > mouvement) {
@@ -323,6 +339,7 @@ export class PlayerActionService {
         playerEntity.stats.mouvement -= range;
 
         player.stats.steps += movePath.length - 1; // count steps taken
+        await this.emitMoved(game, playerEntity, startPosition, "walk");
 
         await this.gameDataManager.set(game.id, game);
 
@@ -346,26 +363,29 @@ export class PlayerActionService {
         const refusal = this.checkIfAllowed(playerEntity, action, destination);
         if (refusal) return refusal;
 
-        const targets = this.dammageTargets(
+        const attackerPreviousLife = playerEntity.stats.life;
+        const targets = this.dammageTargets(game, playerEntity, action, destination);
+
+        playerEntity.stats.energy -= action.cost;
+        this.registerUse(playerEntity, action, destination);
+
+        await this.emitAttackEvents(
             game,
             playerEntity,
             action,
-            destination
+            destination,
+            targets,
+            attackerPreviousLife
         );
 
-        //to finalize
-        playerEntity.stats.energy -= action.cost;
-        this.registerUse(playerEntity,action,destination);
-        this.animationService.animate(
+        await this.animationService.animate(
             game,
             playerEntity,
             action,
             destination,
             targets
         );
-
         await this.gameDataManager.set(game.id, game);
-
         await this.gameTurnService.detectGameEnd(game);
     }
 
@@ -377,19 +397,21 @@ export class PlayerActionService {
     ): Promise<void | SocketError | PlayerCancelAction> {
         const refusal = this.checkIfAllowed(playerEntity, action, destination);
         if (refusal) return refusal;
-
+        const attackerPreviousLife = playerEntity.stats.life;
         const targets = this.dammageTargets(
             game,
             playerEntity,
             action,
             destination
         );
+
         const newCell = this.findGapClosePosition(
             game,
             playerEntity,
             destination
         );
         let movePath: Position[] = [];
+        const from = { ...playerEntity.position };
         if (newCell) {
             movePath = new CellAStar().findPathPositions(
                 playerEntity.position,
@@ -402,10 +424,11 @@ export class PlayerActionService {
             newCell.entityId = playerEntity.id;
             playerEntity.position = { ...newCell.position };
         }
-
+        await this.emitMoved(game, playerEntity, from, "dash");
         playerEntity.stats.energy -= action.cost;
         this.registerUse(playerEntity,action,destination);
-        this.animationService.animate(
+        await this.emitAttackEvents(game, playerEntity, action, destination, targets, attackerPreviousLife);
+        await this.animationService.animate(
             game,
             playerEntity,
             action,
@@ -421,17 +444,18 @@ export class PlayerActionService {
         return Boolean(!cell.entityId && !cell.isHole && !cell.isWall);
     }
 
-    private getTarget(game: Game, action: Action, destination: Cell): Entity[] {
+    private getTarget(game: Game, action: Action, destination: Cell, position: Position): Entity[] {
         const targetEntity: Entity[] = ActionUtils.getEntitiesInRange(
             action,
             game,
-            destination.position
+            destination.position,
+            position
         );
         return targetEntity;
     }
 
-    private getAttackTarget(game: Game, action: Action, destination: Cell) {
-        return this.getTarget(game, action, destination);
+    private getAttackTarget(game: Game, action: Action, destination: Cell, position: Position) {
+        return this.getTarget(game, action, destination, position);
     }
 
     private getBoostTarget(
@@ -440,7 +464,7 @@ export class PlayerActionService {
         action: Action,
         destination: Cell
     ) {
-        return this.getTarget(game, action, destination).filter(
+        return this.getTarget(game, action, destination, playerEntity.position).filter(
             (entity) => entity.teamId === playerEntity.teamId
         );
     }
@@ -479,6 +503,17 @@ export class PlayerActionService {
                     payload: {
                         reason: "max-use-per-target",
                     },
+                };
+            }
+        }
+
+        // pour les utilisation max par fight, voir pour grisé l'action une fois le maximum d'utilisation atteint
+        if (action.maxUsePerRound !== undefined) {
+            const used = playerEntity.actionUsesPerRound[action.id] ?? 0;
+            if (used >= action.maxUsePerRound) {
+                return {
+                    actionId: PlayerOutputActions.CANCEL_ACTION,
+                    payload: { reason: "max-use-per-round" },
                 };
             }
         }
@@ -541,37 +576,40 @@ export class PlayerActionService {
         action: Action,
         destination: Cell
     ) {
-        const targetEntities = this.getAttackTarget(game, action, destination);
-
+        const targetEntities = this.getAttackTarget(game, action, destination, playerEntity.position);
         const targets: AttackTarget[] = targetEntities.map<AttackTarget>(
             (entity) => {
-                const target: AttackTarget = {
-                    entity,
-                    damage: 0,
-                    effects: [],
-                    isCritical: false
-                };
-
-                const result = this.attackService.applyDamage(
+                const previousLife = entity.stats.life;
+                const actionSelect = this.attackService.actionFor(action, playerEntity, entity);
+                const { damage, isCritical } = this.attackService.applyDamage(
                     game,
-                    action,
+                    actionSelect,
                     playerEntity,
                     entity
                 );
-                target.damage = result.damage;
-                target.isCritical = result.isCritical;
-
-                return target;
+                //cas spécial réduction de durée des effets
+                if (action.id === PlayerActionId.DRUGS){
+                    this.gameTurnService.reduceEffectDuration(entity, 1);
+                }
+                return { entity, damage, isCritical, previousLife, effects: [] };
             }
         );
         return targets;
     }
 
     private registerUse(entity: Entity, action: Action, destination: Cell) {
-        if (!action.maxUsePerTarget || !destination.entityId) return;
-        const uses = (entity.actionUses ??= {});
-        const byTarget = (uses[action.id] ??= {});
-        byTarget[destination.entityId] = (byTarget[destination.entityId] ?? 0) + 1;
+        // Compteur par tour
+        if (action.maxUsePerRound !== undefined) {
+            const perRound = (entity.actionUsesPerRound ??= {});
+            perRound[action.id] = (perRound[action.id] ?? 0) + 1;
+        }
+
+        // Compteur par cible
+        if (action.maxUsePerTarget !== undefined && destination.entityId) {
+            const uses = (entity.actionUses ??= {});
+            const byTarget = (uses[action.id] ??= {});
+            byTarget[destination.entityId] = (byTarget[destination.entityId] ?? 0) + 1;
+        }
     }
 
     private findGapClosePosition(
@@ -581,8 +619,6 @@ export class PlayerActionService {
     ): Cell | null {
         const dx = destination.position.x - attacker.position.x;
         const dy = destination.position.y - attacker.position.y;
-
-        // Direction normalisée vers la cible
         const stepX = dx === 0 ? 0 : dx > 0 ? 1 : -1;
         const stepY = dy === 0 ? 0 : dy > 0 ? 1 : -1;
 
@@ -601,12 +637,83 @@ export class PlayerActionService {
         ) {
             const cell = game.plateau[checkX]?.[checkY];
             if (cell && this.checkMoveDestination(cell)) {
-                return cell; // première case libre adjacente à la cible
+                return cell;
             }
             checkX -= stepX;
             checkY -= stepY;
         }
 
-        return null; // pas de case libre trouvée
+        return null;
+    }
+
+    private async emitAttackEvents(
+        game: Game,
+        caster: Entity,
+        action: Action,
+        destination: Cell,
+        targets: AttackTarget[],
+        casterPreviousLife: number,
+    ): Promise<void> {
+        await this.passiveService.dispatch(game, {
+            type: GameEventType.ACTION_USED,
+            origin: "player",
+            sourceId: caster.id,
+            actionId: action.id,
+            targetPosition: destination.position,
+            targetIds: targets.map((t) => t.entity.id),
+        });
+
+        for (const { entity, damage, isCritical } of targets) {
+            await this.passiveService.dispatch(game, {
+                type: GameEventType.DAMAGE_DEALT,
+                origin: "player",
+                sourceId: caster.id,
+                targetId: entity.id,
+                actionId: action.id,
+                damage,
+                isCritical,
+            });
+        }
+
+        for (const t of targets) {
+            if (t.entity.stats.life !== t.previousLife) {
+                await this.passiveService.dispatch(game, {
+                    type: GameEventType.HP_CHANGED,
+                    origin: "player",
+                    entityId: t.entity.id,
+                    previous: t.previousLife,
+                    current: t.entity.stats.life,
+                });
+            }
+        }
+        if (caster.stats.life !== casterPreviousLife) {
+            await this.passiveService.dispatch(game, {
+                type: GameEventType.HP_CHANGED,
+                origin: "player",
+                entityId: caster.id,
+                previous: casterPreviousLife,
+                current: caster.stats.life,
+            });
+        }
+    }
+
+    private async emitMoved(
+        game: Game,
+        entity: Entity,
+        from: Position,
+        cause: "walk" | "push" | "dash",
+        movedById?: string,
+    ): Promise<void> {
+        if (from.x === entity.position.x && from.y === entity.position.y) return;
+
+        await this.passiveService.dispatch(game, {
+            type: GameEventType.ENTITY_MOVED,
+            origin: "player",
+            entityId: entity.id,
+            from,
+            to: { ...entity.position },
+            cause,
+            movedById,
+        });
     }
 }

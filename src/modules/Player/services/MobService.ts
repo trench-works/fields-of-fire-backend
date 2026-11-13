@@ -4,17 +4,20 @@ import {
     AsyncResolver,
 } from "../../../core/app/Controller/DependencyResolver";
 import { Position, PositionUtils } from "../../../game-lib";
-import { ActionType } from "../../Action/data/Action";
+import { Action, ActionType } from "../../Action/data/Action";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { GameEventAnimation } from "../../Game/application/interfaces/GameUpdateEvent";
 import { Entity } from "../../Game/data/Entity";
-import { CellAStar, Game } from "../../Game/data/Game";
+import { Cell, CellAStar, Game } from "../../Game/data/Game";
 import { GameDataManager } from "../../Game/data/GameRepository";
 import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
+import { GameEventType } from "../../Passive/data/GameEvent";
+import { PassiveService } from "../../Passive/services/PassiveService";
 import { ActionEvaluator } from "../utils/ActionEvaluator";
 import { AttackService } from "./AttackService";
 import { MoveService } from "./MoveService";
+import { AttackTarget } from "./PlayerActionService";
 
 export class MobService implements AsyncResolver {
     @Provide(GameDataManager)
@@ -29,6 +32,8 @@ export class MobService implements AsyncResolver {
     private readonly attackService!: AttackService;
     @Provide(MoveService)
     private readonly moveService!: MoveService;
+    @Provide(PassiveService)
+    private readonly passiveService!: PassiveService; 
 
     private gameTurnService!: GameTurnService;
 
@@ -97,6 +102,7 @@ export class MobService implements AsyncResolver {
                             entity.position,
                             moves[0]
                         );
+                        await this.emitMoved(game,entity, originalPosition, "walk")
                         movePath.push({ ...entity.position });
                         game.plateau[entity.position.x][
                             entity.position.y
@@ -122,17 +128,30 @@ export class MobService implements AsyncResolver {
                         damage: number;
                         isCritical: boolean;
                     })[] = [];
+                    const attackTargets : AttackTarget[] = []
                     if (action?.targets) {
                         for (const target of action?.targets ?? []) {
+                            const previousLife = target.stats.life;
                             const result = this.attackService.applyDamage(
                                 game,
                                 action.action,
                                 entity,
                                 target
                             );
+                            const attackTarget : AttackTarget = {
+                                entity : target,
+                                damage : result.damage,
+                                previousLife: previousLife,
+                                effects : action.action.effectList ?? [],
+                                isCritical : result.isCritical
+                            }
+                            attackTargets.push(attackTarget);
                             hits.push({ ...action.position, damage: result.damage, isCritical: result.isCritical});
                         }
                     }
+                    const targetedCell : Cell = game.plateau[action.position.x][action.position.y]
+
+                    this.emitAttackEvents(game, entity, action.action, targetedCell, attackTargets, entity.stats.life)
                     animations.push({
                         key: "attack",
                         data: {
@@ -144,7 +163,7 @@ export class MobService implements AsyncResolver {
                         },
                     });
                     animations.push(
-                        ...this.gameTurnService.detectEntityDeath(game)
+                        ...await this.gameTurnService.detectEntityDeath(game)
                     );
                 }
             }
@@ -176,4 +195,76 @@ export class MobService implements AsyncResolver {
 
         return game.entities.find((entity) => entity.id === targetEntityId)!;
     }
+
+    //Duplicate Code with PlayerService !!!
+    private async emitAttackEvents(
+            game: Game,
+            caster: Entity,
+            action: Action,
+            destination: Cell,
+            targets: AttackTarget[],
+            casterPreviousLife: number,
+        ): Promise<void> {
+            await this.passiveService.dispatch(game, {
+                type: GameEventType.ACTION_USED,
+                origin: "player",
+                sourceId: caster.id,
+                actionId: action.id,
+                targetPosition: destination.position,
+                targetIds: targets.map((t) => t.entity.id),
+            });
+    
+            for (const { entity, damage, isCritical } of targets) {
+                await this.passiveService.dispatch(game, {
+                    type: GameEventType.DAMAGE_DEALT,
+                    origin: "player",
+                    sourceId: caster.id,
+                    targetId: entity.id,
+                    actionId: action.id,
+                    damage,
+                    isCritical,
+                });
+            }
+    
+            for (const t of targets) {
+                if (t.entity.stats.life !== t.previousLife) {
+                    await this.passiveService.dispatch(game, {
+                        type: GameEventType.HP_CHANGED,
+                        origin: "player",
+                        entityId: t.entity.id,
+                        previous: t.previousLife,
+                        current: t.entity.stats.life,
+                    });
+                }
+            }
+            if (caster.stats.life !== casterPreviousLife) {
+                await this.passiveService.dispatch(game, {
+                    type: GameEventType.HP_CHANGED,
+                    origin: "player",
+                    entityId: caster.id,
+                    previous: casterPreviousLife,
+                    current: caster.stats.life,
+                });
+            }
+        }
+    
+        private async emitMoved(
+            game: Game,
+            entity: Entity,
+            from: Position,
+            cause: "walk" | "push" | "dash",
+            movedById?: string,
+        ): Promise<void> {
+            if (from.x === entity.position.x && from.y === entity.position.y) return;
+    
+            await this.passiveService.dispatch(game, {
+                type: GameEventType.ENTITY_MOVED,
+                origin: "player",
+                entityId: entity.id,
+                from,
+                to: { ...entity.position },
+                cause,
+                movedById,
+            });
+        }
 }

@@ -2,7 +2,7 @@ import { Id, Logger, NotFoundError, Provide, SocketError } from "../../../core";
 import { LobbyDataManager } from "../data/LobbyDataManager";
 import { Lobby } from "../data/Lobby";
 import { MenuWebSocketManager } from "../../Menu/web/MenuWebSocketManager";
-import { UserRepository } from "../../User/data/UserRepository";
+import { UserRepository } from "../../User/data/repository/UserRepository";
 import { LobbyService } from "./LobbyService";
 import { LobbyWebSocketManager } from "../web/LobbyWebSocketManager";
 
@@ -55,9 +55,22 @@ export class LobbyPlayerService {
             return lobby;
         }
 
-        lobby.teams
+        const currentPlayer = lobby.teams
             .flatMap((team) => team.players)
-            .find((player) => player.userId === userId)!.classId = classId;
+            .find((player) => player.userId === userId);
+
+        if (!currentPlayer) {
+            return new NotFoundError();
+        }
+
+        if(currentPlayer.classId !== classId) {
+            currentPlayer.classId = classId;
+            // reset des maitrises au changement de classe
+            //voir pour ajouter un systeme de sauvegarde de la dernière page de maitrise
+            // afin de la réappliquer ici. 
+            currentPlayer.masteries= {};
+            lobby.playerReady = lobby.playerReady.filter((id) => id !== currentPlayer.playerId);
+        }
 
         await this.lobbyDataManager.set(lobbyId, lobby);
         await this.lobbyWebSocketManager.emitLobbyUpdate(lobby);

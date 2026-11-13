@@ -8,10 +8,10 @@ import { GameTurnService } from "../../Game/services/GameTurnService";
 import { GameWebSocketManager } from "../../Game/web/GameWebSocketManager";
 import { AttackTarget } from "./PlayerActionService";
 
-export class ActioAnimationService {
+export class ActionAnimationService {
     @Provide(GameWebSocketManager)
     private readonly socketManager!: GameWebSocketManager;
-    @Provide(GameTurnService)
+    @Provide("GameTurnService") // this will do async injection
     private readonly gameTurnService!: GameTurnService;
 
     async animate(
@@ -33,13 +33,15 @@ export class ActioAnimationService {
                     hits: targets.map(({ entity, damage, isCritical }) => ({
                         ...entity.position,
                         damage,
-                        isCritical
+                        isCritical,
                     })),
                     path,
                 },
             },
         ];
-        animations.push(...this.gameTurnService.detectEntityDeath(game));
+        animations.push(
+            ...(await this.gameTurnService.detectEntityDeath(game))
+        );
         await this.socketManager.emitUpdate(game, animations);
     }
 }

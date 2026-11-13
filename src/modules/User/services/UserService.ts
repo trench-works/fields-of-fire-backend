@@ -1,5 +1,5 @@
 import { Hash, HttpError, Id, Provide, TokenService } from "../../../core";
-import { UserRepository } from "../data/UserRepository";
+import { UserRepository } from "../data/repository/UserRepository";
 import { Authenticate } from "../application/interfaces/Authenticate";
 import { AuthenticateUserResponse } from "../application/interfaces/AuthenticateUserResponse";
 

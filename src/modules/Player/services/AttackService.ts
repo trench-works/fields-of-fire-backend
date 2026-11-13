@@ -10,6 +10,8 @@ import {
     ActionLevel,
     ActionType,
     ActionZoneType,
+    EffectTarget,
+    ManagedEffect,
 } from "../../Action/data/Action";
 import { Effect, EffectAction, EffectType } from "../../Effect/data/Effect";
 import { Entity } from "../../Game/data/Entity";
@@ -23,6 +25,7 @@ export class AttackService {
 
     calculateFinalDamage(
         damage: number,
+        backlashDamage: number,
         action: Action,
         attacker: Entity,
         defenser: Entity
@@ -31,43 +34,40 @@ export class AttackService {
         const defenserStats = Stats.fromEntity(defenser);
 
         let attackerDamage: number = 0;
-        let defenserDamage: number;
+        let defenserDamage: number = 0;
         let isCritical : boolean = false;
 
         let statBonus: number = 0;
         // calculate stats bonus
+        const sign = Math.sign(damage); // 1 : dégâts, -1 : soin
         switch (action.actionType) {
             case ActionType.MELEE:
-                {
-                    statBonus += attackerStats.strength / 10;
-                }
+                statBonus += sign * (attackerStats.strength / 10);
                 break;
             case ActionType.RANGED:
-                {
-                    statBonus += attackerStats.precision / 10;
-                }
+                statBonus += sign * (attackerStats.precision / 10);
+                break;
+            case ActionType.SUPPORT:
+                statBonus += sign * (attackerStats.intelligence / 10);
                 break;
         }
 
         let brutTotal: number;
 
-        //cas du soin
-        if (damage < 0) {
-            brutTotal = damage - attackerStats.intelligence/10;
-            defenserDamage = brutTotal;
-            if (defenserStats.life - defenserDamage > defenserStats.maxLife) {
-                defenserDamage = -(defenserStats.maxLife - defenserStats.life);
-            }
-            
+        //Appliquer le bonus sur les soins et les frappes
+        if (action.damage) {
+            const raw = damage + statBonus;
+            brutTotal = damage > 0 ? Math.max(raw, 1) : Math.min(raw, -1);
         } else {
-            if (action.damage && action.damage.max > 0){
-                brutTotal = Math.max(damage + statBonus, 1);
-            }
-            else{
-                brutTotal = damage + statBonus
-            }
-            defenserDamage = brutTotal * (100 / (100 + defenserStats.armor));
+            brutTotal = damage + statBonus;
         }
+        if (damage === 0) {
+            return { attackerDamage: 0, defenserDamage: 0, isCritical: false };
+        }
+
+        //appliquer l'armure sur les frappe
+        defenserDamage = brutTotal > 0 ? brutTotal * (100 / (100 + defenserStats.armor)): brutTotal;  
+
         //Crit Logik
         const critRoll = Ran.int(100);
         const critChanceBuff = attackerStats.critical;
@@ -119,11 +119,25 @@ export class AttackService {
                 (e) => e.action === EffectAction.WEAKNESS
             ).length;
             if (weaknessStacks > 0) {
-                const weaknessDamage = defenserDamage * (0.2 * weaknessStacks);
+                const weaknessDamage = defenserDamage * (0.25 * weaknessStacks);
                 defenserDamage += weaknessDamage;
             }
         }
-
+        //backlashLogik 
+        attackerDamage += backlashDamage;
+        //antiHealLogik
+        if(defenserDamage < 0){
+            if(defenser.effects.some(effect => effect.id === "untreatable")){
+                defenserDamage = 0;
+            }
+        }
+        if(attackerDamage < 0){
+            if(attacker.effects.some(effect => effect.id === "untreatable")){
+                attackerDamage = 0;
+            }
+        }
+        
+        console.log("[calc]", { damage, statBonus, brutTotal, defenserDamage });
         return {
             attackerDamage: Math.ceil(attackerDamage),
             defenserDamage: Math.ceil(defenserDamage),
@@ -135,36 +149,52 @@ export class AttackService {
         game: Game,
         action: Action,
         attacker: Entity,
-        target: Entity
-    ): {damage: number, isCritical: boolean} {
+        target: Entity,
+        reduction?: number
+    ): {damage: number, isCritical: boolean, effectIdsBeforeAttack : string[]} {
         const attackerPlayer: Player | undefined = game.players.find(
             (player) => player.entityId === attacker.id
         );
         const targetPlayer: Player | undefined = game.players.find(
             (player) => player.entityId === target.id
         );
-        //dodging - à voir si on peut dire au front que l'action à été dodge
-        if (action.damage?.min ?? -1 >= 0) {
+
+        const effectIdsBeforeAttack = target.effects.map((e) => e.id);
+        const isHeal = (action.damage?.max ?? 0) <= 0 && action.damage !== undefined;
+        const isSelf = attacker.id === target.id;
+        const canDodge = !isHeal && !isSelf && (action.damage?.min ?? -1) >= 0;
+        
+        if (canDodge) {
+            console.log("dodgeLogik");  
             const diceRoll = Ran.int(100);
             const isDodged = target.stats.dodging > diceRoll ? true : false;
 
             if (isDodged) {
-                return { damage: 0, isCritical: false };
+                return { damage: 0, isCritical: false, effectIdsBeforeAttack};
             }
         }
-
+        console.log("[applyDamage] avant roll", action.id, JSON.stringify(action.damage));
         const randomDamage = action.damage
             ? action.damage.min + Ran.int(action.damage.max - action.damage.min)
             : 0;
+        
+        const randomSelfDamage = action.backlash
+        ? action.backlash.min + Ran.int(action.backlash.max - action.backlash.min)
+        : 0;
 
         // calculate damages
-        const { attackerDamage, defenserDamage, isCritical } = this.calculateFinalDamage(
+        let { attackerDamage, defenserDamage, isCritical } = this.calculateFinalDamage(
             randomDamage,
+            randomSelfDamage,
             action,
             attacker,
             target
         );
-
+        // ajouter pour le cas du passif REFLEXSHOT
+        if (reduction){
+            defenserDamage = Math.round(defenserDamage / 100) * reduction;
+            console.log(`reduced dammage : ${defenserDamage}`)
+        } 
         // damagers to attacker
         if (attackerPlayer && attackerDamage > 0) {
             attackerPlayer.stats.damages += attackerDamage; // count damage on itself
@@ -197,54 +227,79 @@ export class AttackService {
         if (attackerPlayer && defenserDamage < 0) {
             attackerPlayer.stats.heal += -defenserDamage; // count heal done to other
         }
+
         target.stats.life -= defenserDamage;
         target.stats.life = Math.min(
             target.stats.maxLife,
             Math.max(0, target.stats.life)
         );
+
+        // vérifier en cas de mort indirecte (maso,bleeding, etc...)
+        if (defenserDamage > 0 && attacker.id !== target.id) {
+            target.lastDamagedBy = attacker.id;
+        }
         if (target.stats.life === 0 && attackerPlayer) {
             attackerPlayer.stats.kills++; // count kills
         }
 
         //manage effect
+        console.log("number of effect to apply ",action.effectList?.length)
         if ((action.effectList?.length ?? 0) > 0) {
-            for (const effect of action.effectList!) {
-                this.applyEffect(attacker.id, target, effect);
-            }
-            //target.effects = action.effectList!;
+            this.applyManagedEffects(game, attacker, target, action.effectList!, true);
         }
 
-        if (action.selfEffectList) {
-            for (const effect of action.selfEffectList) {
-                this.applyEffect(attacker.id, attacker, effect);
-            }
-        }
-
-        if (action.onHitEffectList && target) {
-            for (const effect of action.onHitEffectList) {
-                this.applyEffect(attacker.id, attacker, effect);
-            }
-        }
-
-
-        return {damage: defenserDamage, isCritical};
+        return {damage: defenserDamage, isCritical, effectIdsBeforeAttack};
     }
 
     applyEffect(caster: string | undefined, target: Entity, effect: Effect) {
         if (!target.stats) {
             return;
         }
-        // chance de ne pas appliquer l'effet
-        if (effect.chance !== undefined && Ran.int(100) >= effect.chance) {
-            return; 
-        }
+        const remaining = (e: { duration: number | null }) =>
+            e.duration === null ? Infinity : e.duration;
         const effectCopy = { ...effect };
         if (caster) {
             effectCopy.author = caster;
         }
 
+        if (effect.maxStacks !== undefined) {
+            const stacks = target.effects.filter((e) => e.id === effect.id);
+
+            if (stacks.length >= effect.maxStacks) {
+                const oldest = stacks.reduce((a, b) => (remaining(a) <= remaining(b) ? a : b));
+
+                if (remaining(effectCopy) > remaining(oldest)) {
+                    oldest.duration = effectCopy.duration;
+                    oldest.author = effectCopy.author;
+                }
+                return; 
+            }
+        }
+
         target.effects.push(effectCopy);
-        target.stats = Stats.add(target.stats, effect.instant);
+        if (effect.instant === undefined) this.logger.warn('the effect is badly written and will not apply !')
+        target.stats = Stats.add(target.stats, effect.instant ?? {});
+    }
+    
+    applyManagedEffects(
+        game: Game,
+        caster: Entity,
+        hitTarget: Entity | undefined,
+        effects: ManagedEffect[],
+        hit: boolean,
+    ): void {
+        for (const managed of effects) {
+            console.log("applying effect : ", managed.effect.name);
+            if (managed.onHit && !hit) continue;
+            for (const entity of this.resolveEffectTargets(managed.target, game, caster, hitTarget)) {
+                if (managed.chanceToApply !== undefined && Ran.int(100) >= managed.chanceToApply) {
+                    continue; 
+                }
+                const duration = managed.duration !== undefined ? managed.duration : managed.effect.duration;
+                //this.logger.warn(` effect : ${managed.effect.name} is going to be applied to ${entity}`)
+                this.applyEffect(caster.id, entity, { ...managed.effect, duration });
+            }
+        }
     }
 
     getCellsInAttackRange(
@@ -324,5 +379,39 @@ export class AttackService {
             );
         }
         return result;
+    }
+
+    resolveEffectTargets(
+    target: EffectTarget,
+    game: Game,
+    caster: Entity,
+    hitTarget: Entity | undefined,
+    ): Entity[] {
+        const alive = game.entities.filter((e) => !e.dead);
+        const allies = alive.filter((e) => e.teamId === caster.teamId);
+        const foes = alive.filter((e) => e.teamId !== caster.teamId);
+
+        switch (target) {
+            case EffectTarget.SELF:
+                return [caster];
+            case EffectTarget.TARGET:
+                return hitTarget ? [hitTarget] : [];
+            case EffectTarget.RANDOM_ALLY:
+                return allies.length ? [allies[Ran.int(allies.length)]] : [];
+            case EffectTarget.RANDOM_FOE:
+                return foes.length ? [foes[Ran.int(foes.length)]] : [];
+            case EffectTarget.ALL_ALLY:
+                return allies;
+            case EffectTarget.ALL_FOE:
+                return foes;
+            case EffectTarget.ALL:
+                return alive;
+        }
+    }
+
+    actionFor(action: Action, attacker: Entity, target: Entity): Action {
+        console.log("[actionFor]", action.id, attacker.teamId, target.teamId);
+        if (!action.onAlly || attacker.teamId !== target.teamId) return action;
+        return { ...action, ...action.onAlly };
     }
 }

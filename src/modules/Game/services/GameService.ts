@@ -7,6 +7,7 @@ import {
     LoggerService,
     Ran,
     WsEventAwaiter,
+    DBError,
 } from "../../../core";
 import { Cell, Game, GameMode } from "../data/Game";
 import { GameDataManager } from "../data/GameRepository";
@@ -16,7 +17,7 @@ import { Entity, EntityType } from "../data/Entity";
 import { Player } from "../../Player/data/Player";
 import { CharacterClassRepository } from "../../CharacterClass/data/CharacterClassRepository";
 import { GameCreationError } from "./errors/GameCreationError";
-import { UserRepository } from "../../User/data/UserRepository";
+import { UserRepository } from "../../User/data/repository/UserRepository";
 import { GameWebSocketManager } from "../web/GameWebSocketManager";
 import { BoostService } from "../../Player/services/BoostService";
 import { Team, TeamColor } from "../data/Team";
@@ -27,6 +28,11 @@ import { MobService } from "../../Player/services/MobService";
 import { GameSubscriptionManager } from "../web/GameSubscriptionManager";
 import { MapService } from "./MapService";
 import { Stats } from "../../Stat/data/Stats";
+import { MasterySelection } from "../../Mastery/data/Mastery";
+import { MasteryTreeRepository } from "../../Mastery/repository/MasteryTreeRepository";
+import { MasteryService } from "../../Mastery/services/MasteryService";
+import { Action } from "../../Action/data/Action";
+import { getClassPoints } from "../../User/data/User";
 
 export class GameService {
     @Provide(GameDataManager)
@@ -51,6 +57,10 @@ export class GameService {
     private readonly gameSubscribeAwaiters!: GameSubscriptionManager;
     @Provide(MapService)
     private readonly mapService!: MapService;
+    @Provide(MasteryTreeRepository)
+    private readonly masteryTreeRepository!: MasteryTreeRepository;
+    @Provide(MasteryService)
+    private readonly masteryService!: MasteryService;
 
     async getPlayerGame(
         gameId: string,
@@ -104,10 +114,63 @@ export class GameService {
             for (const lobbyPlayer of team.players) {
                 const entityId = Id.get();
                 const playerCell = await this.placeEntity(entityId, plateau);
-                const user = await this.userRepository.get(lobbyPlayer.userId);
+                const user = await this.userRepository.getWithMasteries(lobbyPlayer.userId);
                 const charClass = classes.find(
                     (charClass) => charClass.id === lobbyPlayer.classId
                 )!;
+
+                const selection: MasterySelection = { ...(lobbyPlayer.masteries ?? {}) };
+                
+                const tree = await this.masteryTreeRepository.getByClass(lobbyPlayer.classId);
+                const hasTree = tree && !(tree instanceof DBError);
+                
+                if (hasTree) {
+                    const availablePoints = user
+                        ? getClassPoints(user, lobbyPlayer.classId)
+                        : 0;
+                    const error = this.masteryService.validate(tree, selection, availablePoints);
+                    if (error) {
+                        this.logger.error(error);
+                        return new SocketError(error); 
+                    }
+                }
+                const baseActions: Action[] = charClass.actionList;
+                const entity: Entity = {
+                    id: entityId,
+                    teamId: gameTeam.id,
+                    controllerId: lobbyPlayer.playerId,
+                    position: { ...playerCell.position },
+                    classId: lobbyPlayer.classId,
+                    type: EntityType.PLAYER,
+                    stats: { ...charClass.stats },
+                    effects: [],
+                    boosts: [],
+                    dead: false,
+                    isInvocation: false,
+                    isPlaying: charClass.isPlaying,
+                    actionUses: {},
+                    actionUsesPerRound: {},
+                    masteries: selection,
+                    actionList: baseActions.map((a) => a.id),
+                    modifiedActionList: [],
+                    passives: [],
+                };
+
+                if (hasTree) {
+                    this.masteryService.applyToEntity(tree, selection, entity);
+                    const resolved = this.masteryService.resolveActions(
+                        tree,
+                        selection,
+                        baseActions
+                    );
+                    entity.actionList = resolved.map((a) => a.id);
+                    // on ne stocke que ce qui diffère de la base (ou qui est nouveau)
+                    entity.modifiedActionList = resolved.filter((a) => {
+                        const base = baseActions.find((b) => b.id === a.id);
+                        return !base || base !== a;
+                    });
+                }
+
                 players.push({
                     id: lobbyPlayer.playerId,
                     userId: lobbyPlayer.userId,
@@ -125,22 +188,9 @@ export class GameService {
                         sustained: 0,
                         shielded: 0,
                     },
+                    masteries: lobbyPlayer.masteries ?? {},
                 });
-                entities.push({
-                    id: entityId,
-                    teamId: gameTeam.id,
-                    controllerId: lobbyPlayer.playerId,
-                    position: { ...playerCell.position },
-                    classId: lobbyPlayer.classId,
-                    type: EntityType.PLAYER,
-                    stats: charClass.stats,
-                    effects: [],
-                    boosts: [],
-                    dead: false,
-                    isInvocation: false,
-                    isPlaying: charClass.isPlaying,
-                    actionUses: {},
-                });
+                entities.push(entity);
                 gameTeam.entitiesIds.push(entityId);
                 gameTeam.playerIds.push(lobbyPlayer.playerId);
             }
@@ -287,6 +337,7 @@ export class GameService {
                 (charClass) => !charClass.playable && charClass.isPlaying
             );
             const charClass = mobClasses[Ran.int(mobClasses.length)];
+            const baseActions: Action[] = charClass.actionList;
             const npc: NPC = {
                 id: Id.get(),
                 entityId,
@@ -310,6 +361,9 @@ export class GameService {
                 isInvocation: false,
                 isPlaying: charClass.isPlaying,
                 actionUses: {},
+                actionUsesPerRound: {},
+                actionList: baseActions.map((a) => a.id),
+                passives: [],
             };
             team.entitiesIds.push(entity.id);
 
@@ -374,6 +428,8 @@ export class GameService {
             entity.effects = entity.effects.filter((e) => e.duration === null); // garde les effets permanents
             entity.stats.energy = entity.stats.totalEnergy;
             entity.stats.mouvement = entity.stats.totalMouvement;
+            entity.actionUses = {};
+            entity.actionUsesPerRound = {};
 
             const playerCell = await this.placeEntity(entity.id, game.plateau);
             entity.position = { ...playerCell.position };

@@ -1,7 +1,7 @@
 [
     {
         "id": "walk",
-        "name": "Marcher",
+        "name": "Déplacement",
         "description": "Se déplacer vers une position ciblée",
         "cost": 0,
         "range": { "min": 0, "max": 0 },
@@ -14,8 +14,8 @@
     },
     {
         "id": "shoot",
-        "name": "Attaquer",
-        "description": "Attaquer un ennemi à portée",
+        "name": "Tir",
+        "description": "Tirer sur un ennemi à portée",
         "cost": 2,
         "range": { "min": 0, "max": 3 },
         "rangeType": "DIAMOND",
@@ -27,12 +27,12 @@
     },
     {
         "id": "heal",
-        "name": "Soigner",
+        "name": "Soin",
         "description": "buff un allié",
         "cost": 1,
         "range": { "min": 0, "max": 1 },
         "rangeType": "DIAMOND",
-        "damage": { "min": -5, "max": -1 },
+        "damage": { "min": -5, "max": -2 },
         "actionType": "SUPPORT",
         "targetRequired": true,
         "zoneType": ["DIAMOND"],
@@ -42,7 +42,7 @@
     },
     {
         "id": "bayonet",
-        "name": "Baïonnette",
+        "name": "Coup de Baïonnette",
         "description": "Attaque de mêlée",
         "cost": 2,
         "range": { "min": 0, "max": 1 },
@@ -76,7 +76,7 @@
         "actionType": "SUPPORT",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "effectList": ["intimidated"],
+        "effectList": [{"effect" : "intimidated", "target": "TARGET"}],
         "level": "GROUND"
     },
     {
@@ -89,7 +89,7 @@
         "actionType": "SUPPORT",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "effectList": ["doped"],
+        "effectList": [{"effect" : "doped", "target": "TARGET"}],
         "level": "GROUND"
     },
     {
@@ -103,7 +103,7 @@
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "effectList": ["amputated"],
+        "effectList": [{"effect" : "amputated", "target": "TARGET", "chanceToApply": 66}],
         "level": "GROUND"
     },
     {
@@ -116,7 +116,7 @@
         "actionType": "SUPPORT",
         "zoneType": ["DIAMOND"],
         "zoneSize": 3,
-        "effectList": ["charge"],
+        "effectList": [{"effect" : "charge", "target": "TARGET"}],
         "level": "GROUND"
     },
     {
@@ -129,7 +129,7 @@
         "actionType": "SUPPORT",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "effectList": ["enhanced_drug"]
+        "effectList": [{"effect" : "enhanced_drug", "target": "TARGET"}]
     },
     {
         "id": "saber",
@@ -155,7 +155,7 @@
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "effectList": ["weakness"],
+        "effectList": [{"effect" :"weakness", "target": "TARGET"}],
         "level": "GROUND"
     },
     {
@@ -168,7 +168,7 @@
         "actionType": "SUPPORT",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "effectList": ["provoked"],
+        "effectList": [{"effect" : "provoked", "target": "TARGET"}],
         "level": "GROUND"
     },
     {
@@ -182,7 +182,7 @@
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "onHitEffectList":["regain2PE"],
+        "effectList":[{"effect" : "regain2PE", "target": "SELF", "onHit": true}],
         "level": "GROUND"
     },
     {
@@ -197,5 +197,111 @@
         "zoneSize": 1,
         "level": "GROUND",
         "invocateClass": "barricade"
+    },
+    {
+        "id": "grenade",
+        "name": "Grenade",
+        "description": "Lance une grenade",
+        "cost": 2,
+        "range": { "min": 1, "max": 3},
+        "damage": { "min": 3, "max": 6 },
+        "rangeType": "DIAMOND",
+        "actionType": "OTHER",
+        "zoneType": ["DIAMOND"],
+        "zoneSize": 2,
+        "maxUsePerRound": 0,
+        "level": "GROUND"
+    },
+    {
+        "id": "flame_grenade",
+        "name": "Grenade incendiaire",
+        "description": "Lance une grenade qui brûle",
+        "cost": 2,
+        "range": { "min": 1, "max": 3},
+        "damage": { "min": 3, "max": 6 },
+        "rangeType": "DIAMOND",
+        "actionType": "OTHER",
+        "zoneType": ["DIAMOND"],
+        "zoneSize": 2,
+        "maxUsePerRound": 0,
+        "level": "GROUND",
+        "effectList": [{"effect" : "burned", "target": "TARGET", "chanceToApply": 75}]
+    },
+    {
+        "id": "impossible_shot",
+        "name": "Tir impossible",
+        "description": "Effectue un tir sans ligne de vue",
+        "cost": 3,
+        "range": { "min": 0, "max": 4},
+        "rangeType": "DIAMOND",
+        "damage": { "min": 3, "max": 6 },
+        "actionType": "RANGED",
+        "zoneType": ["DIAMOND"],
+        "zoneSize": 1,
+        "level": "OVERGROUND"
+    },
+    {
+        "id": "brutalize",
+        "name": "Brutaliser",
+        "description": "Frappe monocible",
+        "cost": 2,
+        "range": { "min": 0, "max": 1 },
+        "rangeType": "DIAMOND",
+        "damage": { "min": 2, "max": 5 },
+        "actionType": "MELEE",
+        "zoneType": ["DIAMOND"],
+        "zoneSize": 1,
+        "effectList": [
+            {"effect" :"weakness", "target": "TARGET", "chanceToApply": 50},
+            {"effect" :"angered", "target": "SELF", "chanceToApply": 25}
+        ],
+        "level": "GROUND"
+    },
+    {
+        "id": "drugs",
+        "name": "Médicaments",
+        "description": "Reduits la durée des effets",
+        "cost": 1,
+        "range": { "min": 0, "max": 1 },
+        "rangeType": "DIAMOND",
+        "actionType": "SUPPORT",
+        "zoneType": ["DIAMOND"],
+        "zoneSize": 1,
+        "onAlly":{
+            "damage" : { "min" : -2, "max": -1}
+        },
+        "maxUsePerTarget": 3,
+        "level": "GROUND"
+    },
+    {
+        "id": "meat_cleaver",
+        "name": "Couperet",
+        "description": "Une frappe chirurgicale",
+        "cost": 2,
+        "range": { "min": 0, "max": 1 },
+        "rangeType": "DIAMOND",
+        "damage" : { "min" : 3, "max": 5},
+        "actionType": "MELEE",
+        "zoneType": ["DIAMOND"],
+        "zoneSize": 1,
+        "level": "GROUND"
+    },
+    {
+        "id": "organ_donation",
+        "name": "Couperet",
+        "description": "Sacrifie de la vie pour soigner fortement un allié",
+        "cost": 2,
+        "range": { "min": 1, "max": 1 },
+        "rangeType": "DIAMOND",
+        "damage" : { "min" : -10, "max": -20},
+        "backlash" : { "min": 5, "max": 10},
+        "actionType": "SUPPORT",
+        "zoneType": ["DIAMOND"],
+        "zoneSize": 1,
+        "effectList": [
+            {"effect": "difficult_recovery", "target":"SELF", "onHit":true}
+        ],
+        "level": "GROUND"
     }
 ]
+
