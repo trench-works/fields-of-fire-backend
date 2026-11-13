@@ -1,17 +1,17 @@
-import { EffectTarget } from "../../Action/data/Action";
 import { GameEventType } from "../data/GameEvent";
 import { PassiveDefinition } from "../data/Passive";
 
 const healFactor = 0.5;
 
-export const revengeful: PassiveDefinition = {
-    id: "REVENGEFULL",
+export const bloodthirsty: PassiveDefinition = {
+    id: "BLOODTHIRSTY",
     triggers: [GameEventType.DAMAGE_DEALT],
 
     async run({ game, owner, event }) {
         if (event.type !== GameEventType.DAMAGE_DEALT) return;
         if (event.sourceId !== owner.id) return;
         if (event.damage <= 0) return;
+        if (event.actionId !== "meat_cleaver") return;
 
         const targetEntity = game.entities.find(
             (entity) => entity.id === event.targetId

@@ -103,7 +103,7 @@
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
-        "effectList": [{"effect" : "amputated", "target": "TARGET", "chanceToApply": 100}],
+        "effectList": [{"effect" : "amputated", "target": "TARGET", "chanceToApply": 66}],
         "level": "GROUND"
     },
     {
@@ -284,6 +284,23 @@
         "actionType": "MELEE",
         "zoneType": ["DIAMOND"],
         "zoneSize": 1,
+        "level": "GROUND"
+    },
+    {
+        "id": "organ_donation",
+        "name": "Couperet",
+        "description": "Sacrifie de la vie pour soigner fortement un allié",
+        "cost": 2,
+        "range": { "min": 1, "max": 1 },
+        "rangeType": "DIAMOND",
+        "damage" : { "min" : -10, "max": -20},
+        "backlash" : { "min": 5, "max": 10},
+        "actionType": "SUPPORT",
+        "zoneType": ["DIAMOND"],
+        "zoneSize": 1,
+        "effectList": [
+            {"effect": "difficult_recovery", "target":"SELF", "onHit":true}
+        ],
         "level": "GROUND"
     }
 ]

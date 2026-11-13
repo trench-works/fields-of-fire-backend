@@ -15,6 +15,7 @@ export class Action {
     name!: string;
     description?: string;
     damage?: { min: number; max: number };
+    backlash?: { min: number; max: number };
     effectList?: ManagedEffect[];
     rangeType!: ActionZoneType;
     range!: { min: number; max: number };
@@ -39,6 +40,7 @@ export class ActionEntity {
     name!: string;
     description?: string;
     damage?: { min: number; max: number };
+    backlash?: { min: number; max: number };
     effectList?: ManagedEffectEntity[];
     rangeType!: ActionZoneType;
     range!: { min: number; max: number };
@@ -62,6 +64,7 @@ export class ManagedEffect {
     chanceToApply?: number;
     target!: EffectTarget;
     onHit?: boolean;
+    duration?: number| null;
 }
 
 export class ManagedEffectEntity {
@@ -69,6 +72,7 @@ export class ManagedEffectEntity {
     chanceToApply?: number;
     target!: EffectTarget;
     onHit?: boolean;
+    duration?: number| null;
 }
 
 export type AllyOverride = {

@@ -43,6 +43,7 @@ export class MasteryTreeRepository extends FolderRepository<MasteryTree, Mastery
 
     private async resolveEffectModifiers(list: EffectModifierEntity[]): Promise<EffectModifier[]> {
         const result: EffectModifier[] = [];
+        
         for (const m of list) {
             const effect = await this.effectRepository.get(m.effect);
             if (effect && !(effect instanceof DBError)) result.push({ ...m, effect });
@@ -53,17 +54,17 @@ export class MasteryTreeRepository extends FolderRepository<MasteryTree, Mastery
 
     private async resolveModification(entity: ActionModificationEntity): Promise<ActionModification> {
         const { effectList, effectModified, onAlly, ...rest } = entity;
-        let resolvedOnAlly: AllyOverride | undefined;
         return {
             ...rest,
             ...(effectList && {
                 effectList: await this.resolveManagedEffects(effectList),
-                ...(effectModified && { effectModified: await this.resolveEffectModifiers(effectModified) }),
             }),
-            ...(resolvedOnAlly && {
-                onAlly: resolvedOnAlly,
+            ...(effectModified && {
+                effectModified: await this.resolveEffectModifiers(effectModified),
             }),
-            ...(onAlly && { onAlly: await this.resolveAllyModifier(onAlly) }),
+            ...(onAlly && {
+                onAlly: await this.resolveAllyModifier(onAlly),
+            }),
         };
     }
 

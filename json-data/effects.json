@@ -22,6 +22,7 @@
             "precision": -15
         },
         "instant": {},
+        "maxStacks": 3,
         "action": "NONE"
     },
     {
@@ -48,12 +49,13 @@
         "instant": {
             "mouvement": 2
         },
+        "maxStaks" : 2,
         "action": "NONE"
     },
     {
         "id": "enhanced_drug",
         "name": "Drogue de combat",
-        "duration": 2,
+        "duration": 3,
         "type": "APPLY",
         "modifier": {
             "strength": 10,
@@ -63,6 +65,7 @@
         "instant": {
             "energy": 2
         },
+        "maxStacks": 1,
         "action": "NONE"
     },
     {
@@ -172,6 +175,58 @@
             "strength": 10,
             "precision": 10
         },
+        "instant": {},
+        "maxStaks" : 5,
+        "action": "NONE"
+    },
+    {
+        "id": "infected",
+        "name": "Infecté",
+        "duration": -4,
+        "type": "POISON",
+        "modifier": {
+            "life": -1
+        },
+        "instant": {},
+        "maxStaks" : 3,
+        "action": "NONE"
+    },
+    {
+        "id": "bleeding",
+        "name": "Saignement",
+        "duration": 3,
+        "type": "POISON",
+        "modifier": {
+            "life": -2
+        },
+        "instant": {},
+        "maxStaks" : 3,
+        "action": "NONE"
+    },
+    {
+        "id": "emergency_deployment",
+        "name": "Déploiement d'urgence",
+        "duration": null,
+        "type": "APPLY",
+        "modifier": { "totalMouvement": 1 },
+        "instant": { "mouvement": 1 },
+        "action": "NONE"
+    },
+    {
+        "id": "difficult_recovery",
+        "name": "Récupération difficile",
+        "duration": 3,
+        "type": "POISON",
+        "modifier": { "life" : -5 },
+        "instant": {},
+        "action": "NONE"
+    },
+    {
+        "id": "untreatable",
+        "name": "Insoignable",
+        "duration": 2,
+        "type": "APPLY",
+        "modifier": {},
         "instant": {},
         "action": "NONE"
     }

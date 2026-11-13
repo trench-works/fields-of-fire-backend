@@ -25,6 +25,7 @@ export class AttackService {
 
     calculateFinalDamage(
         damage: number,
+        backlashDamage: number,
         action: Action,
         attacker: Entity,
         defenser: Entity
@@ -122,6 +123,20 @@ export class AttackService {
                 defenserDamage += weaknessDamage;
             }
         }
+        //backlashLogik 
+        attackerDamage += backlashDamage;
+        //antiHealLogik
+        if(defenserDamage < 0){
+            if(defenser.effects.some(effect => effect.id === "untreatable")){
+                defenserDamage = 0;
+            }
+        }
+        if(attackerDamage < 0){
+            if(attacker.effects.some(effect => effect.id === "untreatable")){
+                attackerDamage = 0;
+            }
+        }
+        
         console.log("[calc]", { damage, statBonus, brutTotal, defenserDamage });
         return {
             attackerDamage: Math.ceil(attackerDamage),
@@ -147,7 +162,7 @@ export class AttackService {
         const isHeal = (action.damage?.max ?? 0) <= 0 && action.damage !== undefined;
         const isSelf = attacker.id === target.id;
         const canDodge = !isHeal && !isSelf && (action.damage?.min ?? -1) >= 0;
-        //dodging - à voir si on peut dire au front que l'action à été dodge
+        
         if (canDodge) {
             console.log("dodgeLogik");  
             const diceRoll = Ran.int(100);
@@ -161,10 +176,15 @@ export class AttackService {
         const randomDamage = action.damage
             ? action.damage.min + Ran.int(action.damage.max - action.damage.min)
             : 0;
+        
+        const randomSelfDamage = action.backlash
+        ? action.backlash.min + Ran.int(action.backlash.max - action.backlash.min)
+        : 0;
 
         // calculate damages
         let { attackerDamage, defenserDamage, isCritical } = this.calculateFinalDamage(
             randomDamage,
+            randomSelfDamage,
             action,
             attacker,
             target
@@ -234,9 +254,25 @@ export class AttackService {
         if (!target.stats) {
             return;
         }
+        const remaining = (e: { duration: number | null }) =>
+            e.duration === null ? Infinity : e.duration;
         const effectCopy = { ...effect };
         if (caster) {
             effectCopy.author = caster;
+        }
+
+        if (effect.maxStacks !== undefined) {
+            const stacks = target.effects.filter((e) => e.id === effect.id);
+
+            if (stacks.length >= effect.maxStacks) {
+                const oldest = stacks.reduce((a, b) => (remaining(a) <= remaining(b) ? a : b));
+
+                if (remaining(effectCopy) > remaining(oldest)) {
+                    oldest.duration = effectCopy.duration;
+                    oldest.author = effectCopy.author;
+                }
+                return; 
+            }
         }
 
         target.effects.push(effectCopy);
@@ -258,8 +294,9 @@ export class AttackService {
                 if (managed.chanceToApply !== undefined && Ran.int(100) >= managed.chanceToApply) {
                     continue; 
                 }
-                this.logger.warn(` effect : ${managed.effect.name} is going to be applied to ${entity}`)
-                this.applyEffect(caster.id, entity, managed.effect);
+                const duration = managed.duration !== undefined ? managed.duration : managed.effect.duration;
+                //this.logger.warn(` effect : ${managed.effect.name} is going to be applied to ${entity}`)
+                this.applyEffect(caster.id, entity, { ...managed.effect, duration });
             }
         }
     }

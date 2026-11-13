@@ -152,11 +152,15 @@ export class ActionEvaluator extends Evaluator<Action, EvaluatedAction> {
         const averageDamage = action.damage
             ? (action.damage.max - action.damage.min) / 2 + action.damage.min
             : 0;
+        const averageSelfDamage = action.backlash
+            ? (action.backlash.max - action.backlash.min) / 2 + action.backlash.min
+            : 0;
         for (const target of targets) {
             const targetStats = Stats.fromEntity(target);
             const { attackerDamage, defenserDamage } =
                 this.attackService.calculateFinalDamage(
                     averageDamage,
+                    averageSelfDamage,
                     action,
                     this.entity,
                     target
